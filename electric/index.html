@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>จดค่าไฟบ้าน</title>
+<style>
+  :root {
+    --bg: #f3f8f4;
+    --card: #ffffff;
+    --ink: #24352b;
+    --muted: #5f7468;
+    --main: #2f8f6b;
+    --main-dark: #226e51;
+    --bar: #7cc4a4;
+    --bar-last: #2f8f6b;
+    --line: #dbe8df;
+    --red: #c62828;
+    --red-bg: #fdeaea;
+    --green-bg: #e6f5ec;
+    --amber-bg: #fff4dc;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Sarabun", "Noto Sans Thai", "Thonburi", "Leelawadee UI", system-ui, sans-serif;
+    font-size: 20px;
+    line-height: 1.5;
+    padding: 16px;
+  }
+  main { max-width: 640px; margin: 0 auto; }
+  h1 { font-size: 30px; margin: 8px 0 16px; text-align: center; }
+  h2 { font-size: 24px; margin: 0 0 12px; }
+  .card {
+    background: var(--card);
+    border-radius: 18px;
+    padding: 18px;
+    margin-bottom: 16px;
+    box-shadow: 0 2px 8px rgba(40, 80, 60, .08);
+  }
+  label { display: block; font-weight: 700; margin: 12px 0 4px; }
+  input {
+    width: 100%;
+    font: inherit;
+    font-size: 22px;
+    padding: 12px 14px;
+    border: 2px solid var(--line);
+    border-radius: 12px;
+    background: #fbfdfc;
+    color: var(--ink);
+  }
+  input:focus { outline: none; border-color: var(--main); }
+  button {
+    font: inherit;
+    cursor: pointer;
+    border: 0;
+    border-radius: 14px;
+  }
+  .save {
+    width: 100%;
+    margin-top: 18px;
+    padding: 14px;
+    font-size: 24px;
+    font-weight: 700;
+    color: #fff;
+    background: var(--main);
+  }
+  .save:active { background: var(--main-dark); }
+  .msg { margin-top: 10px; font-weight: 700; min-height: 1.5em; }
+  .msg.err { color: var(--red); }
+  .msg.ok { color: var(--main-dark); }
+
+  .alert {
+    border-radius: 14px;
+    padding: 14px 16px;
+    font-size: 22px;
+    font-weight: 700;
+  }
+  .alert small { display: block; font-weight: 400; font-size: 18px; margin-top: 2px; }
+  .alert.up-big { background: var(--red-bg); color: var(--red); border: 2px solid var(--red); }
+  .alert.up { background: var(--amber-bg); color: #8a5a00; }
+  .alert.down { background: var(--green-bg); color: var(--main-dark); }
+  .alert.same { background: var(--green-bg); color: var(--main-dark); }
+
+  .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px; }
+  .stat { background: var(--bg); border-radius: 14px; padding: 12px; text-align: center; }
+  .stat b { display: block; font-size: 28px; color: var(--main-dark); }
+  .stat span { font-size: 17px; color: var(--muted); }
+
+  .chart-wrap { overflow-x: auto; padding-bottom: 4px; }
+  .chart {
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+    height: 230px;
+    min-width: 100%;
+    padding-top: 24px;
+  }
+  .col {
+    flex: 1 0 52px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: center;
+  }
+  .val { font-size: 15px; font-weight: 700; color: var(--muted); white-space: nowrap; }
+  .bar { width: 100%; background: var(--bar); border-radius: 8px 8px 0 0; min-height: 3px; }
+  .col.last .bar { background: var(--bar-last); }
+  .col.last .val { color: var(--main-dark); }
+  .col.spike .bar { background: var(--red); }
+  .col.spike .val { color: var(--red); }
+  .axis { display: flex; gap: 8px; border-top: 2px solid var(--line); padding-top: 4px; }
+  .axis div { flex: 1 0 52px; text-align: center; font-size: 15px; color: var(--muted); }
+
+  .item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .item:last-child { border-bottom: 0; }
+  .item .info { flex: 1; }
+  .item .m { font-weight: 700; }
+  .item .d { font-size: 17px; color: var(--muted); }
+  .del {
+    padding: 10px 14px;
+    font-size: 18px;
+    color: var(--red);
+    background: var(--red-bg);
+  }
+  .empty { text-align: center; color: var(--muted); padding: 20px 0; }
+  .note { text-align: center; color: var(--muted); font-size: 16px; margin: 4px 0 24px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>⚡ จดค่าไฟบ้าน</h1>
+
+  <section class="card">
+    <h2>บันทึกค่าไฟ</h2>
+    <label for="month">เดือน</label>
+    <input type="month" id="month">
+    <label for="units">จำนวนหน่วยไฟ (หน่วย)</label>
+    <input type="number" id="units" inputmode="decimal" min="0" step="any" placeholder="เช่น 350">
+    <label for="amount">ยอดเงิน (บาท)</label>
+    <input type="number" id="amount" inputmode="decimal" min="0" step="any" placeholder="เช่น 1500">
+    <button class="save" id="save">บันทึก</button>
+    <div class="msg" id="msg"></div>
+  </section>
+
+  <section class="card" id="summary" hidden>
+    <h2>สรุปเดือนล่าสุด</h2>
+    <div id="change"></div>
+    <div class="stats">
+      <div class="stat"><b id="avgLast">-</b><span>บาทต่อหน่วย<br>(เดือนล่าสุด)</span></div>
+      <div class="stat"><b id="avgAll">-</b><span>บาทต่อหน่วย<br>(เฉลี่ยทุกเดือน)</span></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>กราฟค่าไฟรายเดือน (บาท)</h2>
+    <div id="chartBox"></div>
+  </section>
+
+  <section class="card">
+    <h2>รายการที่บันทึก</h2>
+    <div id="list"></div>
+  </section>
+
+  <p class="note">ข้อมูลเก็บไว้ในเครื่องนี้เท่านั้น (ถ้าล้างข้อมูลเบราว์เซอร์ ข้อมูลจะหาย)</p>
+</main>
+
+<script>
+(function () {
+  var KEY = "electric-bills-v1";
+  var WARN_PERCENT = 20; // ขึ้นตั้งแต่ค่านี้ = เตือนสีแดง
+  var MONTHS = ["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
+  var $ = function (id) { return document.getElementById(id); };
+
+  function load() {
+    try {
+      var d = JSON.parse(localStorage.getItem(KEY));
+      return Array.isArray(d) ? d : [];
+    } catch (e) { return []; }
+  }
+  function store(d) {
+    try { localStorage.setItem(KEY, JSON.stringify(d)); return true; }
+    catch (e) { return false; }
+  }
+
+  var data = load();
+
+  function label(ym, short) {
+    var p = ym.split("-");
+    var y = (+p[0]) + 543;
+    return MONTHS[+p[1] - 1] + " " + (short ? String(y).slice(-2) : y);
+  }
+  function fmt(n, dec) {
+    return Number(n).toLocaleString("th-TH", { minimumFractionDigits: dec || 0, maximumFractionDigits: dec == null ? 2 : dec });
+  }
+  function sorted() {
+    return data.slice().sort(function (a, b) { return a.month < b.month ? -1 : 1; });
+  }
+  function msg(text, cls) {
+    var m = $("msg");
+    m.textContent = text;
+    m.className = "msg " + (cls || "");
+  }
+
+  function now() {
+    var d = new Date();
+    return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0");
+  }
+
+  function save() {
+    var month = $("month").value;
+    var units = parseFloat($("units").value);
+    var amount = parseFloat($("amount").value);
+    if (!month) return msg("กรุณาเลือกเดือน", "err");
+    if (!(units > 0)) return msg("กรุณากรอกจำนวนหน่วยไฟ", "err");
+    if (!(amount > 0)) return msg("กรุณากรอกยอดเงิน", "err");
+
+    var existing = data.filter(function (r) { return r.month === month; })[0];
+    if (existing) { existing.units = units; existing.amount = amount; }
+    else data.push({ month: month, units: units, amount: amount });
+
+    if (!store(data)) return msg("บันทึกไม่ได้ (เบราว์เซอร์ไม่อนุญาตให้เก็บข้อมูล)", "err");
+    msg(existing ? "แก้ไขข้อมูลเดือน " + label(month) + " แล้ว" : "บันทึกเรียบร้อย", "ok");
+    $("units").value = "";
+    $("amount").value = "";
+    render();
+  }
+
+  function remove(month) {
+    if (!confirm("ลบรายการเดือน " + label(month) + " ใช่ไหม?")) return;
+    data = data.filter(function (r) { return r.month !== month; });
+    store(data);
+    msg("");
+    render();
+  }
+
+  function renderSummary(rows) {
+    var box = $("summary");
+    if (!rows.length) { box.hidden = true; return; }
+    box.hidden = false;
+    var last = rows[rows.length - 1];
+    var prev = rows[rows.length - 2];
+    var html;
+    if (!prev) {
+      html = '<div class="alert same">' + label(last.month) + ': ' + fmt(last.amount) + ' บาท<small>ยังไม่มีเดือนก่อนให้เทียบ</small></div>';
+    } else {
+      var pct = (last.amount - prev.amount) / prev.amount * 100;
+      var diff = last.amount - prev.amount;
+      var abs = fmt(Math.abs(pct), 1);
+      var cls, title, sub;
+      if (Math.abs(pct) < 0.05) {
+        cls = "same"; title = "เท่าเดือนก่อน";
+      } else if (pct > 0) {
+        if (pct >= WARN_PERCENT) { cls = "up-big"; title = "⚠️ ค่าไฟขึ้น " + abs + "%"; }
+        else { cls = "up"; title = "▲ ค่าไฟขึ้น " + abs + "%"; }
+      } else {
+        cls = "down"; title = "▼ ค่าไฟลดลง " + abs + "%";
+      }
+      sub = "เทียบ " + label(prev.month) + " (" + fmt(prev.amount) + " บาท) → " + label(last.month) + " (" + fmt(last.amount) + " บาท)";
+      if (diff) sub += (diff > 0 ? " จ่ายเพิ่ม " : " จ่ายน้อยลง ") + fmt(Math.abs(diff)) + " บาท";
+      if (cls === "up-big") sub += " — ใช้ไฟเยอะผิดปกติ ลองตรวจเครื่องใช้ไฟฟ้า";
+      html = '<div class="alert ' + cls + '">' + title + '<small>' + sub + '</small></div>';
+    }
+    $("change").innerHTML = html;
+
+    var totalAmt = 0, totalUnits = 0;
+    rows.forEach(function (r) { totalAmt += r.amount; totalUnits += r.units; });
+    $("avgLast").textContent = fmt(last.amount / last.units, 2);
+    $("avgAll").textContent = fmt(totalAmt / totalUnits, 2);
+  }
+
+  function renderChart(rows) {
+    var box = $("chartBox");
+    if (!rows.length) { box.innerHTML = '<div class="empty">ยังไม่มีข้อมูล</div>'; return; }
+    var shown = rows.slice(-12);
+    var max = Math.max.apply(null, shown.map(function (r) { return r.amount; }));
+    var cols = "", axis = "";
+    shown.forEach(function (r, i) {
+      var idx = rows.length - shown.length + i;
+      var prev = rows[idx - 1];
+      var spike = prev && (r.amount - prev.amount) / prev.amount * 100 >= WARN_PERCENT;
+      var h = Math.max(2, r.amount / max * 170);
+      var cls = "col" + (idx === rows.length - 1 ? " last" : "") + (spike ? " spike" : "");
+      cols += '<div class="' + cls + '"><span class="val">' + fmt(r.amount) + '</span><div class="bar" style="height:' + h + 'px"></div></div>';
+      axis += '<div>' + label(r.month, true) + '</div>';
+    });
+    box.innerHTML = '<div class="chart-wrap"><div class="chart">' + cols + '</div><div class="axis">' + axis + '</div></div>' +
+      '<div class="note" style="margin:8px 0 0">แท่งสีแดง = ขึ้นเกิน ' + WARN_PERCENT + '% จากเดือนก่อน' + (rows.length > 12 ? ' · แสดง 12 เดือนล่าสุด' : '') + '</div>';
+    var wrap = box.querySelector(".chart-wrap");
+    wrap.scrollLeft = wrap.scrollWidth;
+  }
+
+  function renderList(rows) {
+    var el = $("list");
+    if (!rows.length) { el.innerHTML = '<div class="empty">ยังไม่มีรายการ<br>กรอกข้อมูลด้านบนแล้วกดบันทึก</div>'; return; }
+    el.innerHTML = "";
+    rows.slice().reverse().forEach(function (r) {
+      var div = document.createElement("div");
+      div.className = "item";
+      var info = document.createElement("div");
+      info.className = "info";
+      info.innerHTML = '<div class="m"></div><div class="d"></div>';
+      info.firstChild.textContent = label(r.month) + " · " + fmt(r.amount) + " บาท";
+      info.lastChild.textContent = fmt(r.units) + " หน่วย · เฉลี่ย " + fmt(r.amount / r.units, 2) + " บาท/หน่วย";
+      var btn = document.createElement("button");
+      btn.className = "del";
+      btn.textContent = "ลบ";
+      btn.addEventListener("click", function () { remove(r.month); });
+      div.appendChild(info);
+      div.appendChild(btn);
+      el.appendChild(div);
+    });
+  }
+
+  function render() {
+    var rows = sorted();
+    renderSummary(rows);
+    renderChart(rows);
+    renderList(rows);
+  }
+
+  $("month").value = now();
+  $("save").addEventListener("click", save);
+  render();
+})();
+</script>
+</body>
+</html>
