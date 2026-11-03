@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Word Game">
+<title>ทายคำศัพท์ Word Game</title>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; -webkit-user-select: none; user-select: none; }
+  html, body { margin: 0; height: 100%; overflow: hidden; touch-action: manipulation; }
+  body {
+    font-family: "Baloo 2", "Chalkboard SE", "Comic Sans MS", "Marker Felt", "Thonburi", system-ui, sans-serif;
+    background: linear-gradient(160deg, #8fd3ff 0%, #c5b3ff 50%, #ffc1e3 100%);
+    color: #3a2a6b;
+  }
+  .screen {
+    position: absolute; inset: 0; display: none; flex-direction: column; align-items: center;
+    justify-content: center; padding: max(16px, env(safe-area-inset-top)) 20px max(16px, env(safe-area-inset-bottom));
+    gap: 2.2vmin; text-align: center;
+  }
+  .screen.active { display: flex; }
+  h1 { font-size: clamp(40px, 8vmin, 84px); margin: 0; line-height: 1.1; text-shadow: 0 4px 0 #fff; }
+  .sub { font-size: clamp(20px, 3.4vmin, 34px); margin: 0; font-weight: bold; }
+
+  button { font-family: inherit; border: 0; cursor: pointer; color: inherit; }
+  button:active { transform: scale(0.95); }
+
+  /* Home */
+  .cats { display: flex; gap: 3vmin; flex-wrap: wrap; justify-content: center; width: 100%; max-width: 1000px; }
+  .cat {
+    flex: 1 1 240px; max-width: 300px; min-height: 30vmin; border-radius: 40px;
+    font-size: clamp(32px, 5.4vmin, 56px); font-weight: 800; color: #fff;
+    box-shadow: 0 10px 0 rgba(0,0,0,.18); display: flex; flex-direction: column; align-items: center;
+    justify-content: center; gap: 4px; padding: 16px;
+  }
+  .cat .em { font-size: clamp(64px, 12vmin, 120px); line-height: 1; }
+  .cat small { font-size: clamp(20px, 3.2vmin, 32px); font-weight: 700; opacity: .95; }
+  .cat.animals { background: #ff9a3c; }
+  .cat.fruits  { background: #ff5d7a; }
+  .cat.colors  { background: #3cb6ff; }
+
+  /* Game */
+  .top { width: 100%; max-width: 1000px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .pill {
+    background: #fff; border-radius: 999px; padding: 8px 22px; font-size: clamp(22px, 3.6vmin, 36px);
+    font-weight: 800; box-shadow: 0 5px 0 rgba(0,0,0,.12); white-space: nowrap;
+  }
+  .home-btn { background: #fff; border-radius: 999px; padding: 8px 22px; font-size: clamp(22px, 3.6vmin, 36px); font-weight: 800; box-shadow: 0 5px 0 rgba(0,0,0,.12); }
+  .bar { flex: 1; height: 3.2vmin; min-height: 18px; background: rgba(255,255,255,.6); border-radius: 999px; overflow: hidden; }
+  .bar > div { height: 100%; width: 0; background: linear-gradient(90deg, #ffd23c, #ff8a3c); border-radius: 999px; transition: width .4s; }
+
+  .picture {
+    background: #fff; border-radius: 60px; box-shadow: 0 12px 0 rgba(0,0,0,.14);
+    width: min(52vmin, 440px); height: min(52vmin, 440px); display: flex; align-items: center; justify-content: center;
+    font-size: min(34vmin, 280px); line-height: 1; flex-shrink: 0;
+  }
+  .picture .swatch { width: 70%; height: 70%; border-radius: 50%; border: 6px solid rgba(0,0,0,.12); }
+  .picture.pop { animation: pop .5s; }
+  @keyframes pop { 0% { transform: scale(.6) rotate(-6deg); } 60% { transform: scale(1.08) rotate(3deg); } 100% { transform: scale(1); } }
+  .picture.hop { animation: hop .6s; }
+  @keyframes hop { 0%,100% { transform: translateY(0); } 40% { transform: translateY(-5vmin) scale(1.05); } }
+
+  .question { font-size: clamp(22px, 3.6vmin, 36px); font-weight: 800; margin: 0; }
+  .options { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2.6vmin; width: 100%; max-width: 1000px; }
+  .opt {
+    min-height: 17vmin; border-radius: 36px; background: #fff; color: #3a2a6b;
+    font-size: clamp(32px, 6.4vmin, 68px); font-weight: 800; box-shadow: 0 9px 0 rgba(0,0,0,.16);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.1; padding: 8px;
+  }
+  .opt small { font-size: clamp(18px, 2.8vmin, 28px); font-weight: 700; color: #7a6aa8; margin-top: 4px; }
+  .opt:nth-child(1) { background: #fff3b0; }
+  .opt:nth-child(2) { background: #c9f2c7; }
+  .opt:nth-child(3) { background: #ffd6e8; }
+  .opt.correct { background: #4cd964 !important; color: #fff; animation: pop .5s; }
+  .opt.correct small { color: #fff; }
+  .opt.wrong { background: #e4e4ee !important; color: #9a96b0; animation: shake .45s; box-shadow: 0 4px 0 rgba(0,0,0,.1); }
+  .opt.wrong small { color: #aaa8be; }
+  .opt:disabled { cursor: default; }
+  @keyframes shake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-10px); } 75% { transform: translateX(10px); } }
+
+  .msg { min-height: 1.3em; font-size: clamp(26px, 4.6vmin, 48px); font-weight: 800; margin: 0; }
+
+  /* Stars */
+  .fx { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 50; }
+  .star { position: absolute; font-size: 9vmin; animation: fly 1.4s ease-out forwards; }
+  @keyframes fly {
+    0% { transform: translate(0, 0) scale(.2) rotate(0); opacity: 1; }
+    30% { transform: translate(calc(var(--dx) * .6), calc(var(--dy) * .6 - 6vmin)) scale(1.3) rotate(120deg); opacity: 1; }
+    100% { transform: translate(var(--dx), calc(var(--dy) + 14vmin)) scale(.8) rotate(360deg); opacity: 0; }
+  }
+  .fall { position: absolute; top: -10vmin; font-size: 7vmin; animation: fall linear forwards; }
+  @keyframes fall { to { transform: translateY(120vh) rotate(540deg); } }
+
+  /* Result */
+  .big-em { font-size: clamp(90px, 20vmin, 200px); line-height: 1; animation: hop 1.2s infinite; }
+  .score-big { font-size: clamp(48px, 10vmin, 100px); font-weight: 800; color: #fff; text-shadow: 0 5px 0 rgba(0,0,0,.18); }
+  .stars-row { font-size: clamp(30px, 6vmin, 60px); letter-spacing: 4px; max-width: 90vw; }
+  .btn-row { display: flex; gap: 3vmin; flex-wrap: wrap; justify-content: center; }
+  .big-btn {
+    border-radius: 999px; padding: 2.4vmin 5vmin; font-size: clamp(26px, 4.6vmin, 46px); font-weight: 800;
+    color: #fff; box-shadow: 0 8px 0 rgba(0,0,0,.18);
+  }
+  .big-btn.green { background: #34c759; }
+  .big-btn.blue { background: #3c8bff; }
+
+  @media (max-width: 640px) {
+    .options { grid-template-columns: 1fr; }
+    .opt { min-height: 13vmin; }
+    .picture { width: 44vmin; height: 44vmin; font-size: 28vmin; }
+  }
+</style>
+</head>
+<body>
+
+<!-- หน้าหลัก -->
+<div id="home" class="screen active">
+  <h1>🌈 ทายคำศัพท์ 🌈</h1>
+  <p class="sub">Word Game • เลือกหมวดที่อยากเล่น</p>
+  <div class="cats">
+    <button class="cat animals" data-cat="animals"><span class="em">🐶</span>Animals<small>สัตว์</small></button>
+    <button class="cat fruits" data-cat="fruits"><span class="em">🍎</span>Fruits<small>ผลไม้</small></button>
+    <button class="cat colors" data-cat="colors"><span class="em">🎨</span>Colors<small>สี</small></button>
+  </div>
+</div>
+
+<!-- หน้าเล่น -->
+<div id="game" class="screen">
+  <div class="top">
+    <button class="home-btn" id="btnHome">🏠</button>
+    <div class="bar"><div id="barFill"></div></div>
+    <div class="pill">⭐ <span id="score">0</span></div>
+  </div>
+  <div class="picture" id="picture"></div>
+  <p class="question" id="question">นี่คืออะไร? What is this?</p>
+  <div class="options" id="options"></div>
+  <p class="msg" id="msg"></p>
+</div>
+
+<!-- หน้าสรุป -->
+<div id="result" class="screen">
+  <div class="big-em">🏆</div>
+  <h1>เก่งมาก! Great job!</h1>
+  <div class="score-big"><span id="finalScore">0</span> / 10</div>
+  <div class="stars-row" id="starsRow"></div>
+  <p class="sub" id="resultMsg"></p>
+  <div class="btn-row">
+    <button class="big-btn green" id="btnAgain">🔄 เล่นอีกครั้ง</button>
+    <button class="big-btn blue" id="btnMenu">🏠 เลือกหมวด</button>
+  </div>
+</div>
+
+<div class="fx" id="fx"></div>
+
+<script>
+(function () {
+  "use strict";
+
+  // ---------- ข้อมูลคำศัพท์ ----------
+  // v = อีโมจิ หรือ c = รหัสสี (สำหรับหมวดสี)
+  const DATA = {
+    animals: [
+      { w: "dog", th: "หมา", v: "🐶" }, { w: "cat", th: "แมว", v: "🐱" },
+      { w: "rabbit", th: "กระต่าย", v: "🐰" }, { w: "bear", th: "หมี", v: "🐻" },
+      { w: "monkey", th: "ลิง", v: "🐵" }, { w: "lion", th: "สิงโต", v: "🦁" },
+      { w: "tiger", th: "เสือ", v: "🐯" }, { w: "elephant", th: "ช้าง", v: "🐘" },
+      { w: "pig", th: "หมู", v: "🐷" }, { w: "cow", th: "วัว", v: "🐮" },
+      { w: "frog", th: "กบ", v: "🐸" }, { w: "fish", th: "ปลา", v: "🐟" },
+      { w: "bird", th: "นก", v: "🐦" }, { w: "duck", th: "เป็ด", v: "🦆" },
+      { w: "horse", th: "ม้า", v: "🐴" }, { w: "butterfly", th: "ผีเสื้อ", v: "🦋" }
+    ],
+    fruits: [
+      { w: "apple", th: "แอปเปิล", v: "🍎" }, { w: "banana", th: "กล้วย", v: "🍌" },
+      { w: "orange", th: "ส้ม", v: "🍊" }, { w: "grapes", th: "องุ่น", v: "🍇" },
+      { w: "strawberry", th: "สตรอว์เบอร์รี", v: "🍓" }, { w: "watermelon", th: "แตงโม", v: "🍉" },
+      { w: "pineapple", th: "สับปะรด", v: "🍍" }, { w: "mango", th: "มะม่วง", v: "🥭" },
+      { w: "pear", th: "ลูกแพร์", v: "🍐" }, { w: "peach", th: "ลูกพีช", v: "🍑" },
+      { w: "cherry", th: "เชอร์รี", v: "🍒" }, { w: "lemon", th: "มะนาว", v: "🍋" },
+      { w: "coconut", th: "มะพร้าว", v: "🥥" }, { w: "kiwi", th: "กีวี", v: "🥝" }
+    ],
+    colors: [
+      { w: "red", th: "สีแดง", c: "#ff3b30" }, { w: "blue", th: "สีน้ำเงิน", c: "#1e6bff" },
+      { w: "yellow", th: "สีเหลือง", c: "#ffd60a" }, { w: "green", th: "สีเขียว", c: "#34c759" },
+      { w: "orange", th: "สีส้ม", c: "#ff9500" }, { w: "purple", th: "สีม่วง", c: "#9b51e0" },
+      { w: "pink", th: "สีชมพู", c: "#ff7eb6" }, { w: "black", th: "สีดำ", c: "#1c1c1e" },
+      { w: "white", th: "สีขาว", c: "#ffffff" }, { w: "brown", th: "สีน้ำตาล", c: "#8b5a2b" }
+    ]
+  };
+  const TOTAL = 10;
+  const PRAISE = ["Great job!", "Awesome!", "Super!", "Well done!", "Yay! You did it!", "Amazing!"];
+  const PRAISE_TH = ["เก่งมาก!", "สุดยอด!", "ยอดเยี่ยม!", "เก่งจัง!", "ถูกต้อง!"];
+  const TRY_TH = ["ลองอีกครั้งนะ 😊", "เกือบแล้ว ลองใหม่นะ 💪", "ไม่เป็นไร ลองอีกที 🌈"];
+
+  const $ = (id) => document.getElementById(id);
+  const screens = { home: $("home"), game: $("game"), result: $("result") };
+  function show(name) { Object.keys(screens).forEach(k => screens[k].classList.toggle("active", k === name)); }
+
+  // ---------- เสียง ----------
+  let actx = null;
+  function unlockAudio() {
+    try {
+      if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
+      if (actx.state === "suspended") actx.resume();
+    } catch (e) {}
+  }
+  function tone(freq, start, dur, type, vol) {
+    if (!actx) return;
+    const t0 = actx.currentTime + start;
+    const o = actx.createOscillator(), g = actx.createGain();
+    o.type = type || "sine"; o.frequency.setValueAtTime(freq, t0);
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(vol || 0.25, t0 + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    o.connect(g); g.connect(actx.destination);
+    o.start(t0); o.stop(t0 + dur + 0.05);
+  }
+  function soundCorrect() { [523, 659, 784, 1047].forEach((f, i) => tone(f, i * 0.09, 0.28, "triangle", 0.28)); }
+  function soundWrong() { tone(330, 0, 0.18, "sine", 0.2); tone(262, 0.16, 0.28, "sine", 0.2); }
+  function soundFanfare() { [523, 659, 784, 659, 784, 1047].forEach((f, i) => tone(f, i * 0.14, 0.3, "triangle", 0.28)); }
+
+  let voice = null;
+  function pickVoice() {
+    if (!("speechSynthesis" in window)) return;
+    const vs = speechSynthesis.getVoices().filter(v => /^en[-_]US/i.test(v.lang));
+    voice = vs.find(v => /samantha|ava|allison|nicky|karen|zoe/i.test(v.name)) || vs[0] ||
+            speechSynthesis.getVoices().find(v => /^en/i.test(v.lang)) || null;
+  }
+  if ("speechSynthesis" in window) {
+    pickVoice();
+    speechSynthesis.onvoiceschanged = pickVoice;
+  }
+  // คิวพูด: ใช้ speak(text) หลายครั้งต่อเนื่อง, speak(text, true) เพื่อล้างคิวก่อน
+  function speak(text, clear, rate) {
+    if (!("speechSynthesis" in window)) return;
+    if (clear) speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = "en-US";
+    if (voice) u.voice = voice;
+    u.rate = rate || 0.8;
+    u.pitch = 1.1;
+    speechSynthesis.speak(u);
+  }
+
+  // ---------- เอฟเฟกต์ ----------
+  function burstStars(el) {
+    const fx = $("fx");
+    const r = el.getBoundingClientRect();
+    const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+    for (let i = 0; i < 12; i++) {
+      const s = document.createElement("div");
+      s.className = "star";
+      s.textContent = i % 3 === 0 ? "✨" : "⭐";
+      s.style.left = cx + "px"; s.style.top = cy + "px";
+      s.style.setProperty("--dx", (Math.random() * 60 - 30) + "vmin");
+      s.style.setProperty("--dy", (-Math.random() * 30) + "vmin");
+      s.style.animationDelay = (Math.random() * 0.15) + "s";
+      fx.appendChild(s);
+      setTimeout(() => s.remove(), 1800);
+    }
+  }
+  function confetti() {
+    const fx = $("fx"), icons = ["⭐", "🎉", "✨", "🎈", "🌟", "💖"];
+    for (let i = 0; i < 40; i++) {
+      const s = document.createElement("div");
+      s.className = "fall";
+      s.textContent = icons[i % icons.length];
+      s.style.left = Math.random() * 95 + "vw";
+      s.style.animationDuration = (2.5 + Math.random() * 2.5) + "s";
+      s.style.animationDelay = (Math.random() * 1.5) + "s";
+      fx.appendChild(s);
+      setTimeout(() => s.remove(), 6500);
+    }
+  }
+
+  // ---------- ตรรกะเกม ----------
+  let cat = null, questions = [], idx = 0, score = 0, locked = false, missed = false, timer = null;
+
+  function shuffle(a) {
+    a = a.slice();
+    for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+    return a;
+  }
+
+  function startGame(c) {
+    cat = c;
+    const pool = DATA[c];
+    // เลือก 10 ข้อ (ถ้าคำไม่พอ 10 ให้วนซ้ำเติม)
+    let picks = shuffle(pool);
+    while (picks.length < TOTAL) picks = picks.concat(shuffle(pool));
+    questions = picks.slice(0, TOTAL).map(item => {
+      const others = shuffle(pool.filter(p => p.w !== item.w)).slice(0, 2);
+      return { item, options: shuffle([item, ...others]) };
+    });
+    idx = 0; score = 0;
+    $("score").textContent = "0";
+    show("game");
+    showQuestion();
+  }
+
+  function showQuestion() {
+    clearTimeout(timer);
+    locked = false; missed = false;
+    const q = questions[idx];
+    $("barFill").style.width = (idx / TOTAL * 100) + "%";
+    $("msg").textContent = "";
+
+    const pic = $("picture");
+    pic.innerHTML = "";
+    if (q.item.c) {
+      const sw = document.createElement("div");
+      sw.className = "swatch"; sw.style.background = q.item.c;
+      pic.appendChild(sw);
+    } else {
+      pic.textContent = q.item.v;
+    }
+    pic.classList.remove("pop"); void pic.offsetWidth; pic.classList.add("pop");
+
+    const box = $("options");
+    box.innerHTML = "";
+    q.options.forEach(opt => {
+      const b = document.createElement("button");
+      b.className = "opt";
+      b.innerHTML = opt.w + "<small>" + opt.th + "</small>";
+      b.addEventListener("click", () => choose(b, opt));
+      box.appendChild(b);
+    });
+  }
+
+  function choose(btn, opt) {
+    if (locked || btn.classList.contains("wrong")) return;
+    unlockAudio();
+    const q = questions[idx];
+    if (opt.w === q.item.w) {
+      locked = true;
+      btn.classList.add("correct");
+      if (!missed) { score++; $("score").textContent = score; }
+      $("barFill").style.width = ((idx + 1) / TOTAL * 100) + "%";
+      const k = Math.floor(Math.random() * PRAISE.length);
+      $("msg").textContent = "🎉 " + PRAISE_TH[k % PRAISE_TH.length] + " " + PRAISE[k];
+      soundCorrect();
+      burstStars(btn);
+      speak(opt.w, true);
+      speak(PRAISE[k]);
+      timer = setTimeout(next, 2300);
+    } else {
+      missed = true;
+      btn.classList.add("wrong");
+      btn.disabled = true;
+      $("msg").textContent = TRY_TH[Math.floor(Math.random() * TRY_TH.length)];
+      soundWrong();
+      speak(opt.w, true);
+      speak("Try again!");
+    }
+  }
+
+  function next() {
+    idx++;
+    if (idx >= TOTAL) finish(); else showQuestion();
+  }
+
+  function finish() {
+    $("finalScore").textContent = score;
+    let stars = "";
+    for (let i = 0; i < TOTAL; i++) stars += i < score ? "⭐" : "☆";
+    $("starsRow").textContent = stars;
+    $("resultMsg").textContent =
+      score >= 9 ? "สุดยอดไปเลย! Perfect!" :
+      score >= 6 ? "เก่งมากเลย! Very good!" :
+                   "เยี่ยมมาก! ลองเล่นอีกครั้งนะ Keep going!";
+    show("result");
+    soundFanfare();
+    confetti();
+    speak("Great job! You got " + score + " out of 10!", true);
+  }
+
+  // ---------- ปุ่มต่างๆ ----------
+  document.querySelectorAll(".cat").forEach(b => b.addEventListener("click", () => {
+    unlockAudio();
+    // ปลุกระบบเสียงพูดบน iOS ด้วยการกดครั้งแรก
+    speak(b.dataset.cat === "animals" ? "Animals" : b.dataset.cat === "fruits" ? "Fruits" : "Colors", true);
+    startGame(b.dataset.cat);
+  }));
+  $("picture").addEventListener("click", () => {
+    unlockAudio();
+    const p = $("picture");
+    p.classList.remove("hop"); void p.offsetWidth; p.classList.add("hop");
+    speak("What is this?", true);
+  });
+  $("btnHome").addEventListener("click", () => {
+    clearTimeout(timer);
+    if ("speechSynthesis" in window) speechSynthesis.cancel();
+    show("home");
+  });
+  $("btnAgain").addEventListener("click", () => { unlockAudio(); $("fx").innerHTML = ""; startGame(cat); });
+  $("btnMenu").addEventListener("click", () => { $("fx").innerHTML = ""; show("home"); });
+
+  // กันซูมสองนิ้ว/ดับเบิลแตะบน Safari
+  document.addEventListener("gesturestart", e => e.preventDefault());
+  document.addEventListener("dblclick", e => e.preventDefault());
+})();
+</script>
+</body>
+</html>
