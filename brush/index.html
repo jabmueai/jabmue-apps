@@ -1,0 +1,479 @@
+<!DOCTYPE html><html lang="th"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>นาฬิกาแปรงฟันหรรษา 🪥✨</title>
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Canvas Confetti for victory celebration -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js" crossorigin="anonymous"></script>
+    <!-- Google Fonts for Thai Kid-friendly font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+    <link href="https://fonts.googleapis.com/css2?family=Mali:wght@500;700;800&amp;display=swap" rel="stylesheet">
+    <style>
+        * {
+            font-family: 'Mali', cursive, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+        
+        /* Custom animations for child engagement */
+        @keyframes bounce-slow {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        @keyframes pulse-ring {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 182, 193, 0.7); }
+            70% { transform: scale(1.02); box-shadow: 0 0 0 20px rgba(255, 182, 193, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 182, 193, 0); }
+        }
+
+        .animate-bounce-slow {
+            animation: bounce-slow 2s infinite ease-in-out;
+        }
+
+        .animate-pulse-ring {
+            animation: pulse-ring 2s infinite;
+        }
+
+        /* SVG Mouth Highlight Animation */
+        .teeth-highlight {
+            transition: all 0.5s ease;
+        }
+        .active-zone {
+            fill: #FFD700 !important;
+            filter: drop-shadow(0px 0px 8px #FF9900);
+            animation: pulse-ring 1s infinite;
+        }
+    </style>
+<style>*, ::before, ::after{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }::backdrop{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }/* ! tailwindcss v3.4.17 | MIT License | https://tailwindcss.com */*,::after,::before{box-sizing:border-box;border-width:0;border-style:solid;border-color:#e5e7eb}::after,::before{--tw-content:''}:host,html{line-height:1.5;-webkit-text-size-adjust:100%;-moz-tab-size:4;tab-size:4;font-family:ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";font-feature-settings:normal;font-variation-settings:normal;-webkit-tap-highlight-color:transparent}body{margin:0;line-height:inherit}hr{height:0;color:inherit;border-top-width:1px}abbr:where([title]){-webkit-text-decoration:underline dotted;text-decoration:underline dotted}h1,h2,h3,h4,h5,h6{font-size:inherit;font-weight:inherit}a{color:inherit;text-decoration:inherit}b,strong{font-weight:bolder}code,kbd,pre,samp{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;font-feature-settings:normal;font-variation-settings:normal;font-size:1em}small{font-size:80%}sub,sup{font-size:75%;line-height:0;position:relative;vertical-align:baseline}sub{bottom:-.25em}sup{top:-.5em}table{text-indent:0;border-color:inherit;border-collapse:collapse}button,input,optgroup,select,textarea{font-family:inherit;font-feature-settings:inherit;font-variation-settings:inherit;font-size:100%;font-weight:inherit;line-height:inherit;letter-spacing:inherit;color:inherit;margin:0;padding:0}button,select{text-transform:none}button,input:where([type=button]),input:where([type=reset]),input:where([type=submit]){-webkit-appearance:button;background-color:transparent;background-image:none}:-moz-focusring{outline:auto}:-moz-ui-invalid{box-shadow:none}progress{vertical-align:baseline}::-webkit-inner-spin-button,::-webkit-outer-spin-button{height:auto}[type=search]{-webkit-appearance:textfield;outline-offset:-2px}::-webkit-search-decoration{-webkit-appearance:none}::-webkit-file-upload-button{-webkit-appearance:button;font:inherit}summary{display:list-item}blockquote,dd,dl,figure,h1,h2,h3,h4,h5,h6,hr,p,pre{margin:0}fieldset{margin:0;padding:0}legend{padding:0}menu,ol,ul{list-style:none;margin:0;padding:0}dialog{padding:0}textarea{resize:vertical}input::placeholder,textarea::placeholder{opacity:1;color:#9ca3af}[role=button],button{cursor:pointer}:disabled{cursor:default}audio,canvas,embed,iframe,img,object,svg,video{display:block;vertical-align:middle}img,video{max-width:100%;height:auto}[hidden]:where(:not([hidden=until-found])){display:none}.pointer-events-none{pointer-events:none}.fixed{position:fixed}.absolute{position:absolute}.relative{position:relative}.inset-0{inset:0px}.z-50{z-index:50}.mx-auto{margin-left:auto;margin-right:auto}.my-1{margin-top:0.25rem;margin-bottom:0.25rem}.my-2{margin-top:0.5rem;margin-bottom:0.5rem}.my-auto{margin-top:auto;margin-bottom:auto}.mb-3{margin-bottom:0.75rem}.mt-2{margin-top:0.5rem}.mt-3{margin-top:0.75rem}.flex{display:flex}.grid{display:grid}.hidden{display:none}.h-48{height:12rem}.h-6{height:1.5rem}.h-full{height:100%}.min-h-screen{min-height:100vh}.w-0{width:0px}.w-48{width:12rem}.w-full{width:100%}.max-w-md{max-width:28rem}.max-w-sm{max-width:24rem}.grid-cols-4{grid-template-columns:repeat(4, minmax(0, 1fr))}.flex-col{flex-direction:column}.items-center{align-items:center}.justify-center{justify-content:center}.justify-between{justify-content:space-between}.gap-1{gap:0.25rem}.gap-1\.5{gap:0.375rem}.gap-2{gap:0.5rem}.gap-3{gap:0.75rem}.gap-4{gap:1rem}.overflow-hidden{overflow:hidden}.overflow-x-hidden{overflow-x:hidden}.rounded-2xl{border-radius:1rem}.rounded-3xl{border-radius:1.5rem}.rounded-full{border-radius:9999px}.rounded-xl{border-radius:0.75rem}.border{border-width:1px}.border-2{border-width:2px}.border-4{border-width:4px}.border-b-4{border-bottom-width:4px}.border-b-8{border-bottom-width:8px}.border-amber-200{--tw-border-opacity:1;border-color:rgb(253 230 138 / var(--tw-border-opacity, 1))}.border-amber-300{--tw-border-opacity:1;border-color:rgb(252 211 77 / var(--tw-border-opacity, 1))}.border-emerald-700{--tw-border-opacity:1;border-color:rgb(4 120 87 / var(--tw-border-opacity, 1))}.border-pink-300{--tw-border-opacity:1;border-color:rgb(249 168 212 / var(--tw-border-opacity, 1))}.border-sky-700{--tw-border-opacity:1;border-color:rgb(3 105 161 / var(--tw-border-opacity, 1))}.border-slate-200{--tw-border-opacity:1;border-color:rgb(226 232 240 / var(--tw-border-opacity, 1))}.border-white{--tw-border-opacity:1;border-color:rgb(255 255 255 / var(--tw-border-opacity, 1))}.border-yellow-300{--tw-border-opacity:1;border-color:rgb(253 224 71 / var(--tw-border-opacity, 1))}.bg-amber-100{--tw-bg-opacity:1;background-color:rgb(254 243 199 / var(--tw-bg-opacity, 1))}.bg-amber-50{--tw-bg-opacity:1;background-color:rgb(255 251 235 / var(--tw-bg-opacity, 1))}.bg-black\/60{background-color:rgb(0 0 0 / 0.6)}.bg-sky-400{--tw-bg-opacity:1;background-color:rgb(56 189 248 / var(--tw-bg-opacity, 1))}.bg-slate-100{--tw-bg-opacity:1;background-color:rgb(241 245 249 / var(--tw-bg-opacity, 1))}.bg-white{--tw-bg-opacity:1;background-color:rgb(255 255 255 / var(--tw-bg-opacity, 1))}.bg-white\/80{background-color:rgb(255 255 255 / 0.8)}.bg-gradient-to-b{background-image:linear-gradient(to bottom, var(--tw-gradient-stops))}.bg-gradient-to-r{background-image:linear-gradient(to right, var(--tw-gradient-stops))}.from-emerald-400{--tw-gradient-from:#34d399 var(--tw-gradient-from-position);--tw-gradient-to:rgb(52 211 153 / 0) var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from), var(--tw-gradient-to)}.from-sky-300{--tw-gradient-from:#7dd3fc var(--tw-gradient-from-position);--tw-gradient-to:rgb(125 211 252 / 0) var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from), var(--tw-gradient-to)}.from-sky-400{--tw-gradient-from:#38bdf8 var(--tw-gradient-from-position);--tw-gradient-to:rgb(56 189 248 / 0) var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from), var(--tw-gradient-to)}.via-pink-200{--tw-gradient-to:rgb(251 207 232 / 0)  var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from), #fbcfe8 var(--tw-gradient-via-position), var(--tw-gradient-to)}.to-emerald-500{--tw-gradient-to:#10b981 var(--tw-gradient-to-position)}.to-sky-500{--tw-gradient-to:#0ea5e9 var(--tw-gradient-to-position)}.to-teal-500{--tw-gradient-to:#14b8a6 var(--tw-gradient-to-position)}.to-yellow-100{--tw-gradient-to:#fef9c3 var(--tw-gradient-to-position)}.p-0\.5{padding:0.125rem}.p-4{padding:1rem}.p-5{padding:1.25rem}.p-6{padding:1.5rem}.px-3{padding-left:0.75rem;padding-right:0.75rem}.px-4{padding-left:1rem;padding-right:1rem}.px-6{padding-left:1.5rem;padding-right:1.5rem}.py-1{padding-top:0.25rem;padding-bottom:0.25rem}.py-1\.5{padding-top:0.375rem;padding-bottom:0.375rem}.py-2{padding-top:0.5rem;padding-bottom:0.5rem}.py-3{padding-top:0.75rem;padding-bottom:0.75rem}.py-4{padding-top:1rem;padding-bottom:1rem}.py-5{padding-top:1.25rem;padding-bottom:1.25rem}.text-left{text-align:left}.text-center{text-align:center}.text-2xl{font-size:1.5rem;line-height:2rem}.text-3xl{font-size:1.875rem;line-height:2.25rem}.text-5xl{font-size:3rem;line-height:1}.text-6xl{font-size:3.75rem;line-height:1}.text-7xl{font-size:4.5rem;line-height:1}.text-lg{font-size:1.125rem;line-height:1.75rem}.text-xl{font-size:1.25rem;line-height:1.75rem}.text-xs{font-size:0.75rem;line-height:1rem}.font-black{font-weight:900}.font-bold{font-weight:700}.font-extrabold{font-weight:800}.leading-tight{line-height:1.25}.tracking-wide{letter-spacing:0.025em}.tracking-wider{letter-spacing:0.05em}.text-amber-500{--tw-text-opacity:1;color:rgb(245 158 11 / var(--tw-text-opacity, 1))}.text-amber-600{--tw-text-opacity:1;color:rgb(217 119 6 / var(--tw-text-opacity, 1))}.text-amber-700{--tw-text-opacity:1;color:rgb(180 83 9 / var(--tw-text-opacity, 1))}.text-amber-800{--tw-text-opacity:1;color:rgb(146 64 14 / var(--tw-text-opacity, 1))}.text-emerald-600{--tw-text-opacity:1;color:rgb(5 150 105 / var(--tw-text-opacity, 1))}.text-sky-600{--tw-text-opacity:1;color:rgb(2 132 199 / var(--tw-text-opacity, 1))}.text-slate-400{--tw-text-opacity:1;color:rgb(148 163 184 / var(--tw-text-opacity, 1))}.text-slate-600{--tw-text-opacity:1;color:rgb(71 85 105 / var(--tw-text-opacity, 1))}.text-slate-700{--tw-text-opacity:1;color:rgb(51 65 85 / var(--tw-text-opacity, 1))}.text-slate-800{--tw-text-opacity:1;color:rgb(30 41 59 / var(--tw-text-opacity, 1))}.text-white{--tw-text-opacity:1;color:rgb(255 255 255 / var(--tw-text-opacity, 1))}.shadow{--tw-shadow:0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);--tw-shadow-colored:0 1px 3px 0 var(--tw-shadow-color), 0 1px 2px -1px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-2xl{--tw-shadow:0 25px 50px -12px rgb(0 0 0 / 0.25);--tw-shadow-colored:0 25px 50px -12px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-lg{--tw-shadow:0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);--tw-shadow-colored:0 10px 15px -3px var(--tw-shadow-color), 0 4px 6px -4px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-md{--tw-shadow:0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);--tw-shadow-colored:0 4px 6px -1px var(--tw-shadow-color), 0 2px 4px -2px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-xl{--tw-shadow:0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);--tw-shadow-colored:0 20px 25px -5px var(--tw-shadow-color), 0 8px 10px -6px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.drop-shadow-lg{--tw-drop-shadow:drop-shadow(0 10px 8px rgb(0 0 0 / 0.04)) drop-shadow(0 4px 3px rgb(0 0 0 / 0.1));filter:var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale) var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow)}.drop-shadow-md{--tw-drop-shadow:drop-shadow(0 4px 3px rgb(0 0 0 / 0.07)) drop-shadow(0 2px 2px rgb(0 0 0 / 0.06));filter:var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale) var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow)}.filter{filter:var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale) var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow)}.backdrop-blur-md{--tw-backdrop-blur:blur(12px);-webkit-backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia);backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia)}.backdrop-blur-sm{--tw-backdrop-blur:blur(4px);-webkit-backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia);backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia)}.transition{transition-property:color, background-color, border-color, fill, stroke, opacity, box-shadow, transform, filter, -webkit-text-decoration-color, -webkit-backdrop-filter;transition-property:color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;transition-property:color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter, -webkit-text-decoration-color, -webkit-backdrop-filter;transition-timing-function:cubic-bezier(0.4, 0, 0.2, 1);transition-duration:150ms}.transition-all{transition-property:all;transition-timing-function:cubic-bezier(0.4, 0, 0.2, 1);transition-duration:150ms}.duration-300{transition-duration:300ms}.duration-500{transition-duration:500ms}.hover\:bg-slate-50:hover{--tw-bg-opacity:1;background-color:rgb(248 250 252 / var(--tw-bg-opacity, 1))}.hover\:brightness-105:hover{--tw-brightness:brightness(1.05);filter:var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale) var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow)}.active\:scale-95:active{--tw-scale-x:.95;--tw-scale-y:.95;transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}@media (min-width: 640px){.sm\:h-56{height:14rem}.sm\:w-56{width:14rem}.sm\:p-6{padding:1.5rem}.sm\:p-8{padding:2rem}.sm\:text-2xl{font-size:1.5rem;line-height:2rem}.sm\:text-3xl{font-size:1.875rem;line-height:2.25rem}.sm\:text-6xl{font-size:3.75rem;line-height:1}.sm\:text-7xl{font-size:4.5rem;line-height:1}}</style></head>
+<body class="bg-gradient-to-b from-sky-300 via-pink-200 to-yellow-100 min-h-screen flex flex-col justify-between p-4 sm:p-6 overflow-x-hidden">
+
+    <!-- Header & Streak Counter -->
+    <header class="w-full max-w-md mx-auto flex justify-between items-center bg-white/80 backdrop-blur-md p-4 rounded-3xl shadow-lg border-4 border-white">
+        <div class="flex items-center gap-2">
+            <span class="text-3xl">🪥</span>
+            <h1 class="text-xl sm:text-2xl font-extrabold text-sky-600 tracking-wide">แปรงฟันหรรษา</h1>
+        </div>
+        <!-- Days Streak -->
+        <div class="flex items-center gap-1 bg-amber-100 px-3 py-1.5 rounded-2xl border-2 border-amber-300">
+            <span class="text-2xl">⭐</span>
+            <div class="text-left leading-tight">
+                <div class="text-xs text-amber-800 font-bold">สะสมดาว</div>
+                <div class="text-lg font-black text-amber-600"><span id="streak-count">0</span> วัน</div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="w-full max-w-md mx-auto my-auto flex flex-col items-center justify-center gap-4 py-2">
+        
+        <!-- Interactive Teeth Diagram & Zone Banner -->
+        <div class="w-full bg-white rounded-3xl p-5 shadow-xl border-4 border-pink-300 flex flex-col items-center relative overflow-hidden">
+            
+            <!-- Zone Title Header -->
+            <div id="zone-banner" class="w-full bg-sky-400 text-white text-center text-xl sm:text-2xl font-black py-2 px-4 rounded-2xl shadow-md transition-all duration-300 mb-3">เตรียมพร้อมแปรงฟันกันเลย!</div>
+
+            <!-- Tooth Visual Map -->
+            <div class="relative w-48 h-48 sm:w-56 sm:h-56 my-2 flex items-center justify-center">
+                <svg viewBox="0 0 200 200" class="w-full h-full drop-shadow-md">
+                    <!-- Background mouth base -->
+                    <path d="M 30,100 Q 30,20 100,20 Q 170,20 170,100 Q 170,180 100,180 Q 30,180 30,100 Z" fill="#FF8A8A" stroke="#E65151" stroke-width="6"></path>
+                    <path d="M 50,100 Q 50,40 100,40 Q 150,40 150,100 Q 150,160 100,160 Q 50,160 50,100 Z" fill="#6B0D0D"></path>
+
+                    <!-- Upper Left Teeth Arc (Screen Upper Left = Patient Upper Left from viewer perspective) -->
+                    <!-- Top Left Zone ( Quadrant 1: Top Left in view ) -->
+                    <g id="zone-tl" class="teeth-highlight" fill="#FFFFFF" stroke="#D1D5DB" stroke-width="2">
+                        <path d="M 60,65 Q 75,45 95,43 L 95,58 Q 78,60 68,75 Z"></path>
+                        <path d="M 45,85 Q 50,70 60,65 L 68,75 Q 58,80 55,90 Z"></path>
+                    </g>
+
+                    <!-- Upper Right Zone ( Quadrant 2: Top Right in view ) -->
+                    <g id="zone-tr" class="teeth-highlight" fill="#FFFFFF" stroke="#D1D5DB" stroke-width="2">
+                        <path d="M 140,65 Q 125,45 105,43 L 105,58 Q 122,60 132,75 Z"></path>
+                        <path d="M 155,85 Q 150,70 140,65 L 132,75 Q 142,80 145,90 Z"></path>
+                    </g>
+
+                    <!-- Lower Left Zone ( Quadrant 3: Bottom Left in view ) -->
+                    <g id="zone-bl" class="teeth-highlight" fill="#FFFFFF" stroke="#D1D5DB" stroke-width="2">
+                        <path d="M 45,115 Q 50,130 60,135 L 68,125 Q 58,120 55,110 Z"></path>
+                        <path d="M 60,135 Q 75,155 95,157 L 95,142 Q 78,140 68,125 Z"></path>
+                    </g>
+
+                    <!-- Lower Right Zone ( Quadrant 4: Bottom Right in view ) -->
+                    <g id="zone-br" class="teeth-highlight" fill="#FFFFFF" stroke="#D1D5DB" stroke-width="2">
+                        <path d="M 155,115 Q 150,130 140,135 L 132,125 Q 142,120 145,110 Z"></path>
+                        <path d="M 140,135 Q 125,155 105,157 L 105,142 Q 122,140 132,125 Z"></path>
+                    </g>
+
+                    <!-- Tongue in center -->
+                    <path d="M 70,120 Q 100,100 130,120 Q 115,150 85,150 Z" fill="#FF6B8B" opacity="0.8"></path>
+                </svg>
+
+                <!-- Animated Tooth Mascot Icon -->
+                <div id="mascot" class="absolute inset-0 flex items-center justify-center pointer-events-none transition-all duration-500">
+                    <span class="text-5xl sm:text-6xl filter drop-shadow-lg animate-bounce-slow">🪥</span>
+                </div>
+            </div>
+
+            <!-- Big Countdown Timer Display -->
+            <div class="text-center my-1">
+                <div id="timer-display" class="text-6xl sm:text-7xl font-black text-slate-800 tracking-wider">02:00</div>
+                <div id="zone-timer" class="text-lg font-bold text-sky-600 h-6">กดปุ่มเริ่มเพื่อเริ่มสะอาดยิ้มสวย!</div>
+            </div>
+
+            <!-- Progress Bar (Total 2 mins) -->
+            <div class="w-full bg-slate-100 h-6 rounded-full overflow-hidden border-2 border-slate-200 p-0.5 mt-2">
+                <div id="progress-bar" class="bg-gradient-to-r from-emerald-400 to-teal-500 h-full rounded-full transition-all duration-300 w-0" style="width: 0%;"></div>
+            </div>
+
+            <!-- 4 Phase Indicators -->
+            <div class="grid grid-cols-4 gap-1.5 w-full mt-3">
+                <div id="step-1" class="text-center py-1 rounded-xl bg-slate-100 text-slate-400 font-bold text-xs border border-slate-200">1. บนซ้าย</div>
+                <div id="step-2" class="text-center py-1 rounded-xl bg-slate-100 text-slate-400 font-bold text-xs border border-slate-200">2. บนขวา</div>
+                <div id="step-3" class="text-center py-1 rounded-xl bg-slate-100 text-slate-400 font-bold text-xs border border-slate-200">3. ล่างซ้าย</div>
+                <div id="step-4" class="text-center py-1 rounded-xl bg-slate-100 text-slate-400 font-bold text-xs border border-slate-200">4. ล่างขวา</div>
+            </div>
+
+        </div>
+
+        <!-- Controls Section -->
+        <div class="w-full flex flex-col gap-3">
+            <!-- Main Giant Start/Pause Button -->
+            <button id="btn-main" onclick="toggleTimer()" class="w-full py-5 px-6 rounded-3xl bg-gradient-to-b from-emerald-400 to-emerald-500 text-white text-2xl sm:text-3xl font-black shadow-lg hover:brightness-105 active:scale-95 transition-all border-b-8 border-emerald-700 animate-pulse-ring flex items-center justify-center gap-3">
+                <span>🚀</span>
+                <span id="btn-main-text">เริ่มแปรงฟัน!</span>
+            </button>
+
+            <!-- Reset Button (Hidden initially or secondary) -->
+            <button id="btn-reset" onclick="resetTimer()" class="w-full py-3 rounded-2xl bg-white/80 text-slate-600 font-extrabold text-lg shadow border-2 border-slate-200 hover:bg-slate-50 active:scale-95 transition flex items-center justify-center gap-2">
+                <span>🔄</span> เริ่มใหม่
+            </button>
+        </div>
+
+    </main>
+
+    <!-- Success Modal Overlay -->
+    <div id="success-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-3xl p-6 sm:p-8 max-w-sm w-full text-center shadow-2xl border-4 border-yellow-300 flex flex-col items-center gap-4 animate-bounce-slow">
+            <div class="text-7xl">🌟</div>
+            <h2 class="text-3xl font-black text-emerald-600">เก่งมากๆ เลยครับ!</h2>
+            <p class="text-xl font-bold text-slate-700">ฟันสะอาด เงาวับ สะอาดกริ๊บ!</p>
+            <div class="bg-amber-50 p-4 rounded-2xl border-2 border-amber-200 w-full">
+                <p class="text-amber-800 font-bold text-lg">คุณแปรงฟันครบแล้ว</p>
+                <p class="text-3xl font-black text-amber-500 my-1"><span id="modal-streak">1</span> วันติดกัน!</p>
+                <p class="text-xs text-amber-700">พรุ่งนี้มาแปรงฟันสะสมดาวกันอีกนะ ⭐</p>
+            </div>
+            <button onclick="closeSuccessModal()" class="w-full py-4 bg-gradient-to-b from-sky-400 to-sky-500 text-white text-xl font-black rounded-2xl shadow-lg border-b-4 border-sky-700 active:scale-95 transition">
+                รับดาวแล้วปิด ✨
+            </button>
+        </div>
+    </div>
+
+    <!-- Audio Synthesizer JavaScript (Web Audio API - iOS Friendly without external MP3 dependencies) -->
+    <script>
+        // Web Audio API Context for playing sounds on iOS Safari
+        let audioCtx = null;
+
+        function initAudio() {
+            if (!audioCtx) {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                audioCtx = new AudioContext();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        // Play "Ting!" sound for phase changes
+        function playChimeSound() {
+            try {
+                initAudio();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(880, audioCtx.currentTime); // A5 note
+                osc.frequency.exponentialRampToValueAtTime(1760, audioCtx.currentTime + 0.3); // A6 note
+
+                gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.5);
+            } catch (e) {
+                console.log('Audio play error:', e);
+            }
+        }
+
+        // Play Victory Tune at the end
+        function playVictorySound() {
+            try {
+                initAudio();
+                const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+                notes.forEach((freq, index) => {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(freq, audioCtx.currentTime + index * 0.15);
+
+                    gain.gain.setValueAtTime(0.3, audioCtx.currentTime + index * 0.15);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + index * 0.15 + 0.3);
+
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+
+                    osc.start(audioCtx.currentTime + index * 0.15);
+                    osc.stop(audioCtx.currentTime + index * 0.15 + 0.3);
+                });
+            } catch (e) {
+                console.log('Audio play error:', e);
+            }
+        }
+
+        // Timer Configuration
+        const TOTAL_TIME = 120; // 2 minutes (120 seconds)
+        const ZONE_TIME = 30;   // 30 seconds per quadrant
+
+        // 4 Quadrant Definitions
+        const ZONES = [
+            {
+                id: 'tl',
+                name: 'ฟันบน - ด้านซ้าย 🦷',
+                bgClass: 'bg-pink-400',
+                stepId: 'step-1'
+            },
+            {
+                id: 'tr',
+                name: 'ฟันบน - ด้านขวา 🦷',
+                bgClass: 'bg-purple-400',
+                stepId: 'step-2'
+            },
+            {
+                id: 'bl',
+                name: 'ฟันล่าง - ด้านซ้าย 🦷',
+                bgClass: 'bg-sky-400',
+                stepId: 'step-3'
+            },
+            {
+                id: 'br',
+                name: 'ฟันล่าง - ด้านขวา 🦷',
+                bgClass: 'bg-emerald-400',
+                stepId: 'step-4'
+            }
+        ];
+
+        let timeLeft = TOTAL_TIME;
+        let timerInterval = null;
+        let isRunning = false;
+        let currentZoneIndex = -1;
+
+        // DOM Element references
+        const timerDisplay = document.getElementById('timer-display');
+        const zoneTimerDisplay = document.getElementById('zone-timer');
+        const zoneBanner = document.getElementById('zone-banner');
+        const progressBar = document.getElementById('progress-bar');
+        const btnMain = document.getElementById('btn-main');
+        const btnMainText = document.getElementById('btn-main-text');
+        const streakCountDisplay = document.getElementById('streak-count');
+        const successModal = document.getElementById('success-modal');
+        const modalStreak = document.getElementById('modal-streak');
+
+        // Initialize App & Load Saved Streak
+        window.onload = function() {
+            loadStreak();
+            updateDisplay();
+        };
+
+        // Load Streak from LocalStorage
+        function loadStreak() {
+            const savedData = JSON.parse(localStorage.getItem('brushing_streak') || '{}');
+            const today = new Date().toDateString();
+
+            if (savedData.lastDate) {
+                const lastDate = new Date(savedData.lastDate);
+                const currentDate = new Date(today);
+                const diffTime = Math.abs(currentDate - lastDate);
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+                // If more than 1 day missed, streak resets (unless same day)
+                if (diffDays > 1 && savedData.lastDate !== today) {
+                    savedData.count = 0;
+                    localStorage.setItem('brushing_streak', JSON.stringify(savedData));
+                }
+            }
+
+            streakCountDisplay.textContent = savedData.count || 0;
+        }
+
+        // Save Streak when completed
+        function incrementStreak() {
+            const today = new Date().toDateString();
+            let savedData = JSON.parse(localStorage.getItem('brushing_streak') || '{}');
+
+            // Only increment if not already brushed today
+            if (savedData.lastDate !== today) {
+                savedData.count = (savedData.count || 0) + 1;
+                savedData.lastDate = today;
+                localStorage.setItem('brushing_streak', JSON.stringify(savedData));
+            }
+
+            streakCountDisplay.textContent = savedData.count;
+            modalStreak.textContent = savedData.count;
+        }
+
+        // Main Timer Toggle Button
+        function toggleTimer() {
+            initAudio(); // Initialize audio context on first user touch (iOS requirement)
+
+            if (isRunning) {
+                pauseTimer();
+            } else {
+                startTimer();
+            }
+        }
+
+        function startTimer() {
+            if (timeLeft <= 0) return;
+            
+            isRunning = true;
+            btnMainText.textContent = "พักแปรงฟัน";
+            btnMain.className = btnMain.className.replace('from-emerald-400 to-emerald-500 border-emerald-700', 'from-amber-400 to-amber-500 border-amber-700');
+            btnMain.querySelector('span').textContent = '⏸️';
+
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                updateDisplay();
+
+                if (timeLeft <= 0) {
+                    completeBrushing();
+                }
+            }, 1000);
+
+            // Update display immediately
+            updateDisplay();
+        }
+
+        function pauseTimer() {
+            isRunning = false;
+            clearInterval(timerInterval);
+            btnMainText.textContent = "แปรงฟันต่อ";
+            btnMain.className = btnMain.className.replace('from-amber-400 to-amber-500 border-amber-700', 'from-emerald-400 to-emerald-500 border-emerald-700');
+            btnMain.querySelector('span').textContent = '▶️';
+        }
+
+        function resetTimer() {
+            pauseTimer();
+            timeLeft = TOTAL_TIME;
+            currentZoneIndex = -1;
+            btnMainText.textContent = "เริ่มแปรงฟัน!";
+            btnMain.querySelector('span').textContent = '🚀';
+            updateDisplay();
+        }
+
+        // Update Screen Elements based on Time Left
+        function updateDisplay() {
+            // Minutes and Seconds calculation
+            const mins = Math.floor(timeLeft / 60);
+            const secs = timeLeft % 60;
+            timerDisplay.textContent = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+
+            // Progress Bar Width
+            const progressPercent = ((TOTAL_TIME - timeLeft) / TOTAL_TIME) * 100;
+            progressBar.style.width = `${progressPercent}%`;
+
+            if (timeLeft === TOTAL_TIME) {
+                zoneBanner.textContent = "เตรียมพร้อมแปรงฟันกันเลย!";
+                zoneBanner.className = "w-full bg-sky-400 text-white text-center text-xl sm:text-2xl font-black py-2 px-4 rounded-2xl shadow-md transition-all duration-300 mb-3";
+                zoneTimerDisplay.textContent = "กดปุ่มเริ่มเพื่อเริ่มสะอาดยิ้มสวย!";
+                clearTeethHighlights();
+                resetStepIndicators();
+                return;
+            }
+
+            // Determine Active Zone (0, 1, 2, or 3)
+            const elapsedTime = TOTAL_TIME - timeLeft;
+            const newZoneIndex = Math.min(Math.floor(elapsedTime / ZONE_TIME), 3);
+            const secondsInCurrentZone = ZONE_TIME - (elapsedTime % ZONE_TIME);
+
+            // Trigger "Ting" Sound and Visual Updates on Zone Switch
+            if (newZoneIndex !== currentZoneIndex) {
+                currentZoneIndex = newZoneIndex;
+                if (isRunning) playChimeSound();
+                highlightZone(ZONES[currentZoneIndex]);
+            }
+
+            zoneTimerDisplay.textContent = `แปรงโซนนี้อีก ${secondsInCurrentZone} วินาที ⏳`;
+        }
+
+        // Highlight active tooth quadrant in SVG and UI Step pills
+        function highlightZone(zone) {
+            zoneBanner.textContent = zone.name;
+            zoneBanner.className = `w-full ${zone.bgClass} text-white text-center text-xl sm:text-2xl font-black py-2 px-4 rounded-2xl shadow-md transition-all duration-300 mb-3 animate-bounce-slow`;
+
+            // Reset SVG Highlights
+            clearTeethHighlights();
+
+            // Set Active SVG Zone
+            const svgGroup = document.getElementById(`zone-${zone.id}`);
+            if (svgGroup) {
+                svgGroup.classList.add('active-zone');
+            }
+
+            // Update Steps Indicators
+            ZONES.forEach((z, index) => {
+                const stepElem = document.getElementById(z.stepId);
+                if (index === currentZoneIndex) {
+                    stepElem.className = "text-center py-1 rounded-xl bg-amber-400 text-white font-black text-xs shadow border border-amber-500 scale-105 transition-transform";
+                } else if (index < currentZoneIndex) {
+                    stepElem.className = "text-center py-1 rounded-xl bg-emerald-100 text-emerald-600 font-bold text-xs border border-emerald-300";
+                } else {
+                    stepElem.className = "text-center py-1 rounded-xl bg-slate-100 text-slate-400 font-bold text-xs border border-slate-200";
+                }
+            });
+        }
+
+        function clearTeethHighlights() {
+            document.querySelectorAll('.teeth-highlight').forEach(el => {
+                el.classList.remove('active-zone');
+            });
+        }
+
+        function resetStepIndicators() {
+            ZONES.forEach(z => {
+                const stepElem = document.getElementById(z.stepId);
+                stepElem.className = "text-center py-1 rounded-xl bg-slate-100 text-slate-400 font-bold text-xs border border-slate-200";
+            });
+        }
+
+        // Brushing Complete Handler
+        function completeBrushing() {
+            pauseTimer();
+            incrementStreak();
+            playVictorySound();
+
+            // Fire Confetti Celebration
+            if (typeof confetti === 'function') {
+                confetti({
+                    particleCount: 120,
+                    spread: 80,
+                    origin: { y: 0.6 }
+                });
+            }
+
+            // Show Success Modal
+            successModal.classList.remove('hidden');
+        }
+
+        function closeSuccessModal() {
+            successModal.classList.add('hidden');
+            resetTimer();
+        }
+    </script>
+
+</body></html>
