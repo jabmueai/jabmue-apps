@@ -1,0 +1,590 @@
+<!DOCTYPE html><html lang="th"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>กระปุกออมเงินหมูน้อย</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Canvas Confetti สำหรับพลุฉลอง -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js" crossorigin="anonymous"></script>
+    <!-- Google Fonts: Prompt -->
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;600;700;800;900&amp;display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Prompt', 'sans-serif'],
+                    },
+                    colors: {
+                        pinkish: '#FF6B8B',
+                        yellowish: '#FFD166',
+                        greenish: '#06D6A0',
+                        blueish: '#118AB2',
+                        purplish: '#8338EC'
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* ลบ Highlight สีฟ้าเวลากดบน iOS */
+        * {
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+        
+        body {
+            font-family: 'Prompt', sans-serif;
+            touch-action: manipulation;
+            background: linear-gradient(135deg, #FFF9E6 0%, #FFECF2 100%);
+            min-height: 100vh;
+        }
+
+        /* เอฟเฟกต์หมูดุ๊กดิ๊ก */
+        @keyframes piggyWiggle {
+            0%, 100% { transform: scale(1) rotate(0deg); }
+            25% { transform: scale(1.05) rotate(-4deg); }
+            75% { transform: scale(1.05) rotate(4deg); }
+        }
+
+        .piggy-wiggle {
+            animation: piggyWiggle 0.4s ease-in-out;
+        }
+
+        /* เหรียญร่วง */
+        @keyframes coinDrop {
+            0% {
+                opacity: 1;
+                transform: translateY(-120px) scale(0.6) rotate(0deg);
+            }
+            80% {
+                opacity: 1;
+                transform: translateY(40px) scale(1.1) rotate(180deg);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(80px) scale(0.3) rotate(360deg);
+            }
+        }
+
+        .coin-animation {
+            position: absolute;
+            animation: coinDrop 0.6s cubic-bezier(0.5, 0, 0.75, 0) forwards;
+            pointer-events: none;
+            z-index: 30;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #ffe0eb;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #ff85a2;
+            border-radius: 10px;
+        }
+    </style>
+<style>*, ::before, ::after{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }::backdrop{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }/* ! tailwindcss v3.4.17 | MIT License | https://tailwindcss.com */*,::after,::before{box-sizing:border-box;border-width:0;border-style:solid;border-color:#e5e7eb}::after,::before{--tw-content:''}:host,html{line-height:1.5;-webkit-text-size-adjust:100%;-moz-tab-size:4;tab-size:4;font-family:Prompt, sans-serif;font-feature-settings:normal;font-variation-settings:normal;-webkit-tap-highlight-color:transparent}body{margin:0;line-height:inherit}hr{height:0;color:inherit;border-top-width:1px}abbr:where([title]){-webkit-text-decoration:underline dotted;text-decoration:underline dotted}h1,h2,h3,h4,h5,h6{font-size:inherit;font-weight:inherit}a{color:inherit;text-decoration:inherit}b,strong{font-weight:bolder}code,kbd,pre,samp{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;font-feature-settings:normal;font-variation-settings:normal;font-size:1em}small{font-size:80%}sub,sup{font-size:75%;line-height:0;position:relative;vertical-align:baseline}sub{bottom:-.25em}sup{top:-.5em}table{text-indent:0;border-color:inherit;border-collapse:collapse}button,input,optgroup,select,textarea{font-family:inherit;font-feature-settings:inherit;font-variation-settings:inherit;font-size:100%;font-weight:inherit;line-height:inherit;letter-spacing:inherit;color:inherit;margin:0;padding:0}button,select{text-transform:none}button,input:where([type=button]),input:where([type=reset]),input:where([type=submit]){-webkit-appearance:button;background-color:transparent;background-image:none}:-moz-focusring{outline:auto}:-moz-ui-invalid{box-shadow:none}progress{vertical-align:baseline}::-webkit-inner-spin-button,::-webkit-outer-spin-button{height:auto}[type=search]{-webkit-appearance:textfield;outline-offset:-2px}::-webkit-search-decoration{-webkit-appearance:none}::-webkit-file-upload-button{-webkit-appearance:button;font:inherit}summary{display:list-item}blockquote,dd,dl,figure,h1,h2,h3,h4,h5,h6,hr,p,pre{margin:0}fieldset{margin:0;padding:0}legend{padding:0}menu,ol,ul{list-style:none;margin:0;padding:0}dialog{padding:0}textarea{resize:vertical}input::placeholder,textarea::placeholder{opacity:1;color:#9ca3af}[role=button],button{cursor:pointer}:disabled{cursor:default}audio,canvas,embed,iframe,img,object,svg,video{display:block;vertical-align:middle}img,video{max-width:100%;height:auto}[hidden]:where(:not([hidden=until-found])){display:none}.pointer-events-none{pointer-events:none}.fixed{position:fixed}.absolute{position:absolute}.relative{position:relative}.-inset-4{inset:-1rem}.inset-0{inset:0px}.top-0{top:0px}.z-10{z-index:10}.z-50{z-index:50}.mx-auto{margin-left:auto;margin-right:auto}.my-1{margin-top:0.25rem;margin-bottom:0.25rem}.my-2{margin-top:0.5rem;margin-bottom:0.5rem}.my-4{margin-top:1rem;margin-bottom:1rem}.mb-1{margin-bottom:0.25rem}.mb-2{margin-bottom:0.5rem}.mb-3{margin-bottom:0.75rem}.mb-4{margin-bottom:1rem}.mb-5{margin-bottom:1.25rem}.mt-1{margin-top:0.25rem}.mt-2{margin-top:0.5rem}.mt-3{margin-top:0.75rem}.block{display:block}.inline-block{display:inline-block}.flex{display:flex}.grid{display:grid}.hidden{display:none}.h-4{height:1rem}.h-48{height:12rem}.h-56{height:14rem}.h-full{height:100%}.max-h-\[80vh\]{max-height:80vh}.min-h-screen{min-height:100vh}.w-0{width:0px}.w-56{width:14rem}.w-full{width:100%}.max-w-md{max-width:28rem}.max-w-sm{max-width:24rem}.flex-1{flex:1 1 0%}.scale-100{--tw-scale-x:1;--tw-scale-y:1;transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}.transform{transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}.cursor-pointer{cursor:pointer}.select-none{-webkit-user-select:none;user-select:none}.grid-cols-3{grid-template-columns:repeat(3, minmax(0, 1fr))}.flex-col{flex-direction:column}.items-center{align-items:center}.justify-center{justify-content:center}.justify-between{justify-content:space-between}.gap-1{gap:0.25rem}.gap-2{gap:0.5rem}.gap-3{gap:0.75rem}.space-y-2 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(0.5rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(0.5rem * var(--tw-space-y-reverse))}.space-y-3 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(0.75rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(0.75rem * var(--tw-space-y-reverse))}.self-end{align-self:flex-end}.overflow-hidden{overflow:hidden}.overflow-y-auto{overflow-y:auto}.rounded-2xl{border-radius:1rem}.rounded-3xl{border-radius:1.5rem}.rounded-full{border-radius:9999px}.rounded-xl{border-radius:0.75rem}.border{border-width:1px}.border-2{border-width:2px}.border-4{border-width:4px}.border-blue-300{--tw-border-opacity:1;border-color:rgb(147 197 253 / var(--tw-border-opacity, 1))}.border-blue-600{--tw-border-opacity:1;border-color:rgb(37 99 235 / var(--tw-border-opacity, 1))}.border-gray-300{--tw-border-opacity:1;border-color:rgb(209 213 219 / var(--tw-border-opacity, 1))}.border-gray-400{--tw-border-opacity:1;border-color:rgb(156 163 175 / var(--tw-border-opacity, 1))}.border-green-600{--tw-border-opacity:1;border-color:rgb(22 163 74 / var(--tw-border-opacity, 1))}.border-pink-100{--tw-border-opacity:1;border-color:rgb(252 231 243 / var(--tw-border-opacity, 1))}.border-pink-200{--tw-border-opacity:1;border-color:rgb(251 207 232 / var(--tw-border-opacity, 1))}.border-purple-200{--tw-border-opacity:1;border-color:rgb(233 213 255 / var(--tw-border-opacity, 1))}.border-purple-300{--tw-border-opacity:1;border-color:rgb(216 180 254 / var(--tw-border-opacity, 1))}.border-red-600{--tw-border-opacity:1;border-color:rgb(220 38 38 / var(--tw-border-opacity, 1))}.border-rose-300{--tw-border-opacity:1;border-color:rgb(253 164 175 / var(--tw-border-opacity, 1))}.border-slate-500{--tw-border-opacity:1;border-color:rgb(100 116 139 / var(--tw-border-opacity, 1))}.border-yellow-300{--tw-border-opacity:1;border-color:rgb(253 224 71 / var(--tw-border-opacity, 1))}.border-yellow-400{--tw-border-opacity:1;border-color:rgb(250 204 21 / var(--tw-border-opacity, 1))}.border-yellow-600{--tw-border-opacity:1;border-color:rgb(202 138 4 / var(--tw-border-opacity, 1))}.bg-black\/50{background-color:rgb(0 0 0 / 0.5)}.bg-black\/60{background-color:rgb(0 0 0 / 0.6)}.bg-blue-500{--tw-bg-opacity:1;background-color:rgb(59 130 246 / var(--tw-bg-opacity, 1))}.bg-gray-200{--tw-bg-opacity:1;background-color:rgb(229 231 235 / var(--tw-bg-opacity, 1))}.bg-pink-300\/40{background-color:rgb(249 168 212 / 0.4)}.bg-pink-50{--tw-bg-opacity:1;background-color:rgb(253 242 248 / var(--tw-bg-opacity, 1))}.bg-purple-500{--tw-bg-opacity:1;background-color:rgb(168 85 247 / var(--tw-bg-opacity, 1))}.bg-rose-100{--tw-bg-opacity:1;background-color:rgb(255 228 230 / var(--tw-bg-opacity, 1))}.bg-rose-500{--tw-bg-opacity:1;background-color:rgb(244 63 94 / var(--tw-bg-opacity, 1))}.bg-white{--tw-bg-opacity:1;background-color:rgb(255 255 255 / var(--tw-bg-opacity, 1))}.bg-white\/70{background-color:rgb(255 255 255 / 0.7)}.bg-white\/80{background-color:rgb(255 255 255 / 0.8)}.bg-gradient-to-b{background-image:linear-gradient(to bottom, var(--tw-gradient-stops))}.bg-gradient-to-r{background-image:linear-gradient(to right, var(--tw-gradient-stops))}.from-emerald-400{--tw-gradient-from:#34d399 var(--tw-gradient-from-position);--tw-gradient-to:rgb(52 211 153 / 0) var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from), var(--tw-gradient-to)}.from-gray-100{--tw-gradient-from:#f3f4f6 var(--tw-gradient-from-position);--tw-gradient-to:rgb(243 244 246 / 0) var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from), var(--tw-gradient-to)}.from-gray-200{--tw-gradient-from:#e5e7eb var(--tw-gradient-from-position);--tw-gradient-to:rgb(229 231 235 / 0) var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from), var(--tw-gradient-to)}.from-pink-500{--tw-gradient-from:#ec4899 var(--tw-gradient-from-position);--tw-gradient-to:rgb(236 72 153 / 0) var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from), var(--tw-gradient-to)}.from-red-400{--tw-gradient-from:#f87171 var(--tw-gradient-from-position);--tw-gradient-to:rgb(248 113 113 / 0) var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from), var(--tw-gradient-to)}.from-sky-400{--tw-gradient-from:#38bdf8 var(--tw-gradient-from-position);--tw-gradient-to:rgb(56 189 248 / 0) var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from), var(--tw-gradient-to)}.from-yellow-100{--tw-gradient-from:#fef9c3 var(--tw-gradient-from-position);--tw-gradient-to:rgb(254 249 195 / 0) var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from), var(--tw-gradient-to)}.from-yellow-400{--tw-gradient-from:#facc15 var(--tw-gradient-from-position);--tw-gradient-to:rgb(250 204 21 / 0) var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from), var(--tw-gradient-to)}.to-blue-500{--tw-gradient-to:#3b82f6 var(--tw-gradient-to-position)}.to-gray-300{--tw-gradient-to:#d1d5db var(--tw-gradient-to-position)}.to-gray-400{--tw-gradient-to:#9ca3af var(--tw-gradient-to-position)}.to-green-400{--tw-gradient-to:#4ade80 var(--tw-gradient-to-position)}.to-green-500{--tw-gradient-to:#22c55e var(--tw-gradient-to-position)}.to-pink-100{--tw-gradient-to:#fce7f3 var(--tw-gradient-to-position)}.to-rose-500{--tw-gradient-to:#f43f5e var(--tw-gradient-to-position)}.to-yellow-400{--tw-gradient-to:#facc15 var(--tw-gradient-to-position)}.to-yellow-500{--tw-gradient-to:#eab308 var(--tw-gradient-to-position)}.p-2{padding:0.5rem}.p-3{padding:0.75rem}.p-4{padding:1rem}.p-5{padding:1.25rem}.p-6{padding:1.5rem}.px-3{padding-left:0.75rem;padding-right:0.75rem}.px-4{padding-left:1rem;padding-right:1rem}.px-6{padding-left:1.5rem;padding-right:1.5rem}.py-1{padding-top:0.25rem;padding-bottom:0.25rem}.py-2{padding-top:0.5rem;padding-bottom:0.5rem}.py-2\.5{padding-top:0.625rem;padding-bottom:0.625rem}.py-3{padding-top:0.75rem;padding-bottom:0.75rem}.pb-6{padding-bottom:1.5rem}.pl-1{padding-left:0.25rem}.pr-1{padding-right:0.25rem}.pt-6{padding-top:1.5rem}.text-center{text-align:center}.text-right{text-align:right}.text-2xl{font-size:1.5rem;line-height:2rem}.text-3xl{font-size:1.875rem;line-height:2.25rem}.text-4xl{font-size:2.25rem;line-height:2.5rem}.text-5xl{font-size:3rem;line-height:1}.text-6xl{font-size:3.75rem;line-height:1}.text-\[10px\]{font-size:10px}.text-\[11px\]{font-size:11px}.text-base{font-size:1rem;line-height:1.5rem}.text-lg{font-size:1.125rem;line-height:1.75rem}.text-sm{font-size:0.875rem;line-height:1.25rem}.text-xl{font-size:1.25rem;line-height:1.75rem}.text-xs{font-size:0.75rem;line-height:1rem}.font-black{font-weight:900}.font-bold{font-weight:700}.font-extrabold{font-weight:800}.font-normal{font-weight:400}.tracking-tight{letter-spacing:-0.025em}.tracking-wide{letter-spacing:0.025em}.text-blue-100{--tw-text-opacity:1;color:rgb(219 234 254 / var(--tw-text-opacity, 1))}.text-blue-600{--tw-text-opacity:1;color:rgb(37 99 235 / var(--tw-text-opacity, 1))}.text-gray-500{--tw-text-opacity:1;color:rgb(107 114 128 / var(--tw-text-opacity, 1))}.text-gray-600{--tw-text-opacity:1;color:rgb(75 85 99 / var(--tw-text-opacity, 1))}.text-gray-700{--tw-text-opacity:1;color:rgb(55 65 81 / var(--tw-text-opacity, 1))}.text-green-100{--tw-text-opacity:1;color:rgb(220 252 231 / var(--tw-text-opacity, 1))}.text-pink-400{--tw-text-opacity:1;color:rgb(244 114 182 / var(--tw-text-opacity, 1))}.text-pink-500{--tw-text-opacity:1;color:rgb(236 72 153 / var(--tw-text-opacity, 1))}.text-pink-600{--tw-text-opacity:1;color:rgb(219 39 119 / var(--tw-text-opacity, 1))}.text-purple-700{--tw-text-opacity:1;color:rgb(126 34 206 / var(--tw-text-opacity, 1))}.text-red-100{--tw-text-opacity:1;color:rgb(254 226 226 / var(--tw-text-opacity, 1))}.text-rose-600{--tw-text-opacity:1;color:rgb(225 29 72 / var(--tw-text-opacity, 1))}.text-slate-600{--tw-text-opacity:1;color:rgb(71 85 105 / var(--tw-text-opacity, 1))}.text-slate-800{--tw-text-opacity:1;color:rgb(30 41 59 / var(--tw-text-opacity, 1))}.text-white{--tw-text-opacity:1;color:rgb(255 255 255 / var(--tw-text-opacity, 1))}.text-yellow-600{--tw-text-opacity:1;color:rgb(202 138 4 / var(--tw-text-opacity, 1))}.text-yellow-800{--tw-text-opacity:1;color:rgb(133 77 14 / var(--tw-text-opacity, 1))}.text-yellow-900{--tw-text-opacity:1;color:rgb(113 63 18 / var(--tw-text-opacity, 1))}.shadow-2xl{--tw-shadow:0 25px 50px -12px rgb(0 0 0 / 0.25);--tw-shadow-colored:0 25px 50px -12px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-lg{--tw-shadow:0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);--tw-shadow-colored:0 10px 15px -3px var(--tw-shadow-color), 0 4px 6px -4px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-md{--tw-shadow:0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);--tw-shadow-colored:0 4px 6px -1px var(--tw-shadow-color), 0 2px 4px -2px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-sm{--tw-shadow:0 1px 2px 0 rgb(0 0 0 / 0.05);--tw-shadow-colored:0 1px 2px 0 var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-xl{--tw-shadow:0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);--tw-shadow-colored:0 20px 25px -5px var(--tw-shadow-color), 0 8px 10px -6px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.blur-xl{--tw-blur:blur(24px);filter:var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale) var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow)}.drop-shadow-2xl{--tw-drop-shadow:drop-shadow(0 25px 25px rgb(0 0 0 / 0.15));filter:var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale) var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow)}.backdrop-blur-md{--tw-backdrop-blur:blur(12px);-webkit-backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia);backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia)}.backdrop-blur-sm{--tw-backdrop-blur:blur(4px);-webkit-backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia);backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia)}.transition{transition-property:color, background-color, border-color, fill, stroke, opacity, box-shadow, transform, filter, -webkit-text-decoration-color, -webkit-backdrop-filter;transition-property:color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;transition-property:color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter, -webkit-text-decoration-color, -webkit-backdrop-filter;transition-timing-function:cubic-bezier(0.4, 0, 0.2, 1);transition-duration:150ms}.transition-all{transition-property:all;transition-timing-function:cubic-bezier(0.4, 0, 0.2, 1);transition-duration:150ms}.transition-transform{transition-property:transform;transition-timing-function:cubic-bezier(0.4, 0, 0.2, 1);transition-duration:150ms}.duration-150{transition-duration:150ms}.duration-500{transition-duration:500ms}.hover\:bg-blue-600:hover{--tw-bg-opacity:1;background-color:rgb(37 99 235 / var(--tw-bg-opacity, 1))}.hover\:bg-gray-300:hover{--tw-bg-opacity:1;background-color:rgb(209 213 219 / var(--tw-bg-opacity, 1))}.hover\:bg-purple-600:hover{--tw-bg-opacity:1;background-color:rgb(147 51 234 / var(--tw-bg-opacity, 1))}.hover\:bg-rose-200:hover{--tw-bg-opacity:1;background-color:rgb(254 205 211 / var(--tw-bg-opacity, 1))}.hover\:bg-rose-600:hover{--tw-bg-opacity:1;background-color:rgb(225 29 72 / var(--tw-bg-opacity, 1))}.hover\:brightness-105:hover{--tw-brightness:brightness(1.05);filter:var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale) var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow)}.focus\:border-purple-500:focus{--tw-border-opacity:1;border-color:rgb(168 85 247 / var(--tw-border-opacity, 1))}.focus\:outline-none:focus{outline:2px solid transparent;outline-offset:2px}.active\:translate-y-1:active{--tw-translate-y:0.25rem;transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}.active\:scale-95:active{--tw-scale-x:.95;--tw-scale-y:.95;transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}.group:hover .group-hover\:bg-pink-400\/50{background-color:rgb(244 114 182 / 0.5)}@media (min-width: 768px){.md\:h-64{height:16rem}.md\:w-64{width:16rem}}</style></head>
+<body class="flex flex-col min-h-screen pb-6 justify-between select-none">
+
+    <!-- Header & Total Balance -->
+    <header class="pt-6 px-4 text-center">
+        <div class="inline-block bg-white/80 backdrop-blur-md px-6 py-2 rounded-full shadow-md border-2 border-pink-200 mb-2">
+            <h1 class="text-xl font-bold text-pink-500">🐷 กระปุกออมเงินของหนู 🐷</h1>
+        </div>
+        
+        <div class="bg-white rounded-3xl p-4 shadow-xl border-4 border-yellow-300 max-w-sm mx-auto relative overflow-hidden">
+            <div class="text-gray-500 font-bold text-sm tracking-wide">ยอดเงินสะสมทั้งหมด</div>
+            <div class="flex items-center justify-center gap-1 my-1">
+                <span class="text-5xl font-black text-pink-600 tracking-tight" id="total-amount">0</span>
+                <span class="text-2xl font-extrabold text-pink-400 self-end mb-1">บาท</span>
+            </div>
+            
+            <!-- Progress Bar Goal -->
+            <div class="mt-3 bg-pink-50 rounded-2xl p-2 border border-pink-100">
+                <div class="flex justify-between text-xs font-bold mb-1 text-gray-700">
+                    <span id="goal-title-display">🎯 เป้าหมาย: ของเล่น</span>
+                    <span id="goal-percent">0%</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-4 overflow-hidden border border-gray-300">
+                    <div id="progress-bar" class="bg-gradient-to-r from-yellow-400 to-green-400 h-full rounded-full transition-all duration-500 w-0" style="width: 0%;"></div>
+                </div>
+                <div class="text-right text-[11px] font-bold text-gray-500 mt-1" id="goal-target-display">เป้าหมาย: 500 บาท</div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Piggy Section -->
+    <main class="flex-1 flex flex-col items-center justify-center relative my-4 px-4">
+        <!-- Area where coins fall into -->
+        <div id="coin-drop-area" class="absolute top-0 w-full flex justify-center h-48 pointer-events-none"></div>
+
+        <!-- Piggy Container -->
+        <div id="piggy-btn" onclick="bouncePiggy()" class="relative cursor-pointer transform active:scale-95 transition duration-150 group">
+            <!-- Glow Effect -->
+            <div class="absolute -inset-4 bg-pink-300/40 rounded-full blur-xl group-hover:bg-pink-400/50 transition"></div>
+            
+            <!-- Big Piggy SVG -->
+            <svg id="piggy-svg" class="w-56 h-56 md:w-64 md:h-64 drop-shadow-2xl relative z-10 transition-transform" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <!-- Ears -->
+                <path d="M45 65C35 40 15 45 25 75C35 75 45 70 45 65Z" fill="#FF85A1" stroke="#E65C7B" stroke-width="4" stroke-linejoin="round"></path>
+                <path d="M155 65C165 40 185 45 175 75C165 75 155 70 155 65Z" fill="#FF85A1" stroke="#E65C7B" stroke-width="4" stroke-linejoin="round"></path>
+                <!-- Body -->
+                <ellipse cx="100" cy="115" rx="75" ry="60" fill="#FFB3C1" stroke="#E65C7B" stroke-width="5"></ellipse>
+                <!-- Legs -->
+                <rect x="55" y="160" width="22" height="25" rx="10" fill="#FF85A1" stroke="#E65C7B" stroke-width="4"></rect>
+                <rect x="123" y="160" width="22" height="25" rx="10" fill="#FF85A1" stroke="#E65C7B" stroke-width="4"></rect>
+                <!-- Coin Slot -->
+                <ellipse cx="100" cy="62" rx="20" ry="4" fill="#592534"></ellipse>
+                <!-- Eyes -->
+                <circle cx="70" cy="100" r="7" fill="#2B2D42"></circle>
+                <circle cx="68" cy="98" r="2.5" fill="white"></circle>
+                <circle cx="130" cy="100" r="7" fill="#2B2D42"></circle>
+                <circle cx="128" cy="98" r="2.5" fill="white"></circle>
+                <!-- Cheeks -->
+                <circle cx="55" cy="112" r="10" fill="#FF6B8B" opacity="0.5"></circle>
+                <circle cx="145" cy="112" r="10" fill="#FF6B8B" opacity="0.5"></circle>
+                <!-- Nose -->
+                <ellipse cx="100" cy="118" rx="24" ry="17" fill="#FF7096" stroke="#E65C7B" stroke-width="4"></ellipse>
+                <circle cx="92" cy="118" r="4" fill="#592534"></circle>
+                <circle cx="108" cy="118" r="4" fill="#592534"></circle>
+                <!-- Tail -->
+                <path d="M173 115C185 110 190 120 185 125C180 130 185 135 190 130" stroke="#E65C7B" stroke-width="4" stroke-linecap="round" fill="none"></path>
+            </svg>
+        </div>
+
+        <p class="text-xs font-bold text-pink-400 mt-2 bg-white/70 px-3 py-1 rounded-full shadow-sm">
+            👇 กดเลือกเงินด้านล่างเพื่อหยอดกระปุกได้เลย!
+        </p>
+    </main>
+
+    <!-- Coin & Banknote Control Panel -->
+    <footer class="px-4 max-w-md mx-auto w-full">
+        <!-- Coin Buttons Row -->
+        <div class="mb-3">
+            <div class="text-xs font-bold text-gray-500 mb-1 pl-1">เหรียญ (Coins)</div>
+            <div class="grid grid-cols-3 gap-3">
+                <button onclick="addMoney(1, 'coin')" class="bg-gradient-to-b from-gray-100 to-gray-300 active:translate-y-1 hover:brightness-105 border-4 border-gray-400 rounded-2xl py-3 shadow-lg flex flex-col items-center justify-center font-black text-gray-700 text-xl">
+                    <span>1 ฿</span>
+                    <span class="text-[10px] font-normal text-gray-500">เหรียญบาท</span>
+                </button>
+                <button onclick="addMoney(5, 'coin')" class="bg-gradient-to-b from-gray-200 to-gray-400 active:translate-y-1 hover:brightness-105 border-4 border-slate-500 rounded-2xl py-3 shadow-lg flex flex-col items-center justify-center font-black text-slate-800 text-xl">
+                    <span>5 ฿</span>
+                    <span class="text-[10px] font-normal text-slate-600">เหรียญห้า</span>
+                </button>
+                <button onclick="addMoney(10, 'coin')" class="bg-gradient-to-b from-yellow-100 to-yellow-400 active:translate-y-1 hover:brightness-105 border-4 border-yellow-600 rounded-2xl py-3 shadow-lg flex flex-col items-center justify-center font-black text-yellow-900 text-xl">
+                    <span>10 ฿</span>
+                    <span class="text-[10px] font-normal text-yellow-800">เหรียญสิบ</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Banknote Buttons Row -->
+        <div class="mb-4">
+            <div class="text-xs font-bold text-gray-500 mb-1 pl-1">ธนบัตร (Banknotes)</div>
+            <div class="grid grid-cols-3 gap-3">
+                <button onclick="addMoney(20, 'note')" class="bg-gradient-to-r from-emerald-400 to-green-500 active:translate-y-1 hover:brightness-105 border-2 border-green-600 rounded-2xl py-3 shadow-lg flex flex-col items-center justify-center font-black text-white text-xl">
+                    <span>20 ฿</span>
+                    <span class="text-[10px] font-normal text-green-100">แบงก์ยี่สิบ</span>
+                </button>
+                <button onclick="addMoney(50, 'note')" class="bg-gradient-to-r from-sky-400 to-blue-500 active:translate-y-1 hover:brightness-105 border-2 border-blue-600 rounded-2xl py-3 shadow-lg flex flex-col items-center justify-center font-black text-white text-xl">
+                    <span>50 ฿</span>
+                    <span class="text-[10px] font-normal text-blue-100">แบงก์ห้าสิบ</span>
+                </button>
+                <button onclick="addMoney(100, 'note')" class="bg-gradient-to-r from-red-400 to-rose-500 active:translate-y-1 hover:brightness-105 border-2 border-red-600 rounded-2xl py-3 shadow-lg flex flex-col items-center justify-center font-black text-white text-xl">
+                    <span>100 ฿</span>
+                    <span class="text-[10px] font-normal text-red-100">แบงก์ร้อย</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Bottom Actions (Goal, History, Withdraw) -->
+        <div class="flex gap-2 justify-center">
+            <button onclick="openGoalModal()" class="flex-1 bg-purple-500 hover:bg-purple-600 text-white font-bold py-2.5 px-3 rounded-xl shadow-md text-sm flex items-center justify-center gap-1 active:scale-95 transition">
+                <i class="fa-solid fa-bullseye text-base"></i>
+                <span>ตั้งเป้าหมาย</span>
+            </button>
+            <button onclick="openHistoryModal()" class="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2.5 px-3 rounded-xl shadow-md text-sm flex items-center justify-center gap-1 active:scale-95 transition">
+                <i class="fa-solid fa-clock-rotate-left text-base"></i>
+                <span>ประวัติ</span>
+            </button>
+            <button onclick="withdrawMoney()" class="bg-rose-100 hover:bg-rose-200 text-rose-600 border border-rose-300 font-bold py-2.5 px-3 rounded-xl shadow-md text-sm flex items-center justify-center gap-1 active:scale-95 transition">
+                <i class="fa-solid fa-hand-holding-dollar text-base"></i>
+                <span>ถอนเงิน</span>
+            </button>
+        </div>
+    </footer>
+
+    <!-- Modal: ตั้งเป้าหมาย (Set Goal) -->
+    <div id="goal-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl border-4 border-purple-300 transform transition-all scale-100">
+            <div class="text-center mb-4">
+                <div class="text-3xl mb-1">🎯</div>
+                <h3 class="text-xl font-extrabold text-purple-700">ตั้งเป้าหมายการออม</h3>
+                <p class="text-xs text-gray-500">หนูอยากเก็บเงินไว้ซื้ออะไรครับ?</p>
+            </div>
+
+            <div class="space-y-3 mb-5">
+                <div>
+                    <label class="block text-xs font-bold text-gray-600 mb-1">ชื่อเป้าหมาย</label>
+                    <input type="text" id="goal-name-input" placeholder="เช่น ของเล่น, ตัวต่อ, ขนม" class="w-full border-2 border-purple-200 rounded-xl px-4 py-2.5 font-bold text-gray-700 focus:outline-none focus:border-purple-500" style="">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-600 mb-1">จำนวนเงินเป้าหมาย (บาท)</label>
+                    <input type="number" id="goal-amount-input" placeholder="เช่น 500" class="w-full border-2 border-purple-200 rounded-xl px-4 py-2.5 font-bold text-gray-700 focus:outline-none focus:border-purple-500" style="">
+                </div>
+            </div>
+
+            <div class="flex gap-2">
+                <button onclick="closeModal('goal-modal')" class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-2.5 rounded-xl text-sm">
+                    ยกเลิก
+                </button>
+                <button onclick="saveGoal()" class="flex-1 bg-purple-500 hover:bg-purple-600 text-white font-bold py-2.5 rounded-xl text-sm shadow-md">
+                    บันทึก
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: ประวัติการออม/ถอน (History) -->
+    <div id="history-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-3xl p-5 w-full max-w-sm shadow-2xl border-4 border-blue-300 flex flex-col max-h-[80vh]">
+            <div class="text-center mb-3">
+                <div class="text-2xl mb-1">📜</div>
+                <h3 class="text-xl font-extrabold text-blue-600">ประวัติการหยอดและถอน</h3>
+            </div>
+
+            <div id="history-list" class="flex-1 overflow-y-auto space-y-2 pr-1 my-2">
+                <!-- รายการประวัติจะถูกสร้างที่นี่ -->
+            </div>
+
+            <button onclick="closeModal('history-modal')" class="w-full mt-3 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2.5 rounded-xl text-sm shadow-md">
+                ปิดหน้าต่าง
+            </button>
+        </div>
+    </div>
+
+    <!-- Modal: ยืนยันการถอนเงิน (Withdraw Confirm) -->
+    <div id="withdraw-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl border-4 border-rose-300 text-center">
+            <div class="text-4xl mb-2">💸</div>
+            <h3 class="text-xl font-extrabold text-rose-600 mb-1">ถอนเงินจากกระปุก?</h3>
+            <p class="text-sm text-gray-600 mb-4">หนูแน่ใจไหมว่าจะทุบกระปุกนำเงินออกมาใช้?</p>
+            
+            <div class="flex gap-2">
+                <button onclick="closeModal('withdraw-modal')" class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-2.5 rounded-xl text-sm">
+                    ไม่ถอนนะ
+                </button>
+                <button onclick="confirmWithdraw()" class="flex-1 bg-rose-500 hover:bg-rose-600 text-white font-bold py-2.5 rounded-xl text-sm shadow-md">
+                    ถอนเงินทั้งหมด
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: ฉลองเป้าหมายแตก! (Goal Reached) -->
+    <div id="congrat-modal" class="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-gradient-to-b from-yellow-100 to-pink-100 rounded-3xl p-6 w-full max-w-sm shadow-2xl border-4 border-yellow-400 text-center transform animate-bounce-short">
+            <div class="text-6xl mb-2">🎉🥳</div>
+            <h3 class="text-2xl font-black text-pink-600 mb-1">เก่งมากเลยลูก!</h3>
+            <p class="text-lg font-bold text-purple-700 mb-2">หนูทำเป้าหมายสำเร็จแล้ว!</p>
+            <div class="bg-white/80 p-3 rounded-2xl mb-4 border border-pink-200">
+                <span class="text-gray-600 text-xs block">เป้าหมาย:</span>
+                <span id="congrat-goal-name" class="text-xl font-black text-yellow-600 block"></span>
+            </div>
+            <button onclick="closeModal('congrat-modal')" class="w-full bg-gradient-to-r from-pink-500 to-yellow-500 text-white font-extrabold py-3 rounded-2xl text-base shadow-lg active:scale-95 transition">
+                เย้! เก่งที่สุดเลย ⭐
+            </button>
+        </div>
+    </div>
+
+    <!-- JavaScript Engine -->
+    <script>
+        // State Variables
+        let totalAmount = 0;
+        let goalName = "ของเล่น";
+        let goalAmount = 500;
+        let history = [];
+        let hasReachedGoal = false;
+
+        // Web Audio API สำหรับสร้างเสียงประกอบ (ไม่ต้องพึ่งไฟล์ภายนอก)
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        let audioCtx = null;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new AudioContext();
+            }
+        }
+
+        // เสียงหยอดเหรียญ (Coin Sound)
+        function playCoinSound() {
+            initAudio();
+            if (!audioCtx) return;
+
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(987.77, audioCtx.currentTime); // B5
+            osc.frequency.exponentialRampToValueAtTime(1318.51, audioCtx.currentTime + 0.08); // E6
+
+            gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.25);
+
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.25);
+        }
+
+        // เสียงแบงก์/เสียงฉลอง (Fanfare / Cheer)
+        function playFanfareSound() {
+            initAudio();
+            if (!audioCtx) return;
+
+            const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+            notes.forEach((freq, index) => {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                
+                osc.type = 'triangle';
+                osc.frequency.value = freq;
+
+                const startTime = audioCtx.currentTime + (index * 0.1);
+                gain.gain.setValueAtTime(0.2, startTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, startTime + 0.3);
+
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                osc.start(startTime);
+                osc.stop(startTime + 0.3);
+            });
+        }
+
+        // โหลดข้อมูลจาก LocalStorage
+        function loadData() {
+            const savedAmount = localStorage.getItem('piggy_amount');
+            const savedGoalName = localStorage.getItem('piggy_goal_name');
+            const savedGoalAmount = localStorage.getItem('piggy_goal_amount');
+            const savedHistory = localStorage.getItem('piggy_history');
+
+            if (savedAmount !== null) totalAmount = parseFloat(savedAmount);
+            if (savedGoalName !== null) goalName = savedGoalName;
+            if (savedGoalAmount !== null) goalAmount = parseFloat(savedGoalAmount);
+            if (savedHistory !== null) history = JSON.parse(savedHistory);
+
+            updateUI();
+        }
+
+        // บันทึกข้อมูลลง LocalStorage
+        function saveData() {
+            localStorage.setItem('piggy_amount', totalAmount);
+            localStorage.setItem('piggy_goal_name', goalName);
+            localStorage.setItem('piggy_goal_amount', goalAmount);
+            localStorage.setItem('piggy_history', JSON.stringify(history));
+        }
+
+        // อัปเดต UI หน้าจอ
+        function updateUI() {
+            document.getElementById('total-amount').innerText = totalAmount.toLocaleString();
+            document.getElementById('goal-title-display').innerText = `🎯 เป้าหมาย: ${goalName}`;
+            document.getElementById('goal-target-display').innerText = `เป้าหมาย: ${goalAmount.toLocaleString()} บาท`;
+
+            //คำนวณ เปอร์เซ็นต์เป้าหมาย
+            let percent = Math.min(100, Math.round((totalAmount / goalAmount) * 100)) || 0;
+            document.getElementById('goal-percent').innerText = `${percent}%`;
+            document.getElementById('progress-bar').style.width = `${percent}%`;
+
+            // Check Goal Reached
+            if (totalAmount >= goalAmount && !hasReachedGoal && goalAmount > 0) {
+                hasReachedGoal = true;
+                triggerCelebration();
+            } else if (totalAmount < goalAmount) {
+                hasReachedGoal = false;
+            }
+        }
+
+        // เพิ่มเงิน (หยอดกระปุก)
+        function addMoney(amount, type) {
+            totalAmount += amount;
+            
+            // เพิ่มลงประวัติ
+            const now = new Date();
+            const dateStr = `${now.getDate()}/${now.getMonth()+1}/${now.getFullYear()} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+            history.unshift({
+                type: 'add',
+                amount: amount,
+                date: dateStr,
+                label: type === 'coin' ? `เหรียญ ${amount} บาท` : `ธนบัตร ${amount} บาท`
+            });
+
+            // เอฟเฟกต์ & เสียง
+            playCoinSound();
+            animateCoinDrop(type, amount);
+            bouncePiggy();
+
+            saveData();
+            updateUI();
+        }
+
+        // แอนิเมชันหมูเด้ง
+        function bouncePiggy() {
+            const piggy = document.getElementById('piggy-svg');
+            piggy.classList.remove('piggy-wiggle');
+            void piggy.offsetWidth; // Trigger reflow
+            piggy.classList.add('piggy-wiggle');
+        }
+
+        // แอนิเมชันเหรียญหล่น
+        function animateCoinDrop(type, amount) {
+            const container = document.getElementById('coin-drop-area');
+            const item = document.createElement('div');
+            item.className = 'coin-animation flex items-center justify-center rounded-full font-black text-white shadow-lg';
+            
+            if (type === 'coin') {
+                item.style.width = '48px';
+                item.style.height = '48px';
+                item.style.background = amount === 10 ? 'linear-gradient(135deg, #f59e0b, #d97706)' : '#9ca3af';
+                item.style.border = '3px solid white';
+                item.innerText = `${amount}฿`;
+            } else {
+                item.style.width = '70px';
+                item.style.height = '40px';
+                item.style.borderRadius = '8px';
+                item.style.background = amount === 20 ? '#10b981' : amount === 50 ? '#3b82f6' : '#ef4444';
+                item.style.border = '2px solid white';
+                item.innerText = `${amount}฿`;
+            }
+
+            container.appendChild(item);
+
+            setTimeout(() => {
+                item.remove();
+            }, 600);
+        }
+
+        // จุดพลุฉลองเมื่อถึงเป้าหมาย
+        function triggerCelebration() {
+            playFanfareSound();
+            
+            // Confetti เอฟเฟกต์
+            confetti({
+                particleCount: 120,
+                spread: 80,
+                origin: { y: 0.6 }
+            });
+
+            setTimeout(() => {
+                document.getElementById('congrat-goal-name').innerText = `${goalName} (${goalAmount.toLocaleString()} บาท)`;
+                document.getElementById('congrat-modal').classList.remove('hidden');
+            }, 400);
+        }
+
+        // เปิด Modal ตั้งเป้าหมาย
+        function openGoalModal() {
+            document.getElementById('goal-name-input').value = goalName;
+            document.getElementById('goal-amount-input').value = goalAmount;
+            document.getElementById('goal-modal').classList.remove('hidden');
+        }
+
+        // บันทึกเป้าหมาย
+        function saveGoal() {
+            const name = document.getElementById('goal-name-input').value.trim();
+            const amount = parseFloat(document.getElementById('goal-amount-input').value);
+
+            if (!name || isNaN(amount) || amount <= 0) {
+                alert('กรุณากรอกข้อมูลเป้าหมายให้ถูกต้องนะคะ');
+                return;
+            }
+
+            goalName = name;
+            goalAmount = amount;
+            hasReachedGoal = totalAmount >= goalAmount;
+
+            saveData();
+            updateUI();
+            closeModal('goal-modal');
+        }
+
+        // ถอนเงิน
+        function withdrawMoney() {
+            if (totalAmount <= 0) {
+                alert('ในกระปุกยังไม่มีเงินเลยลูก ออมเงินก่อนนะ!');
+                return;
+            }
+            document.getElementById('withdraw-modal').classList.remove('hidden');
+        }
+
+        function confirmWithdraw() {
+            const now = new Date();
+            const dateStr = `${now.getDate()}/${now.getMonth()+1}/${now.getFullYear()} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+            
+            history.unshift({
+                type: 'withdraw',
+                amount: totalAmount,
+                date: dateStr,
+                label: 'ถอนเงินออกทั้งหมด'
+            });
+
+            totalAmount = 0;
+            hasReachedGoal = false;
+            saveData();
+            updateUI();
+            closeModal('withdraw-modal');
+        }
+
+        // เปิด Modal ประวัติ
+        function openHistoryModal() {
+            const listEl = document.getElementById('history-list');
+            listEl.innerHTML = '';
+
+            if (history.length === 0) {
+                listEl.innerHTML = '<div class="text-center text-gray-400 py-6 text-sm">ยังไม่มีประวัติการหยอดเงิน</div>';
+            } else {
+                history.forEach(item => {
+                    const isAdd = item.type === 'add';
+                    const div = document.createElement('div');
+                    div.className = `flex justify-between items-center p-3 rounded-2xl border ${isAdd ? 'bg-green-50 border-green-200' : 'bg-rose-50 border-rose-200'}`;
+                    div.innerHTML = `
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${isAdd ? 'bg-green-500 text-white' : 'bg-rose-500 text-white'}">
+                                ${isAdd ? '+' : '-'}
+                            </div>
+                            <div>
+                                <div class="font-bold text-xs text-gray-800">${item.label}</div>
+                                <div class="text-[10px] text-gray-400">${item.date}</div>
+                            </div>
+                        </div>
+                        <div class="font-black text-sm ${isAdd ? 'text-green-600' : 'text-rose-600'}">
+                            ${isAdd ? '+' : '-'}${item.amount.toLocaleString()} ฿
+                        </div>
+                    `;
+                    listEl.appendChild(div);
+                });
+            }
+
+            document.getElementById('history-modal').classList.remove('hidden');
+        }
+
+        // ปิด Modal
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.add('hidden');
+        }
+
+        // โหลดข้อมูลเมื่อเปิดหน้าเว็บ
+        window.onload = function() {
+            loadData();
+        };
+    </script>
+
+</body></html>
