@@ -1,0 +1,1020 @@
+<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>ตารางงานบ้านสะสมดาวของหนูน้อย</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Prompt -->
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;600;700;800;900&amp;display=swap" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Canvas Confetti for Celebration Effects -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js" crossorigin="anonymous"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        prompt: ['Prompt', 'sans-serif'],
+                    },
+                    colors: {
+                        kidYellow: '#FFD166',
+                        kidGreen: '#06D6A0',
+                        kidBlue: '#118AB2',
+                        kidPink: '#EF476F',
+                        kidPurple: '#8338EC',
+                        kidOrange: '#FB5607'
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Prompt', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+            background-color: #F8F9FA;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #CBD5E1;
+            border-radius: 10px;
+        }
+
+        /* Star & Button Animations */
+        @keyframes popIn {
+            0% { transform: scale(0.5); opacity: 0; }
+            70% { transform: scale(1.2); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .animate-pop {
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        @keyframes starBounce {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-8px) rotate(10deg); }
+        }
+
+        .star-active {
+            animation: starBounce 1s infinite ease-in-out;
+        }
+
+        /* Safe area spacing for iOS Notch & Home Bar */
+        .pb-safe {
+            padding-bottom: env(safe-area-inset-bottom, 1rem);
+        }
+        .pt-safe {
+            padding-top: env(safe-area-inset-top, 1rem);
+        }
+    </style>
+<style>*, ::before, ::after{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }::backdrop{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }/* ! tailwindcss v3.4.17 | MIT License | https://tailwindcss.com */*,::after,::before{box-sizing:border-box;border-width:0;border-style:solid;border-color:#e5e7eb}::after,::before{--tw-content:''}:host,html{line-height:1.5;-webkit-text-size-adjust:100%;-moz-tab-size:4;tab-size:4;font-family:ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";font-feature-settings:normal;font-variation-settings:normal;-webkit-tap-highlight-color:transparent}body{margin:0;line-height:inherit}hr{height:0;color:inherit;border-top-width:1px}abbr:where([title]){-webkit-text-decoration:underline dotted;text-decoration:underline dotted}h1,h2,h3,h4,h5,h6{font-size:inherit;font-weight:inherit}a{color:inherit;text-decoration:inherit}b,strong{font-weight:bolder}code,kbd,pre,samp{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;font-feature-settings:normal;font-variation-settings:normal;font-size:1em}small{font-size:80%}sub,sup{font-size:75%;line-height:0;position:relative;vertical-align:baseline}sub{bottom:-.25em}sup{top:-.5em}table{text-indent:0;border-color:inherit;border-collapse:collapse}button,input,optgroup,select,textarea{font-family:inherit;font-feature-settings:inherit;font-variation-settings:inherit;font-size:100%;font-weight:inherit;line-height:inherit;letter-spacing:inherit;color:inherit;margin:0;padding:0}button,select{text-transform:none}button,input:where([type=button]),input:where([type=reset]),input:where([type=submit]){-webkit-appearance:button;background-color:transparent;background-image:none}:-moz-focusring{outline:auto}:-moz-ui-invalid{box-shadow:none}progress{vertical-align:baseline}::-webkit-inner-spin-button,::-webkit-outer-spin-button{height:auto}[type=search]{-webkit-appearance:textfield;outline-offset:-2px}::-webkit-search-decoration{-webkit-appearance:none}::-webkit-file-upload-button{-webkit-appearance:button;font:inherit}summary{display:list-item}blockquote,dd,dl,figure,h1,h2,h3,h4,h5,h6,hr,p,pre{margin:0}fieldset{margin:0;padding:0}legend{padding:0}menu,ol,ul{list-style:none;margin:0;padding:0}dialog{padding:0}textarea{resize:vertical}input::placeholder,textarea::placeholder{opacity:1;color:#9ca3af}[role=button],button{cursor:pointer}:disabled{cursor:default}audio,canvas,embed,iframe,img,object,svg,video{display:block;vertical-align:middle}img,video{max-width:100%;height:auto}[hidden]:where(:not([hidden=until-found])){display:none}.fixed{position:fixed}.relative{position:relative}.sticky{position:sticky}.inset-0{inset:0px}.top-0{top:0px}.z-10{z-index:10}.z-30{z-index:30}.z-50{z-index:50}.mx-auto{margin-left:auto;margin-right:auto}.mb-1{margin-bottom:0.25rem}.mb-2{margin-bottom:0.5rem}.mt-1{margin-top:0.25rem}.mt-2{margin-top:0.5rem}.mt-3{margin-top:0.75rem}.mb-3{margin-bottom:0.75rem}.mt-0\.5{margin-top:0.125rem}.block{display:block}.flex{display:flex}.inline-flex{display:inline-flex}.grid{display:grid}.hidden{display:none}.h-12{height:3rem}.h-4{height:1rem}.h-full{height:100%}.h-14{height:3.5rem}.max-h-\[90vh\]{max-height:90vh}.min-h-screen{min-height:100vh}.w-0{width:0px}.w-1\/2{width:50%}.w-12{width:3rem}.w-full{width:100%}.w-14{width:3.5rem}.min-w-0{min-width:0px}.max-w-3xl{max-width:48rem}.max-w-sm{max-width:24rem}.flex-1{flex:1 1 0%}.flex-shrink-0{flex-shrink:0}.scale-105{--tw-scale-x:1.05;--tw-scale-y:1.05;transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}.transform{transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}.cursor-not-allowed{cursor:not-allowed}.grid-cols-1{grid-template-columns:repeat(1, minmax(0, 1fr))}.grid-cols-2{grid-template-columns:repeat(2, minmax(0, 1fr))}.grid-cols-7{grid-template-columns:repeat(7, minmax(0, 1fr))}.flex-col{flex-direction:column}.items-start{align-items:flex-start}.items-end{align-items:flex-end}.items-center{align-items:center}.justify-center{justify-content:center}.justify-between{justify-content:space-between}.gap-1{gap:0.25rem}.gap-2{gap:0.5rem}.gap-3{gap:0.75rem}.space-x-2 > :not([hidden]) ~ :not([hidden]){--tw-space-x-reverse:0;margin-right:calc(0.5rem * var(--tw-space-x-reverse));margin-left:calc(0.5rem * calc(1 - var(--tw-space-x-reverse)))}.space-x-3 > :not([hidden]) ~ :not([hidden]){--tw-space-x-reverse:0;margin-right:calc(0.75rem * var(--tw-space-x-reverse));margin-left:calc(0.75rem * calc(1 - var(--tw-space-x-reverse)))}.space-y-3 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(0.75rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(0.75rem * var(--tw-space-y-reverse))}.space-y-4 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(1rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(1rem * var(--tw-space-y-reverse))}.space-y-5 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(1.25rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(1.25rem * var(--tw-space-y-reverse))}.space-x-1 > :not([hidden]) ~ :not([hidden]){--tw-space-x-reverse:0;margin-right:calc(0.25rem * var(--tw-space-x-reverse));margin-left:calc(0.25rem * calc(1 - var(--tw-space-x-reverse)))}.overflow-hidden{overflow:hidden}.overflow-x-auto{overflow-x:auto}.overflow-y-auto{overflow-y:auto}.truncate{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.rounded-2xl{border-radius:1rem}.rounded-3xl{border-radius:1.5rem}.rounded-full{border-radius:9999px}.rounded-xl{border-radius:0.75rem}.rounded-t-3xl{border-top-left-radius:1.5rem;border-top-right-radius:1.5rem}.border{border-width:1px}.border-2{border-width:2px}.border-b{border-bottom-width:1px}.border-b-4{border-bottom-width:4px}.border-dashed{border-style:dashed}.border-amber-200{--tw-border-opacity:1;border-color:rgb(253 230 138 / var(--tw-border-opacity, 1))}.border-amber-300{--tw-border-opacity:1;border-color:rgb(252 211 77 / var(--tw-border-opacity, 1))}.border-amber-400{--tw-border-opacity:1;border-color:rgb(251 191 36 / var(--tw-border-opacity, 1))}.border-purple-100{--tw-border-opacity:1;border-color:rgb(243 232 255 / var(--tw-border-opacity, 1))}.border-purple-200{--tw-border-opacity:1;border-color:rgb(233 213 255 / var(--tw-border-opacity, 1))}.border-purple-400{--tw-border-opacity:1;border-color:rgb(192 132 252 / var(--tw-border-opacity, 1))}.border-white{--tw-border-opacity:1;border-color:rgb(255 255 255 / var(--tw-border-opacity, 1))}.border-yellow-200{--tw-border-opacity:1;border-color:rgb(254 240 138 / var(--tw-border-opacity, 1))}.border-yellow-300{--tw-border-opacity:1;border-color:rgb(253 224 71 / var(--tw-border-opacity, 1))}.border-amber-500{--tw-border-opacity:1;border-color:rgb(245 158 11 / var(--tw-border-opacity, 1))}.border-purple-500{--tw-border-opacity:1;border-color:rgb(168 85 247 / var(--tw-border-opacity, 1))}.border-sky-300{--tw-border-opacity:1;border-color:rgb(125 211 252 / var(--tw-border-opacity, 1))}.border-slate-100{--tw-border-opacity:1;border-color:rgb(241 245 249 / var(--tw-border-opacity, 1))}.border-slate-200{--tw-border-opacity:1;border-color:rgb(226 232 240 / var(--tw-border-opacity, 1))}.bg-amber-100{--tw-bg-opacity:1;background-color:rgb(254 243 199 / var(--tw-bg-opacity, 1))}.bg-amber-50\/50{background-color:rgb(255 251 235 / 0.5)}.bg-amber-500{--tw-bg-opacity:1;background-color:rgb(245 158 11 / var(--tw-bg-opacity, 1))}.bg-black\/20{background-color:rgb(0 0 0 / 0.2)}.bg-black\/60{background-color:rgb(0 0 0 / 0.6)}.bg-purple-50\/50{background-color:rgb(250 245 255 / 0.5)}.bg-purple-600{--tw-bg-opacity:1;background-color:rgb(147 51 234 / var(--tw-bg-opacity, 1))}.bg-slate-100{--tw-bg-opacity:1;background-color:rgb(241 245 249 / var(--tw-bg-opacity, 1))}.bg-slate-200{--tw-bg-opacity:1;background-color:rgb(226 232 240 / var(--tw-bg-opacity, 1))}.bg-white{--tw-bg-opacity:1;background-color:rgb(255 255 255 / var(--tw-bg-opacity, 1))}.bg-white\/20{background-color:rgb(255 255 255 / 0.2)}.bg-white\/30{background-color:rgb(255 255 255 / 0.3)}.bg-white\/70{background-color:rgb(255 255 255 / 0.7)}.bg-white\/90{background-color:rgb(255 255 255 / 0.9)}.bg-yellow-300{--tw-bg-opacity:1;background-color:rgb(253 224 71 / var(--tw-bg-opacity, 1))}.bg-yellow-400{--tw-bg-opacity:1;background-color:rgb(250 204 21 / var(--tw-bg-opacity, 1))}.bg-amber-50{--tw-bg-opacity:1;background-color:rgb(255 251 235 / var(--tw-bg-opacity, 1))}.bg-purple-100{--tw-bg-opacity:1;background-color:rgb(243 232 255 / var(--tw-bg-opacity, 1))}.bg-purple-50{--tw-bg-opacity:1;background-color:rgb(250 245 255 / var(--tw-bg-opacity, 1))}.bg-sky-400{--tw-bg-opacity:1;background-color:rgb(56 189 248 / var(--tw-bg-opacity, 1))}.bg-gradient-to-b{background-image:linear-gradient(to bottom, var(--tw-gradient-stops))}.bg-gradient-to-r{background-image:linear-gradient(to right, var(--tw-gradient-stops))}.from-sky-100{--tw-gradient-from:#e0f2fe var(--tw-gradient-from-position);--tw-gradient-to:rgb(224 242 254 / 0) var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from), var(--tw-gradient-to)}.from-teal-400{--tw-gradient-from:#2dd4bf var(--tw-gradient-from-position);--tw-gradient-to:rgb(45 212 191 / 0) var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from), var(--tw-gradient-to)}.from-yellow-400{--tw-gradient-from:#facc15 var(--tw-gradient-from-position);--tw-gradient-to:rgb(250 204 21 / 0) var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from), var(--tw-gradient-to)}.via-purple-50{--tw-gradient-to:rgb(250 245 255 / 0)  var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from), #faf5ff var(--tw-gradient-via-position), var(--tw-gradient-to)}.to-amber-500{--tw-gradient-to:#f59e0b var(--tw-gradient-to-position)}.to-emerald-500{--tw-gradient-to:#10b981 var(--tw-gradient-to-position)}.to-pink-100{--tw-gradient-to:#fce7f3 var(--tw-gradient-to-position)}.p-0{padding:0px}.p-0\.5{padding:0.125rem}.p-1\.5{padding:0.375rem}.p-3{padding:0.75rem}.p-4{padding:1rem}.p-6{padding:1.5rem}.p-1{padding:0.25rem}.p-2{padding:0.5rem}.px-1{padding-left:0.25rem;padding-right:0.25rem}.px-2{padding-left:0.5rem;padding-right:0.5rem}.px-2\.5{padding-left:0.625rem;padding-right:0.625rem}.px-4{padding-left:1rem;padding-right:1rem}.py-0\.5{padding-top:0.125rem;padding-bottom:0.125rem}.py-1{padding-top:0.25rem;padding-bottom:0.25rem}.py-2{padding-top:0.5rem;padding-bottom:0.5rem}.py-3{padding-top:0.75rem;padding-bottom:0.75rem}.py-3\.5{padding-top:0.875rem;padding-bottom:0.875rem}.py-4{padding-top:1rem;padding-bottom:1rem}.py-2\.5{padding-top:0.625rem;padding-bottom:0.625rem}.pb-2{padding-bottom:0.5rem}.pb-3{padding-bottom:0.75rem}.pt-2{padding-top:0.5rem}.pt-4{padding-top:1rem}.pr-2{padding-right:0.5rem}.text-center{text-align:center}.text-right{text-align:right}.text-2xl{font-size:1.5rem;line-height:2rem}.text-3xl{font-size:1.875rem;line-height:2.25rem}.text-5xl{font-size:3rem;line-height:1}.text-base{font-size:1rem;line-height:1.5rem}.text-lg{font-size:1.125rem;line-height:1.75rem}.text-xl{font-size:1.25rem;line-height:1.75rem}.text-xs{font-size:0.75rem;line-height:1rem}.text-4xl{font-size:2.25rem;line-height:2.5rem}.text-sm{font-size:0.875rem;line-height:1.25rem}.font-black{font-weight:900}.font-bold{font-weight:700}.font-extrabold{font-weight:800}.font-semibold{font-weight:600}.uppercase{text-transform:uppercase}.leading-none{line-height:1}.leading-snug{line-height:1.375}.tracking-wide{letter-spacing:0.025em}.tracking-wider{letter-spacing:0.05em}.text-amber-700{--tw-text-opacity:1;color:rgb(180 83 9 / var(--tw-text-opacity, 1))}.text-amber-800{--tw-text-opacity:1;color:rgb(146 64 14 / var(--tw-text-opacity, 1))}.text-amber-900{--tw-text-opacity:1;color:rgb(120 53 15 / var(--tw-text-opacity, 1))}.text-purple-700{--tw-text-opacity:1;color:rgb(126 34 206 / var(--tw-text-opacity, 1))}.text-slate-400{--tw-text-opacity:1;color:rgb(148 163 184 / var(--tw-text-opacity, 1))}.text-slate-500{--tw-text-opacity:1;color:rgb(100 116 139 / var(--tw-text-opacity, 1))}.text-slate-600{--tw-text-opacity:1;color:rgb(71 85 105 / var(--tw-text-opacity, 1))}.text-slate-800{--tw-text-opacity:1;color:rgb(30 41 59 / var(--tw-text-opacity, 1))}.text-teal-100{--tw-text-opacity:1;color:rgb(204 251 241 / var(--tw-text-opacity, 1))}.text-white{--tw-text-opacity:1;color:rgb(255 255 255 / var(--tw-text-opacity, 1))}.text-amber-500{--tw-text-opacity:1;color:rgb(245 158 11 / var(--tw-text-opacity, 1))}.text-sky-950{--tw-text-opacity:1;color:rgb(8 47 73 / var(--tw-text-opacity, 1))}.text-slate-300{--tw-text-opacity:1;color:rgb(203 213 225 / var(--tw-text-opacity, 1))}.underline{-webkit-text-decoration-line:underline;text-decoration-line:underline}.opacity-80{opacity:0.8}.shadow-2xl{--tw-shadow:0 25px 50px -12px rgb(0 0 0 / 0.25);--tw-shadow-colored:0 25px 50px -12px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-inner{--tw-shadow:inset 0 2px 4px 0 rgb(0 0 0 / 0.05);--tw-shadow-colored:inset 0 2px 4px 0 var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-lg{--tw-shadow:0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);--tw-shadow-colored:0 10px 15px -3px var(--tw-shadow-color), 0 4px 6px -4px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-md{--tw-shadow:0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);--tw-shadow-colored:0 4px 6px -1px var(--tw-shadow-color), 0 2px 4px -2px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-sm{--tw-shadow:0 1px 2px 0 rgb(0 0 0 / 0.05);--tw-shadow-colored:0 1px 2px 0 var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.outline-none{outline:2px solid transparent;outline-offset:2px}.ring-4{--tw-ring-offset-shadow:var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);--tw-ring-shadow:var(--tw-ring-inset) 0 0 0 calc(4px + var(--tw-ring-offset-width)) var(--tw-ring-color);box-shadow:var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000)}.ring-purple-300{--tw-ring-opacity:1;--tw-ring-color:rgb(216 180 254 / var(--tw-ring-opacity, 1))}.drop-shadow{--tw-drop-shadow:drop-shadow(0 1px 2px rgb(0 0 0 / 0.1)) drop-shadow(0 1px 1px rgb(0 0 0 / 0.06));filter:var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale) var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow)}.backdrop-blur-md{--tw-backdrop-blur:blur(12px);-webkit-backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia);backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia)}.backdrop-blur-sm{--tw-backdrop-blur:blur(4px);-webkit-backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia);backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia)}.transition{transition-property:color, background-color, border-color, fill, stroke, opacity, box-shadow, transform, filter, -webkit-text-decoration-color, -webkit-backdrop-filter;transition-property:color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;transition-property:color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter, -webkit-text-decoration-color, -webkit-backdrop-filter;transition-timing-function:cubic-bezier(0.4, 0, 0.2, 1);transition-duration:150ms}.transition-all{transition-property:all;transition-timing-function:cubic-bezier(0.4, 0, 0.2, 1);transition-duration:150ms}.duration-500{transition-duration:500ms}.hover\:border-purple-600:hover{--tw-border-opacity:1;border-color:rgb(147 51 234 / var(--tw-border-opacity, 1))}.hover\:bg-amber-600:hover{--tw-bg-opacity:1;background-color:rgb(217 119 6 / var(--tw-bg-opacity, 1))}.hover\:bg-purple-700:hover{--tw-bg-opacity:1;background-color:rgb(126 34 206 / var(--tw-bg-opacity, 1))}.hover\:bg-slate-300:hover{--tw-bg-opacity:1;background-color:rgb(203 213 225 / var(--tw-bg-opacity, 1))}.hover\:bg-slate-200:hover{--tw-bg-opacity:1;background-color:rgb(226 232 240 / var(--tw-bg-opacity, 1))}.hover\:text-red-500:hover{--tw-text-opacity:1;color:rgb(239 68 68 / var(--tw-text-opacity, 1))}.hover\:text-slate-600:hover{--tw-text-opacity:1;color:rgb(71 85 105 / var(--tw-text-opacity, 1))}.hover\:text-red-400:hover{--tw-text-opacity:1;color:rgb(248 113 113 / var(--tw-text-opacity, 1))}.focus\:border-amber-500:focus{--tw-border-opacity:1;border-color:rgb(245 158 11 / var(--tw-border-opacity, 1))}.focus\:border-purple-500:focus{--tw-border-opacity:1;border-color:rgb(168 85 247 / var(--tw-border-opacity, 1))}.active\:scale-95:active{--tw-scale-x:.95;--tw-scale-y:.95;transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}@media (min-width: 640px){.sm\:max-w-md{max-width:28rem}.sm\:grid-cols-2{grid-template-columns:repeat(2, minmax(0, 1fr))}.sm\:items-center{align-items:center}.sm\:rounded-3xl{border-radius:1.5rem}.sm\:p-4{padding:1rem}}</style></head>
+<body class="bg-gradient-to-b from-sky-100 via-purple-50 to-pink-100 min-h-screen text-slate-800 flex flex-col pb-safe">
+
+    <!-- HEADER / PROFILE BAR -->
+    <header class="sticky top-0 z-30 bg-white/90 backdrop-blur-md shadow-md px-4 py-3 pt-safe border-b-4 border-yellow-300">
+        <div class="max-w-3xl mx-auto flex justify-between items-center">
+            <!-- App Logo & Title -->
+            <div class="flex items-center space-x-3">
+                <div class="w-12 h-12 bg-yellow-400 rounded-2xl flex items-center justify-center text-2xl shadow-md border-2 border-yellow-200">
+                    ⭐
+                </div>
+                <div>
+                    <h1 class="text-xl font-extrabold text-purple-700 tracking-wide leading-none">งานบ้านสะสมดาว</h1>
+                    <p class="text-xs font-semibold text-slate-500 mt-1">เก่งมากเด็กดี! 💪🌟</p>
+                </div>
+            </div>
+
+            <!-- Total Stars Badge -->
+            <div class="bg-gradient-to-r from-yellow-400 to-amber-500 text-white px-4 py-2 rounded-full shadow-lg border-2 border-yellow-200 flex items-center space-x-2 transform transition active:scale-95">
+                <span class="text-2xl star-active">⭐</span>
+                <span id="total-stars" class="text-2xl font-black text-white drop-shadow">0</span>
+                <span class="text-xs font-bold bg-white/30 px-2 py-0.5 rounded-full">ดวง</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTAINER -->
+    <main class="max-w-3xl mx-auto w-full flex-1 px-4 py-4 space-y-5">
+
+        <!-- NAV TABS (ตารางงาน / ร้านแลกรางวัล) -->
+        <div class="grid grid-cols-2 gap-2 bg-white/70 p-1.5 rounded-2xl shadow-inner border border-white">
+            <button id="tab-chores-btn" onclick="switchTab('chores')" class="py-3 px-4 rounded-xl font-extrabold text-lg flex items-center justify-center space-x-2 transition-all bg-purple-600 text-white shadow-md">
+                <span>📋 ตารางงาน</span>
+            </button>
+            <button id="tab-rewards-btn" onclick="switchTab('rewards')" class="py-3 px-4 rounded-xl font-extrabold text-lg flex items-center justify-center space-x-2 transition-all bg-slate-200 text-slate-600 hover:bg-slate-300">
+                <span>🎁 แลกรางวัล</span>
+            </button>
+        </div>
+
+        <!-- TAB 1: CHORES VIEW -->
+        <section id="tab-chores" class="space-y-4">
+
+            <!-- DAY SELECTOR (จันทร์ - อาทิตย์) -->
+            <div class="bg-white rounded-2xl p-3 shadow-md border-2 border-purple-100">
+                <p class="text-xs font-bold text-slate-400 mb-2 px-1">📅 เลือกวัน:</p>
+                <div class="grid grid-cols-7 gap-1" id="days-bar"><button class="flex flex-col items-center justify-center p-2 rounded-xl transition-all relative bg-slate-100 text-slate-600 font-bold hover:bg-slate-200">
+                    <span class="text-xs opacity-80">จ</span>
+                    <span class="text-sm font-black mt-0.5">•</span>
+                </button><button class="flex flex-col items-center justify-center p-2 rounded-xl transition-all relative bg-slate-100 text-slate-600 font-bold hover:bg-slate-200">
+                    <span class="text-xs opacity-80">อ</span>
+                    <span class="text-sm font-black mt-0.5">•</span>
+                </button><button class="flex flex-col items-center justify-center p-2 rounded-xl transition-all relative bg-slate-100 text-slate-600 font-bold hover:bg-slate-200">
+                    <span class="text-xs opacity-80">พ</span>
+                    <span class="text-sm font-black mt-0.5">•</span>
+                </button><button class="flex flex-col items-center justify-center p-2 rounded-xl transition-all relative bg-slate-100 text-slate-600 font-bold hover:bg-slate-200">
+                    <span class="text-xs opacity-80">พฤ</span>
+                    <span class="text-sm font-black mt-0.5">•</span>
+                </button><button class="flex flex-col items-center justify-center p-2 rounded-xl transition-all relative bg-sky-400 text-sky-950 border-sky-300 ring-4 ring-purple-300 font-extrabold scale-105 shadow-md">
+                    <span class="text-xs opacity-80">ศ</span>
+                    <span class="text-sm font-black mt-0.5">•</span>
+                </button><button class="flex flex-col items-center justify-center p-2 rounded-xl transition-all relative bg-slate-100 text-slate-600 font-bold hover:bg-slate-200">
+                    <span class="text-xs opacity-80">ส</span>
+                    <span class="text-sm font-black mt-0.5">•</span>
+                </button><button class="flex flex-col items-center justify-center p-2 rounded-xl transition-all relative bg-slate-100 text-slate-600 font-bold hover:bg-slate-200">
+                    <span class="text-xs opacity-80">อา</span>
+                    <span class="text-sm font-black mt-0.5">•</span>
+                </button></div>
+            </div>
+
+            <!-- TODAY PROGRESS CARD -->
+            <div id="daily-progress-card" class="bg-gradient-to-r from-teal-400 to-emerald-500 rounded-2xl p-4 text-white shadow-lg relative overflow-hidden">
+                <div class="flex justify-between items-center relative z-10">
+                    <div>
+                        <span id="current-day-label" class="bg-white/20 text-xs font-black px-2.5 py-1 rounded-full uppercase tracking-wider">วันศุกร์</span>
+                        <h2 class="text-lg font-black mt-1">ความคืบหน้าวันนี้</h2>
+                    </div>
+                    <div class="text-right">
+                        <span id="progress-percent" class="text-2xl font-black">0%</span>
+                    </div>
+                </div>
+                <!-- Progress Bar -->
+                <div class="w-full bg-black/20 h-4 rounded-full mt-3 overflow-hidden p-0.5">
+                    <div id="progress-bar-inner" class="bg-yellow-300 h-full rounded-full transition-all duration-500 w-0" style="width: 0%;"></div>
+                </div>
+                <p id="completion-status-text" class="text-xs font-bold mt-2 text-teal-100 text-center">ทำสำเร็จแล้ว 0 จาก 5 งาน</p>
+            </div>
+
+            <!-- CHORE LIST -->
+            <div class="space-y-3" id="chores-container"><div class="bg-white rounded-2xl p-4 shadow-sm border-2 transition-all flex items-center justify-between border-slate-100">
+                    <div class="flex items-center space-x-3 flex-1 min-w-0 pr-2">
+                        <div class="text-4xl w-14 h-14 bg-purple-50 rounded-2xl flex items-center justify-center border border-purple-100 flex-shrink-0">
+                            🧸
+                        </div>
+                        <div class="truncate">
+                            <h4 class="font-extrabold text-lg text-slate-800 truncate ">
+                                เก็บของเล่นเข้าที่
+                            </h4>
+                            <div class="flex items-center space-x-1 mt-0.5">
+                                <span class="text-sm font-bold text-amber-500">⭐⭐</span>
+                                <span class="text-xs font-bold text-slate-400">(2 ดาว)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center space-x-2">
+                        <!-- Checkbox Button -->
+                        <button onclick="toggleChore('c1')" class="w-14 h-14 rounded-2xl flex items-center justify-center transition-all bg-slate-100 hover:bg-slate-200 text-slate-300 text-xl border-2 border-slate-200">
+                            <i class="fa-solid fa-check"></i>
+                        </button>
+                        
+                        <!-- Delete Chore Button -->
+                        <button onclick="deleteChore('c1')" class="text-slate-300 hover:text-red-400 p-2 text-xs">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </div>
+                </div><div class="bg-white rounded-2xl p-4 shadow-sm border-2 transition-all flex items-center justify-between border-slate-100">
+                    <div class="flex items-center space-x-3 flex-1 min-w-0 pr-2">
+                        <div class="text-4xl w-14 h-14 bg-purple-50 rounded-2xl flex items-center justify-center border border-purple-100 flex-shrink-0">
+                            🧺
+                        </div>
+                        <div class="truncate">
+                            <h4 class="font-extrabold text-lg text-slate-800 truncate ">
+                                ช่วยพับผ้า
+                            </h4>
+                            <div class="flex items-center space-x-1 mt-0.5">
+                                <span class="text-sm font-bold text-amber-500">⭐⭐</span>
+                                <span class="text-xs font-bold text-slate-400">(2 ดาว)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center space-x-2">
+                        <!-- Checkbox Button -->
+                        <button onclick="toggleChore('c2')" class="w-14 h-14 rounded-2xl flex items-center justify-center transition-all bg-slate-100 hover:bg-slate-200 text-slate-300 text-xl border-2 border-slate-200">
+                            <i class="fa-solid fa-check"></i>
+                        </button>
+                        
+                        <!-- Delete Chore Button -->
+                        <button onclick="deleteChore('c2')" class="text-slate-300 hover:text-red-400 p-2 text-xs">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </div>
+                </div><div class="bg-white rounded-2xl p-4 shadow-sm border-2 transition-all flex items-center justify-between border-slate-100">
+                    <div class="flex items-center space-x-3 flex-1 min-w-0 pr-2">
+                        <div class="text-4xl w-14 h-14 bg-purple-50 rounded-2xl flex items-center justify-center border border-purple-100 flex-shrink-0">
+                            🪴
+                        </div>
+                        <div class="truncate">
+                            <h4 class="font-extrabold text-lg text-slate-800 truncate ">
+                                รดน้ำต้นไม้
+                            </h4>
+                            <div class="flex items-center space-x-1 mt-0.5">
+                                <span class="text-sm font-bold text-amber-500">⭐</span>
+                                <span class="text-xs font-bold text-slate-400">(1 ดาว)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center space-x-2">
+                        <!-- Checkbox Button -->
+                        <button onclick="toggleChore('c3')" class="w-14 h-14 rounded-2xl flex items-center justify-center transition-all bg-slate-100 hover:bg-slate-200 text-slate-300 text-xl border-2 border-slate-200">
+                            <i class="fa-solid fa-check"></i>
+                        </button>
+                        
+                        <!-- Delete Chore Button -->
+                        <button onclick="deleteChore('c3')" class="text-slate-300 hover:text-red-400 p-2 text-xs">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </div>
+                </div><div class="bg-white rounded-2xl p-4 shadow-sm border-2 transition-all flex items-center justify-between border-slate-100">
+                    <div class="flex items-center space-x-3 flex-1 min-w-0 pr-2">
+                        <div class="text-4xl w-14 h-14 bg-purple-50 rounded-2xl flex items-center justify-center border border-purple-100 flex-shrink-0">
+                            🍽️
+                        </div>
+                        <div class="truncate">
+                            <h4 class="font-extrabold text-lg text-slate-800 truncate ">
+                                ช่วยล้างจาน
+                            </h4>
+                            <div class="flex items-center space-x-1 mt-0.5">
+                                <span class="text-sm font-bold text-amber-500">⭐⭐⭐</span>
+                                <span class="text-xs font-bold text-slate-400">(3 ดาว)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center space-x-2">
+                        <!-- Checkbox Button -->
+                        <button onclick="toggleChore('c4')" class="w-14 h-14 rounded-2xl flex items-center justify-center transition-all bg-slate-100 hover:bg-slate-200 text-slate-300 text-xl border-2 border-slate-200">
+                            <i class="fa-solid fa-check"></i>
+                        </button>
+                        
+                        <!-- Delete Chore Button -->
+                        <button onclick="deleteChore('c4')" class="text-slate-300 hover:text-red-400 p-2 text-xs">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </div>
+                </div><div class="bg-white rounded-2xl p-4 shadow-sm border-2 transition-all flex items-center justify-between border-slate-100">
+                    <div class="flex items-center space-x-3 flex-1 min-w-0 pr-2">
+                        <div class="text-4xl w-14 h-14 bg-purple-50 rounded-2xl flex items-center justify-center border border-purple-100 flex-shrink-0">
+                            🐱
+                        </div>
+                        <div class="truncate">
+                            <h4 class="font-extrabold text-lg text-slate-800 truncate ">
+                                ป้อนข้าวแมว / สัตว์เลี้ยง
+                            </h4>
+                            <div class="flex items-center space-x-1 mt-0.5">
+                                <span class="text-sm font-bold text-amber-500">⭐</span>
+                                <span class="text-xs font-bold text-slate-400">(1 ดาว)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center space-x-2">
+                        <!-- Checkbox Button -->
+                        <button onclick="toggleChore('c5')" class="w-14 h-14 rounded-2xl flex items-center justify-center transition-all bg-slate-100 hover:bg-slate-200 text-slate-300 text-xl border-2 border-slate-200">
+                            <i class="fa-solid fa-check"></i>
+                        </button>
+                        
+                        <!-- Delete Chore Button -->
+                        <button onclick="deleteChore('c5')" class="text-slate-300 hover:text-red-400 p-2 text-xs">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </div>
+                </div></div>
+
+            <!-- ADD NEW CHORE BUTTON -->
+            <button onclick="openAddChoreModal()" class="w-full py-3.5 bg-dashed border-2 border-dashed border-purple-400 hover:border-purple-600 bg-purple-50/50 rounded-2xl text-purple-700 font-extrabold flex items-center justify-center space-x-2 active:scale-98 transition">
+                <i class="fa-solid fa-plus text-lg"></i>
+                <span>เพิ่มงานบ้านใหม่</span>
+            </button>
+
+            <!-- RESET WEEK BUTTON -->
+            <div class="pt-4 text-center">
+                <button onclick="confirmResetWeek()" class="text-xs font-bold text-slate-400 hover:text-red-500 underline transition">
+                    🔄 เริ่มต้นสัปดาห์ใหม่ (รีเซ็ตเครื่องหมายติ๊ก)
+                </button>
+            </div>
+        </section>
+
+        <!-- TAB 2: REWARDS VIEW -->
+        <section id="tab-rewards" class="space-y-4 hidden">
+            
+            <div class="bg-amber-100 border-2 border-amber-300 rounded-2xl p-4 flex items-center space-x-3">
+                <div class="text-3xl">🏆</div>
+                <div>
+                    <h3 class="font-extrabold text-amber-900">คลังรางวัลของเด็กดี</h3>
+                    <p class="text-xs font-semibold text-amber-700">สะสมดาวครบแล้ว นำมาแลกรางวัลสุดพิเศษที่นี่ได้เลย!</p>
+                </div>
+            </div>
+
+            <!-- REWARDS LIST CONTAINER -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3" id="rewards-container"><div class="bg-white rounded-2xl p-4 shadow-sm border-2 flex flex-col justify-between border-slate-100">
+                    <div class="flex items-start space-x-3 mb-3">
+                        <div class="text-4xl w-12 h-12 bg-amber-50 rounded-2xl flex items-center justify-center flex-shrink-0">
+                            🍦
+                        </div>
+                        <div class="flex-1">
+                            <h4 class="font-extrabold text-base text-slate-800 leading-snug">ไอศกรีมแสนอร่อย 1 ถ้วย</h4>
+                            <div class="inline-flex items-center space-x-1 bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full text-xs font-black mt-1">
+                                <span>⭐ 10 ดาว</span>
+                            </div>
+                        </div>
+                        <button onclick="deleteReward('r1')" class="text-slate-300 hover:text-red-400 text-xs p-1">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </div>
+
+                    <button onclick="redeemReward('r1')" disabled="" class="w-full py-2.5 rounded-xl font-extrabold text-sm shadow-md transition-all flex items-center justify-center space-x-2 bg-slate-200 text-slate-400 cursor-not-allowed">
+                        <span>สะสมเพิ่มอีก 10 ⭐</span>
+                    </button>
+                </div><div class="bg-white rounded-2xl p-4 shadow-sm border-2 flex flex-col justify-between border-slate-100">
+                    <div class="flex items-start space-x-3 mb-3">
+                        <div class="text-4xl w-12 h-12 bg-amber-50 rounded-2xl flex items-center justify-center flex-shrink-0">
+                            🎮
+                        </div>
+                        <div class="flex-1">
+                            <h4 class="font-extrabold text-base text-slate-800 leading-snug">เล่นเกม / ดูการ์ตูน 30 นาที</h4>
+                            <div class="inline-flex items-center space-x-1 bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full text-xs font-black mt-1">
+                                <span>⭐ 15 ดาว</span>
+                            </div>
+                        </div>
+                        <button onclick="deleteReward('r2')" class="text-slate-300 hover:text-red-400 text-xs p-1">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </div>
+
+                    <button onclick="redeemReward('r2')" disabled="" class="w-full py-2.5 rounded-xl font-extrabold text-sm shadow-md transition-all flex items-center justify-center space-x-2 bg-slate-200 text-slate-400 cursor-not-allowed">
+                        <span>สะสมเพิ่มอีก 15 ⭐</span>
+                    </button>
+                </div><div class="bg-white rounded-2xl p-4 shadow-sm border-2 flex flex-col justify-between border-slate-100">
+                    <div class="flex items-start space-x-3 mb-3">
+                        <div class="text-4xl w-12 h-12 bg-amber-50 rounded-2xl flex items-center justify-center flex-shrink-0">
+                            🧸
+                        </div>
+                        <div class="flex-1">
+                            <h4 class="font-extrabold text-base text-slate-800 leading-snug">ได้ของเล่นชิ้นใหม่</h4>
+                            <div class="inline-flex items-center space-x-1 bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full text-xs font-black mt-1">
+                                <span>⭐ 50 ดาว</span>
+                            </div>
+                        </div>
+                        <button onclick="deleteReward('r3')" class="text-slate-300 hover:text-red-400 text-xs p-1">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </div>
+
+                    <button onclick="redeemReward('r3')" disabled="" class="w-full py-2.5 rounded-xl font-extrabold text-sm shadow-md transition-all flex items-center justify-center space-x-2 bg-slate-200 text-slate-400 cursor-not-allowed">
+                        <span>สะสมเพิ่มอีก 50 ⭐</span>
+                    </button>
+                </div></div>
+
+            <!-- ADD NEW REWARD BUTTON -->
+            <button onclick="openAddRewardModal()" class="w-full py-3.5 bg-dashed border-2 border-dashed border-amber-400 bg-amber-50/50 rounded-2xl text-amber-800 font-extrabold flex items-center justify-center space-x-2 active:scale-98 transition">
+                <i class="fa-solid fa-plus text-lg"></i>
+                <span>เพิ่มรางวัลใหม่</span>
+            </button>
+        </section>
+
+    </main>
+
+    <!-- MODAL 1: ADD CHORE -->
+    <div id="add-chore-modal" class="fixed inset-0 bg-black/60 z-50 backdrop-blur-sm flex items-end sm:items-center justify-center hidden p-0 sm:p-4">
+        <div class="bg-white w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl p-6 space-y-4 animate-pop max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="text-xl font-extrabold text-purple-700">✨ เพิ่มงานบ้านใหม่</h3>
+                <button onclick="closeModal('add-chore-modal')" class="text-slate-400 hover:text-slate-600 text-2xl font-bold">×</button>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-slate-500 mb-1">เลือกอีโมจิ:</label>
+                <div class="flex space-x-2 overflow-x-auto pb-2" id="emoji-picker"><button type="button" class="text-2xl p-2 rounded-xl border-2 transition border-purple-500 bg-purple-100">🧸</button><button type="button" class="text-2xl p-2 rounded-xl border-2 transition border-slate-200">🧺</button><button type="button" class="text-2xl p-2 rounded-xl border-2 transition border-slate-200">🪴</button><button type="button" class="text-2xl p-2 rounded-xl border-2 transition border-slate-200">🍽️</button><button type="button" class="text-2xl p-2 rounded-xl border-2 transition border-slate-200">🐱</button><button type="button" class="text-2xl p-2 rounded-xl border-2 transition border-slate-200">📚</button><button type="button" class="text-2xl p-2 rounded-xl border-2 transition border-slate-200">🧹</button><button type="button" class="text-2xl p-2 rounded-xl border-2 transition border-slate-200">🛏️</button><button type="button" class="text-2xl p-2 rounded-xl border-2 transition border-slate-200">🦷</button><button type="button" class="text-2xl p-2 rounded-xl border-2 transition border-slate-200">🐶</button><button type="button" class="text-2xl p-2 rounded-xl border-2 transition border-slate-200">🎒</button><button type="button" class="text-2xl p-2 rounded-xl border-2 transition border-slate-200">🎨</button></div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-slate-500 mb-1">ชื่องานบ้าน:</label>
+                <input type="text" id="new-chore-title" placeholder="เช่น ให้อาหารปลา, เก็บที่นอน" class="w-full px-4 py-3 rounded-xl border-2 border-purple-200 focus:border-purple-500 outline-none font-bold text-lg" style="">
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-slate-500 mb-1">จำนวนดาวที่จะได้รับ:</label>
+                <select id="new-chore-stars" class="w-full px-4 py-3 rounded-xl border-2 border-purple-200 focus:border-purple-500 outline-none font-bold text-lg bg-white">
+                    <option value="1">⭐ 1 ดาว</option>
+                    <option value="2">⭐⭐ 2 ดาว</option>
+                    <option value="3" selected="">⭐⭐⭐ 3 ดาว</option>
+                    <option value="5">⭐⭐⭐⭐⭐ 5 ดาว</option>
+                </select>
+            </div>
+
+            <div class="pt-2 flex space-x-2">
+                <button onclick="closeModal('add-chore-modal')" class="w-1/2 py-3 bg-slate-100 rounded-xl font-bold text-slate-500">ยกเลิก</button>
+                <button onclick="saveNewChore()" class="w-1/2 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-extrabold shadow-md">บันทึกงาน</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 2: ADD REWARD -->
+    <div id="add-reward-modal" class="fixed inset-0 bg-black/60 z-50 backdrop-blur-sm flex items-end sm:items-center justify-center hidden p-0 sm:p-4">
+        <div class="bg-white w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl p-6 space-y-4 animate-pop max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="text-xl font-extrabold text-amber-700">🎁 เพิ่มของรางวัลใหม่</h3>
+                <button onclick="closeModal('add-reward-modal')" class="text-slate-400 hover:text-slate-600 text-2xl font-bold">×</button>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-slate-500 mb-1">เลือกอีโมจิรางวัล:</label>
+                <div class="flex space-x-2 overflow-x-auto pb-2" id="reward-emoji-picker"><button type="button" class="text-2xl p-2 rounded-xl border-2 transition border-amber-500 bg-amber-100">🍦</button><button type="button" class="text-2xl p-2 rounded-xl border-2 transition border-slate-200">🎮</button><button type="button" class="text-2xl p-2 rounded-xl border-2 transition border-slate-200">🍫</button><button type="button" class="text-2xl p-2 rounded-xl border-2 transition border-slate-200">🎠</button><button type="button" class="text-2xl p-2 rounded-xl border-2 transition border-slate-200">🚴</button><button type="button" class="text-2xl p-2 rounded-xl border-2 transition border-slate-200">🎬</button><button type="button" class="text-2xl p-2 rounded-xl border-2 transition border-slate-200">🧩</button><button type="button" class="text-2xl p-2 rounded-xl border-2 transition border-slate-200">🧸</button><button type="button" class="text-2xl p-2 rounded-xl border-2 transition border-slate-200">🍕</button></div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-slate-500 mb-1">ชื่อรางวัล:</label>
+                <input type="text" id="new-reward-title" placeholder="เช่น ไอศกรีม 1 ถ้วย, ไปสวนสาธารณะ" class="w-full px-4 py-3 rounded-xl border-2 border-amber-200 focus:border-amber-500 outline-none font-bold text-lg" style="">
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-slate-500 mb-1">ดาวที่ต้องใช้แลก:</label>
+                <input type="number" id="new-reward-cost" value="10" min="1" max="500" class="w-full px-4 py-3 rounded-xl border-2 border-amber-200 focus:border-amber-500 outline-none font-bold text-lg" style="">
+            </div>
+
+            <div class="pt-2 flex space-x-2">
+                <button onclick="closeModal('add-reward-modal')" class="w-1/2 py-3 bg-slate-100 rounded-xl font-bold text-slate-500">ยกเลิก</button>
+                <button onclick="saveNewReward()" class="w-1/2 py-3 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-extrabold shadow-md">บันทึกรางวัล</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 3: CUSTOM MESSAGE BOX (Replacing Alert) -->
+    <div id="msg-modal" class="fixed inset-0 bg-black/60 z-50 backdrop-blur-sm flex items-center justify-center hidden p-4">
+        <div class="bg-white w-full max-w-sm rounded-3xl p-6 text-center space-y-4 animate-pop shadow-2xl">
+            <div id="msg-icon" class="text-5xl">🎉</div>
+            <h3 id="msg-title" class="text-2xl font-black text-slate-800">เก่งมาก!</h3>
+            <p id="msg-body" class="text-slate-600 font-bold text-base">คุณทำภารกิจสำเร็จแล้ว</p>
+            <button onclick="closeModal('msg-modal')" class="w-full py-3 bg-purple-600 text-white font-extrabold rounded-xl shadow-lg hover:bg-purple-700">ตกลง</button>
+        </div>
+    </div>
+
+    <!-- AUDIO EFFECTS (Web Audio API Synthesizer - No External Files Required) -->
+    <script>
+        // Web Audio API Synthesizer for reliable sound effects on iPhone
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        let audioCtx = null;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new AudioContext();
+            }
+        }
+
+        // Play Ding Sound for Star Earned
+        function playStarSound() {
+            try {
+                initAudio();
+                const now = audioCtx.currentTime;
+
+                // High musical chime (C6 -> G6)
+                const osc1 = audioCtx.createOscillator();
+                const gain1 = audioCtx.createGain();
+                
+                osc1.type = 'sine';
+                osc1.frequency.setValueAtTime(1046.50, now); // C6
+                osc1.frequency.exponentialRampToValueAtTime(1567.98, now + 0.15); // G6
+
+                gain1.gain.setValueAtTime(0.3, now);
+                gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+
+                osc1.connect(gain1);
+                gain1.connect(audioCtx.destination);
+
+                osc1.start(now);
+                osc1.stop(now + 0.4);
+            } catch (e) {
+                console.log("Audio play error:", e);
+            }
+        }
+
+        // Play Fanfare / Ta-da Sound for Daily Completion & Reward Redemptions
+        function playFanfareSound() {
+            try {
+                initAudio();
+                const now = audioCtx.currentTime;
+                const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+
+                notes.forEach((freq, idx) => {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(freq, now + (idx * 0.08));
+
+                    gain.gain.setValueAtTime(0.3, now + (idx * 0.08));
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + (idx * 0.08) + 0.3);
+
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+
+                    osc.start(now + (idx * 0.08));
+                    osc.stop(now + (idx * 0.08) + 0.3);
+                });
+            } catch (e) {
+                console.log("Audio play error:", e);
+            }
+        }
+    </script>
+
+    <!-- APP LOGIC CODE -->
+    <script>
+        // --- CONSTANTS & INITIAL DATA ---
+        const DAYS = [
+            { id: 'mon', name: 'จันทร์', short: 'จ', color: 'bg-yellow-400 text-yellow-950 border-yellow-300' },
+            { id: 'tue', name: 'อังคาร', short: 'อ', color: 'bg-pink-400 text-pink-950 border-pink-300' },
+            { id: 'wed', name: 'พุธ', short: 'พ', color: 'bg-emerald-400 text-emerald-950 border-emerald-300' },
+            { id: 'thu', name: 'พฤหัสบดี', short: 'พฤ', color: 'bg-orange-400 text-orange-950 border-orange-300' },
+            { id: 'fri', name: 'ศุกร์', short: 'ศ', color: 'bg-sky-400 text-sky-950 border-sky-300' },
+            { id: 'sat', name: 'เสาร์', short: 'ส', color: 'bg-purple-400 text-purple-950 border-purple-300' },
+            { id: 'sun', name: 'อาทิตย์', short: 'อา', color: 'bg-red-400 text-red-950 border-red-300' }
+        ];
+
+        const DEFAULT_EMOJIS = ['🧸', '🧺', '🪴', '🍽️', '🐱', '📚', '🧹', '🛏️', '🦷', '🐶', '🎒', '🎨'];
+        const REWARD_EMOJIS = ['🍦', '🎮', '🍫', '🎠', '🚴', '🎬', '🧩', '🧸', '🍕'];
+
+        const DEFAULT_CHORES = [
+            { id: 'c1', title: 'เก็บของเล่นเข้าที่', emoji: '🧸', stars: 2 },
+            { id: 'c2', title: 'ช่วยพับผ้า', emoji: '🧺', stars: 2 },
+            { id: 'c3', title: 'รดน้ำต้นไม้', emoji: '🪴', stars: 1 },
+            { id: 'c4', title: 'ช่วยล้างจาน', emoji: '🍽️', stars: 3 },
+            { id: 'c5', title: 'ป้อนข้าวแมว / สัตว์เลี้ยง', emoji: '🐱', stars: 1 }
+        ];
+
+        const DEFAULT_REWARDS = [
+            { id: 'r1', title: 'ไอศกรีมแสนอร่อย 1 ถ้วย', emoji: '🍦', cost: 10 },
+            { id: 'r2', title: 'เล่นเกม / ดูการ์ตูน 30 นาที', emoji: '🎮', cost: 15 },
+            { id: 'r3', title: 'ได้ของเล่นชิ้นใหม่', emoji: '🧸', cost: 50 }
+        ];
+
+        // --- APP STATE ---
+        let appState = {
+            totalStars: 0,
+            selectedDay: 'mon',
+            chores: [],
+            rewards: [],
+            // completedMap structure: { "mon": { "c1": true, "c2": false }, ... }
+            completedMap: {}
+        };
+
+        let selectedChoreEmoji = DEFAULT_EMOJIS[0];
+        let selectedRewardEmoji = REWARD_EMOJIS[0];
+
+        // --- LOCAL STORAGE HELPERS ---
+        function loadState() {
+            const saved = localStorage.getItem('kids_chore_app_data');
+            if (saved) {
+                try {
+                    appState = JSON.parse(saved);
+                } catch (e) {
+                    console.error("Failed to parse saved state", e);
+                    initDefaultState();
+                }
+            } else {
+                initDefaultState();
+            }
+            
+            // Set initial day to current actual day of week if applicable
+            const todayIdx = (new Date().getDay() + 6) % 7; // Map Sun(0)-Sat(6) to Mon(0)-Sun(6)
+            appState.selectedDay = DAYS[todayIdx].id;
+        }
+
+        function initDefaultState() {
+            appState = {
+                totalStars: 0,
+                selectedDay: 'mon',
+                chores: [...DEFAULT_CHORES],
+                rewards: [...DEFAULT_REWARDS],
+                completedMap: {}
+            };
+            DAYS.forEach(d => {
+                appState.completedMap[d.id] = {};
+            });
+            saveState();
+        }
+
+        function saveState() {
+            localStorage.setItem('kids_chore_app_data', JSON.stringify(appState));
+        }
+
+        // --- RENDER FUNCTIONS ---
+        function renderApp() {
+            document.getElementById('total-stars').innerText = appState.totalStars;
+            renderDaysBar();
+            renderChores();
+            renderRewards();
+            updateDailyProgress();
+        }
+
+        function renderDaysBar() {
+            const container = document.getElementById('days-bar');
+            container.innerHTML = '';
+
+            DAYS.forEach(day => {
+                const isSelected = day.id === appState.selectedDay;
+                
+                // Count completed chores for this day
+                const dayLog = appState.completedMap[day.id] || {};
+                const totalChores = appState.chores.length;
+                let doneCount = 0;
+                appState.chores.forEach(c => {
+                    if (dayLog[c.id]) doneCount++;
+                });
+                const isAllDone = totalChores > 0 && doneCount === totalChores;
+
+                const btn = document.createElement('button');
+                btn.onclick = () => {
+                    appState.selectedDay = day.id;
+                    renderApp();
+                };
+
+                btn.className = `flex flex-col items-center justify-center p-2 rounded-xl transition-all relative ${
+                    isSelected 
+                        ? `${day.color} ring-4 ring-purple-300 font-extrabold scale-105 shadow-md` 
+                        : 'bg-slate-100 text-slate-600 font-bold hover:bg-slate-200'
+                }`;
+
+                btn.innerHTML = `
+                    <span class="text-xs opacity-80">${day.short}</span>
+                    ${isAllDone ? '<span class="text-xs">🌟</span>' : '<span class="text-sm font-black mt-0.5">•</span>'}
+                `;
+                container.appendChild(btn);
+            });
+
+            // Update Current Day Banner Label
+            const currentDayObj = DAYS.find(d => d.id === appState.selectedDay);
+            document.getElementById('current-day-label').innerText = `วัน${currentDayObj.name}`;
+        }
+
+        function renderChores() {
+            const container = document.getElementById('chores-container');
+            container.innerHTML = '';
+
+            if (appState.chores.length === 0) {
+                container.innerHTML = `
+                    <div class="bg-white rounded-2xl p-6 text-center text-slate-400 font-bold">
+                        ยังไม่มีรายการงานบ้าน กดปุ่มด้านล่างเพื่อเพิ่มงานบ้านได้เลย!
+                    </div>
+                `;
+                return;
+            }
+
+            const dayLog = appState.completedMap[appState.selectedDay] || {};
+
+            appState.chores.forEach(chore => {
+                const isChecked = !!dayLog[chore.id];
+
+                const card = document.createElement('div');
+                card.className = `bg-white rounded-2xl p-4 shadow-sm border-2 transition-all flex items-center justify-between ${
+                    isChecked ? 'border-green-400 bg-green-50/40' : 'border-slate-100'
+                }`;
+
+                // Star string generator
+                const starIcons = '⭐'.repeat(chore.stars);
+
+                card.innerHTML = `
+                    <div class="flex items-center space-x-3 flex-1 min-w-0 pr-2">
+                        <div class="text-4xl w-14 h-14 bg-purple-50 rounded-2xl flex items-center justify-center border border-purple-100 flex-shrink-0">
+                            ${chore.emoji}
+                        </div>
+                        <div class="truncate">
+                            <h4 class="font-extrabold text-lg text-slate-800 truncate ${isChecked ? 'line-through text-slate-400' : ''}">
+                                ${chore.title}
+                            </h4>
+                            <div class="flex items-center space-x-1 mt-0.5">
+                                <span class="text-sm font-bold text-amber-500">${starIcons}</span>
+                                <span class="text-xs font-bold text-slate-400">(${chore.stars} ดาว)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center space-x-2">
+                        <!-- Checkbox Button -->
+                        <button onclick="toggleChore('${chore.id}')" 
+                            class="w-14 h-14 rounded-2xl flex items-center justify-center transition-all ${
+                                isChecked 
+                                    ? 'bg-gradient-to-r from-emerald-400 to-green-500 text-white text-2xl shadow-lg scale-105' 
+                                    : 'bg-slate-100 hover:bg-slate-200 text-slate-300 text-xl border-2 border-slate-200'
+                            }">
+                            <i class="fa-solid ${isChecked ? 'fa-check' : 'fa-check'}"></i>
+                        </button>
+                        
+                        <!-- Delete Chore Button -->
+                        <button onclick="deleteChore('${chore.id}')" class="text-slate-300 hover:text-red-400 p-2 text-xs">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </div>
+                `;
+
+                container.appendChild(card);
+            });
+        }
+
+        function renderRewards() {
+            const container = document.getElementById('rewards-container');
+            container.innerHTML = '';
+
+            appState.rewards.forEach(reward => {
+                const canAfford = appState.totalStars >= reward.cost;
+
+                const card = document.createElement('div');
+                card.className = `bg-white rounded-2xl p-4 shadow-sm border-2 flex flex-col justify-between ${
+                    canAfford ? 'border-amber-300 bg-amber-50/20' : 'border-slate-100'
+                }`;
+
+                card.innerHTML = `
+                    <div class="flex items-start space-x-3 mb-3">
+                        <div class="text-4xl w-12 h-12 bg-amber-50 rounded-2xl flex items-center justify-center flex-shrink-0">
+                            ${reward.emoji}
+                        </div>
+                        <div class="flex-1">
+                            <h4 class="font-extrabold text-base text-slate-800 leading-snug">${reward.title}</h4>
+                            <div class="inline-flex items-center space-x-1 bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full text-xs font-black mt-1">
+                                <span>⭐ ${reward.cost} ดาว</span>
+                            </div>
+                        </div>
+                        <button onclick="deleteReward('${reward.id}')" class="text-slate-300 hover:text-red-400 text-xs p-1">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </div>
+
+                    <button onclick="redeemReward('${reward.id}')" 
+                        ${!canAfford ? 'disabled' : ''}
+                        class="w-full py-2.5 rounded-xl font-extrabold text-sm shadow-md transition-all flex items-center justify-center space-x-2 ${
+                            canAfford 
+                                ? 'bg-gradient-to-r from-amber-400 to-orange-500 text-white hover:brightness-105 active:scale-95' 
+                                : 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                        }">
+                        <span>${canAfford ? '🎉 แลกรางวัลนี้!' : `สะสมเพิ่มอีก ${reward.cost - appState.totalStars} ⭐`}</span>
+                    </button>
+                `;
+
+                container.appendChild(card);
+            });
+        }
+
+        function updateDailyProgress() {
+            const dayLog = appState.completedMap[appState.selectedDay] || {};
+            const total = appState.chores.length;
+            let completedCount = 0;
+
+            appState.chores.forEach(c => {
+                if (dayLog[c.id]) completedCount++;
+            });
+
+            const percent = total > 0 ? Math.round((completedCount / total) * 100) : 0;
+            
+            document.getElementById('progress-percent').innerText = `${percent}%`;
+            document.getElementById('progress-bar-inner').style.width = `${percent}%`;
+
+            const statusText = document.getElementById('completion-status-text');
+            if (percent === 100 && total > 0) {
+                statusText.innerText = "🎉 ยอดเยี่ยมมาก! หนูทำครบทุกงานของวันนี้แล้ว!";
+            } else {
+                statusText.innerText = `ทำสำเร็จแล้ว ${completedCount} จาก ${total} งาน`;
+            }
+        }
+
+        // --- ACTIONS & HANDLERS ---
+        function toggleChore(choreId) {
+            if (!appState.completedMap[appState.selectedDay]) {
+                appState.completedMap[appState.selectedDay] = {};
+            }
+
+            const currentStatus = !!appState.completedMap[appState.selectedDay][choreId];
+            const chore = appState.chores.find(c => c.id === choreId);
+
+            if (!chore) return;
+
+            if (!currentStatus) {
+                // Mark as completed
+                appState.completedMap[appState.selectedDay][choreId] = true;
+                appState.totalStars += chore.stars;
+                
+                // Audio & Celebration
+                playStarSound();
+                triggerConfetti(0.3);
+
+                // Check if ALL chores are completed for today
+                checkDailyCompletion();
+            } else {
+                // Uncheck
+                appState.completedMap[appState.selectedDay][choreId] = false;
+                appState.totalStars = Math.max(0, appState.totalStars - chore.stars);
+            }
+
+            saveState();
+            renderApp();
+        }
+
+        function checkDailyCompletion() {
+            const dayLog = appState.completedMap[appState.selectedDay] || {};
+            const total = appState.chores.length;
+            let done = 0;
+            appState.chores.forEach(c => {
+                if (dayLog[c.id]) done++;
+            });
+
+            if (total > 0 && done === total) {
+                setTimeout(() => {
+                    playFanfareSound();
+                    triggerConfetti(1);
+                    showCustomModal('🏆 สุดยอดไปเลย!', 'เก่งมากครับ/ค่ะ! หนูทำภารกิจครบทุกงานของวันนี้แล้ว รับคำชมและสะสมดาวต่อไปนะคนเก่ง!');
+                }, 400);
+            }
+        }
+
+        function redeemReward(rewardId) {
+            const reward = appState.rewards.find(r => r.id === rewardId);
+            if (!reward) return;
+
+            if (appState.totalStars >= reward.cost) {
+                appState.totalStars -= reward.cost;
+                saveState();
+                renderApp();
+
+                playFanfareSound();
+                triggerConfetti(0.8);
+                showCustomModal('🎉 แลกรางวัลสำเร็จ!', `ยินดีด้วย! หนูได้รับรางวัล "${reward.title}" แล้ว ไปรับรางวัลกับคุณพ่อคุณแม่ได้เลยครับ!`);
+            }
+        }
+
+        function deleteChore(id) {
+            appState.chores = appState.chores.filter(c => c.id !== id);
+            saveState();
+            renderApp();
+        }
+
+        function deleteReward(id) {
+            appState.rewards = appState.rewards.filter(r => r.id !== id);
+            saveState();
+            renderApp();
+        }
+
+        function confirmResetWeek() {
+            if (confirm("คุณต้องการเริ่มต้นสัปดาห์ใหม่หรือไม่? (ดาวสะสมจะไม่ถูกลบ แต่รายการติ๊กงานในแต่ละวันจะถูกรีเซ็ต)")) {
+                DAYS.forEach(d => {
+                    appState.completedMap[d.id] = {};
+                });
+                saveState();
+                renderApp();
+                showCustomModal('🔄 เริ่มต้นสัปดาห์ใหม่', 'รีเซ็ตตารางงานประจำวันเรียบร้อยแล้ว พร้อมลุยสัปดาห์ใหม่กันเลย!');
+            }
+        }
+
+        // --- MODAL CONTROLS & PICKERS ---
+        function switchTab(tabName) {
+            const choresTab = document.getElementById('tab-chores');
+            const rewardsTab = document.getElementById('tab-rewards');
+            const choresBtn = document.getElementById('tab-chores-btn');
+            const rewardsBtn = document.getElementById('tab-rewards-btn');
+
+            if (tabName === 'chores') {
+                choresTab.classList.remove('hidden');
+                rewardsTab.classList.add('hidden');
+                choresBtn.className = "py-3 px-4 rounded-xl font-extrabold text-lg flex items-center justify-center space-x-2 transition-all bg-purple-600 text-white shadow-md";
+                rewardsBtn.className = "py-3 px-4 rounded-xl font-extrabold text-lg flex items-center justify-center space-x-2 transition-all bg-slate-200 text-slate-600 hover:bg-slate-300";
+            } else {
+                choresTab.classList.add('hidden');
+                rewardsTab.classList.remove('hidden');
+                rewardsBtn.className = "py-3 px-4 rounded-xl font-extrabold text-lg flex items-center justify-center space-x-2 transition-all bg-amber-500 text-white shadow-md";
+                choresBtn.className = "py-3 px-4 rounded-xl font-extrabold text-lg flex items-center justify-center space-x-2 transition-all bg-slate-200 text-slate-600 hover:bg-slate-300";
+            }
+        }
+
+        function setupEmojiPickers() {
+            const chorePicker = document.getElementById('emoji-picker');
+            chorePicker.innerHTML = '';
+            DEFAULT_EMOJIS.forEach((emo, idx) => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = `text-2xl p-2 rounded-xl border-2 transition ${idx === 0 ? 'border-purple-500 bg-purple-100' : 'border-slate-200'}`;
+                btn.innerText = emo;
+                btn.onclick = () => {
+                    selectedChoreEmoji = emo;
+                    Array.from(chorePicker.children).forEach(c => c.className = 'text-2xl p-2 rounded-xl border-2 border-slate-200');
+                    btn.className = 'text-2xl p-2 rounded-xl border-2 border-purple-500 bg-purple-100';
+                };
+                chorePicker.appendChild(btn);
+            });
+
+            const rewardPicker = document.getElementById('reward-emoji-picker');
+            rewardPicker.innerHTML = '';
+            REWARD_EMOJIS.forEach((emo, idx) => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = `text-2xl p-2 rounded-xl border-2 transition ${idx === 0 ? 'border-amber-500 bg-amber-100' : 'border-slate-200'}`;
+                btn.innerText = emo;
+                btn.onclick = () => {
+                    selectedRewardEmoji = emo;
+                    Array.from(rewardPicker.children).forEach(c => c.className = 'text-2xl p-2 rounded-xl border-2 border-slate-200');
+                    btn.className = 'text-2xl p-2 rounded-xl border-2 border-amber-500 bg-amber-100';
+                };
+                rewardPicker.appendChild(btn);
+            });
+        }
+
+        function openAddChoreModal() {
+            document.getElementById('new-chore-title').value = '';
+            document.getElementById('add-chore-modal').classList.remove('hidden');
+        }
+
+        function saveNewChore() {
+            const title = document.getElementById('new-chore-title').value.trim();
+            const stars = parseInt(document.getElementById('new-chore-stars').value);
+
+            if (!title) {
+                showCustomModal('⚠️ ข้อมูลไม่ครบ', 'กรุณากรอกชื่องานบ้านด้วยครับ');
+                return;
+            }
+
+            const newChore = {
+                id: 'c_' + Date.now(),
+                title: title,
+                emoji: selectedChoreEmoji,
+                stars: stars
+            };
+
+            appState.chores.push(newChore);
+            saveState();
+            renderApp();
+            closeModal('add-chore-modal');
+        }
+
+        function openAddRewardModal() {
+            document.getElementById('new-reward-title').value = '';
+            document.getElementById('add-reward-modal').classList.remove('hidden');
+        }
+
+        function saveNewReward() {
+            const title = document.getElementById('new-reward-title').value.trim();
+            const cost = parseInt(document.getElementById('new-reward-cost').value);
+
+            if (!title || isNaN(cost) || cost <= 0) {
+                showCustomModal('⚠️ ข้อมูลไม่ครบ', 'กรุณากรอกชื่อรางวัลและจำนวนดาวที่ถูกต้อง');
+                return;
+            }
+
+            const newReward = {
+                id: 'r_' + Date.now(),
+                title: title,
+                emoji: selectedRewardEmoji,
+                cost: cost
+            };
+
+            appState.rewards.push(newReward);
+            saveState();
+            renderApp();
+            closeModal('add-reward-modal');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.add('hidden');
+        }
+
+        function showCustomModal(title, body) {
+            document.getElementById('msg-title').innerText = title;
+            document.getElementById('msg-body').innerText = body;
+            document.getElementById('msg-modal').classList.remove('hidden');
+        }
+
+        function triggerConfetti(intensity = 0.5) {
+            if (typeof confetti === 'function') {
+                confetti({
+                    particleCount: Math.floor(80 * intensity),
+                    spread: 70 * intensity,
+                    origin: { y: 0.6 }
+                });
+            }
+        }
+
+        // --- INIT ON LOAD ---
+        window.onload = function() {
+            loadState();
+            setupEmojiPickers();
+            renderApp();
+        };
+    </script>
+
+</body></html>
