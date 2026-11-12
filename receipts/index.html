@@ -1,0 +1,1264 @@
+<!DOCTYPE html><html lang="th"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <!-- จับมือ AI: ไอคอน + ติดตั้งลงหน้าจอโฮม (เพิ่มทีหลัง โค้ดแอปเหมือนเดิม) -->
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="apple-touch-icon" href="icon-180.png">
+    <link rel="icon" type="image/png" href="icon-192.png">
+    <meta name="theme-color" content="#2e7d5b">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="ใบเสร็จภาษี">
+    <script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');</script>
+<title>สมุดเก็บใบเสร็จลดหย่อนภาษีของบ้าน</title>
+    <!-- โหลด Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- โหลดฟอนต์ Prompt และ Sarabun สำหรับภาษาไทยที่อ่านง่าย สบายตา -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700&amp;family=Sarabun:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+    <!-- โหลด Font Awesome สำหรับไอคอน -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Prompt', 'Sarabun', 'sans-serif'],
+                    },
+                    colors: {
+                        cream: '#FAF9F6',
+                        sage: {
+                            50: '#F2F7F4',
+                            100: '#E1ECE6',
+                            500: '#3D7A5D',
+                            600: '#2E6149',
+                            700: '#234B38'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* ปรับแต่งเพิ่มเติมสำหรับการใช้งานบนมือถือ (iPhone) */
+        body {
+            background-color: #F4F6F5;
+            -webkit-tap-highlight-color: transparent;
+            font-size: 16px;
+        }
+        /* ซ่อน Scrollbar แนวนอนแต่ยังเลื่อนได้ */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        /* ปรับแต่ง Checkbox ให้ใหญ่กดง่าย */
+        .custom-checkbox {
+            width: 1.5rem;
+            height: 1.5rem;
+            accent-color: #3D7A5D;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body class="text-slate-800 antialiased pb-28">
+
+    <!-- ส่วนหัวแอป (Header) -->
+    <header class="bg-sage-600 text-white pt-6 pb-8 px-5 rounded-b-3xl shadow-md">
+        <div class="max-w-lg mx-auto">
+            <div class="flex justify-between items-center mb-4">
+                <div>
+                    <h1 class="text-xl font-bold tracking-wide">ใบเสร็จลดหย่อนภาษี</h1>
+                    <p class="text-sage-100 text-sm">บันทึกข้อมูลของบ้าน (เก็บในเครื่องนี้)</p>
+                </div>
+                <!-- ปุ่มคัดลอกสรุป -->
+                <button onclick="copySummary()" class="bg-white text-sage-700 hover:bg-sage-50 active:scale-95 transition font-semibold py-2.5 px-4 rounded-2xl shadow-sm flex items-center gap-2 text-base">
+                    <i class="fa-regular fa-copy text-lg"></i>
+                    <span>คัดลอกสรุป</span>
+                </button>
+            </div>
+
+            <!-- การ์ดยอดรวมทั้งปี -->
+            <div class="bg-white/15 backdrop-blur-sm border border-white/20 rounded-2xl p-5 text-center mt-2">
+                <p class="text-sage-50 text-base font-medium mb-1">ยอดรวมใบเสร็จทั้งหมดในปีนี้</p>
+                <div class="text-4xl sm:text-5xl font-bold tracking-tight text-white my-1" id="totalAmountDisplay">84,600 <span class="text-xl font-normal">บาท</span></div>
+                <p class="text-xs text-sage-100 mt-2">
+                    <i class="fa-solid fa-circle-info mr-1"></i>
+                    *ยอดรวมเบื้องต้น กรุณาตรวจสอบสิทธิ์และเพดานลดหย่อนล่าสุดกับกรมสรรพากร
+                </p>
+            </div>
+        </div>
+    </header>
+
+    <!-- เนื้อหาหลัก -->
+    <main class="max-w-lg mx-auto px-4 -mt-4 space-y-6">
+
+        <!-- แถบนำทางสลับหน้า (Tab) -->
+        <div class="bg-white p-1.5 rounded-2xl shadow-sm flex gap-1 border border-slate-200/60">
+            <button onclick="switchTab('receipts')" id="tab-receipts" class="flex-1 py-3 px-3 rounded-xl font-semibold text-base transition bg-sage-600 text-white shadow-sm flex items-center justify-center gap-2">
+                <i class="fa-solid fa-receipt"></i>
+                <span>รายการใบเสร็จ</span>
+            </button>
+            <button onclick="switchTab('checklist')" id="tab-checklist" class="flex-1 py-3 px-3 rounded-xl font-semibold text-base transition text-slate-600 hover:bg-slate-50 flex items-center justify-center gap-2">
+                <i class="fa-solid fa-list-check"></i>
+                <span>เช็คลิสต์เอกสาร</span>
+            </button>
+        </div>
+
+        <!-- ================= ส่วนที่ 1: รายการใบเสร็จและหมวดหมู่ ================= -->
+        <div id="view-receipts" class="space-y-6">
+            
+            <!-- การ์ดสีแยกแต่ละหมวด (กดเพื่อกรองดูรายการ) -->
+            <section>
+                <div class="flex justify-between items-end mb-3 px-1">
+                    <h2 class="text-lg font-bold text-slate-800">แยกตามหมวดหมู่ <span class="text-sm font-normal text-slate-500">(แตะเพื่อดูรายการ)</span></h2>
+                    <button id="clearFilterBtn" onclick="selectCategory('all')" class="hidden text-sm font-semibold text-sage-600 underline py-1 px-2">
+                        ดูทั้งหมด
+                    </button>
+                </div>
+
+                <!-- กริดการ์ดหมวดหมู่ 2 คอลัมน์ -->
+                <div class="grid grid-cols-2 gap-3" id="categoryCardsContainer"><button type="button" class="text-left p-4 rounded-2xl border transition active:scale-98 flex flex-col justify-between bg-teal-50 border-teal-200 hover:opacity-90">
+                    <div class="flex items-center justify-between w-full mb-2.5">
+                        <div class="w-9 h-9 rounded-xl bg-teal-600 text-white flex items-center justify-center text-base shadow-xs">
+                            <i class="fa-solid fa-heart-pulse"></i>
+                        </div>
+                        <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-white/80 text-slate-600">
+                            1 ใบ
+                        </span>
+                    </div>
+                    <div>
+                        <div class="text-sm font-semibold text-teal-900 line-clamp-1">ประกันสุขภาพ</div>
+                        <div class="text-xl font-bold text-teal-700 mt-0.5">12,000 ฿</div>
+                    </div>
+                </button><button type="button" class="text-left p-4 rounded-2xl border transition active:scale-98 flex flex-col justify-between bg-blue-50 border-blue-200 hover:opacity-90">
+                    <div class="flex items-center justify-between w-full mb-2.5">
+                        <div class="w-9 h-9 rounded-xl bg-blue-600 text-white flex items-center justify-center text-base shadow-xs">
+                            <i class="fa-solid fa-shield-heart"></i>
+                        </div>
+                        <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-white/80 text-slate-600">
+                            1 ใบ
+                        </span>
+                    </div>
+                    <div>
+                        <div class="text-sm font-semibold text-blue-900 line-clamp-1">ประกันชีวิต</div>
+                        <div class="text-xl font-bold text-blue-700 mt-0.5">18,500 ฿</div>
+                    </div>
+                </button><button type="button" class="text-left p-4 rounded-2xl border transition active:scale-98 flex flex-col justify-between bg-indigo-50 border-indigo-200 hover:opacity-90">
+                    <div class="flex items-center justify-between w-full mb-2.5">
+                        <div class="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center text-base shadow-xs">
+                            <i class="fa-solid fa-hands-holding-child"></i>
+                        </div>
+                        <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-white/80 text-slate-600">
+                            1 ใบ
+                        </span>
+                    </div>
+                    <div>
+                        <div class="text-sm font-semibold text-indigo-900 line-clamp-1">ประกันสุขภาพพ่อแม่</div>
+                        <div class="text-xl font-bold text-indigo-700 mt-0.5">9,800 ฿</div>
+                    </div>
+                </button><button type="button" class="text-left p-4 rounded-2xl border transition active:scale-98 flex flex-col justify-between bg-amber-50 border-amber-200 hover:opacity-90">
+                    <div class="flex items-center justify-between w-full mb-2.5">
+                        <div class="w-9 h-9 rounded-xl bg-amber-600 text-white flex items-center justify-center text-base shadow-xs">
+                            <i class="fa-solid fa-hand-holding-heart"></i>
+                        </div>
+                        <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-white/80 text-slate-600">
+                            1 ใบ
+                        </span>
+                    </div>
+                    <div>
+                        <div class="text-sm font-semibold text-amber-900 line-clamp-1">เงินบริจาค</div>
+                        <div class="text-xl font-bold text-amber-700 mt-0.5">2,000 ฿</div>
+                    </div>
+                </button><button type="button" class="text-left p-4 rounded-2xl border transition active:scale-98 flex flex-col justify-between bg-emerald-50 border-emerald-200 hover:opacity-90">
+                    <div class="flex items-center justify-between w-full mb-2.5">
+                        <div class="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center text-base shadow-xs">
+                            <i class="fa-solid fa-house-chimney"></i>
+                        </div>
+                        <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-white/80 text-slate-600">
+                            1 ใบ
+                        </span>
+                    </div>
+                    <div>
+                        <div class="text-sm font-semibold text-emerald-900 line-clamp-1">ดอกเบี้ยบ้าน</div>
+                        <div class="text-xl font-bold text-emerald-700 mt-0.5">42,300 ฿</div>
+                    </div>
+                </button><button type="button" class="text-left p-4 rounded-2xl border transition active:scale-98 flex flex-col justify-between bg-slate-100 border-slate-200 hover:opacity-90">
+                    <div class="flex items-center justify-between w-full mb-2.5">
+                        <div class="w-9 h-9 rounded-xl bg-slate-600 text-white flex items-center justify-center text-base shadow-xs">
+                            <i class="fa-solid fa-folder-open"></i>
+                        </div>
+                        <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-white/80 text-slate-600">
+                            0 ใบ
+                        </span>
+                    </div>
+                    <div>
+                        <div class="text-sm font-semibold text-slate-900 line-clamp-1">อื่น ๆ</div>
+                        <div class="text-xl font-bold text-slate-700 mt-0.5">0 ฿</div>
+                    </div>
+                </button></div>
+            </section>
+
+            <!-- รายการใบเสร็จ -->
+            <section class="bg-white rounded-3xl p-5 shadow-sm border border-slate-200/60">
+                <div class="flex justify-between items-center mb-4 pb-3 border-b border-slate-100">
+                    <div>
+                        <h3 class="text-lg font-bold text-slate-800" id="listHeaderTitle">ใบเสร็จทั้งหมด</h3>
+                        <p class="text-sm text-slate-500" id="listHeaderCount">5 รายการ</p>
+                    </div>
+                    <button onclick="openModal()" class="bg-sage-50 text-sage-700 hover:bg-sage-100 font-semibold py-2 px-3.5 rounded-xl text-sm flex items-center gap-1.5 transition">
+                        <i class="fa-solid fa-plus"></i> เพิ่มใบเสร็จ
+                    </button>
+                </div>
+
+                <!-- รายการใบเสร็จแต่ละใบ -->
+                <div id="receiptListContainer" class="space-y-3"><div class="p-4 rounded-2xl border border-slate-200/80 bg-slate-50/50 hover:bg-white transition shadow-2xs">
+                    <div class="flex justify-between items-start gap-3">
+                        <div class="flex items-start gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center text-base shrink-0 mt-0.5">
+                                <i class="fa-solid fa-house-chimney"></i>
+                            </div>
+                            <div>
+                                <div class="font-bold text-base text-slate-800">ดอกเบี้ยบ้าน</div>
+                                <div class="text-sm text-slate-500 mt-0.5">
+                                    <i class="fa-regular fa-calendar mr-1"></i>31 ต.ค. 69
+                                    <span class="mx-1">•</span><span class="text-slate-600">หนังสือรับรองดอกเบี้ยเงินกู้ซื้อบ้าน</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-right shrink-0">
+                            <div class="text-lg font-bold text-sage-700">42,300 ฿</div>
+                        </div>
+                    </div>
+
+                    <!-- แถบปุ่มจัดการ (ดูรูป / แก้ไข / ลบ) -->
+                    <div class="flex items-center justify-between mt-3 pt-2.5 border-t border-slate-200/60">
+                        <div>
+                            
+                                <span class="text-xs text-slate-400"><i class="fa-regular fa-image mr-1"></i>ไม่มีรูปแนบ</span>
+                            
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button type="button" onclick="openModal('sample-5')" class="text-sm font-medium text-slate-600 hover:text-sage-700 bg-white border border-slate-200 px-3 py-1.5 rounded-xl flex items-center gap-1 transition">
+                                <i class="fa-solid fa-pen"></i> แก้ไข
+                            </button>
+                            <button type="button" onclick="askDeleteReceipt('sample-5')" class="text-sm font-medium text-red-600 hover:bg-red-50 bg-white border border-slate-200 px-3 py-1.5 rounded-xl flex items-center gap-1 transition">
+                                <i class="fa-solid fa-trash-can"></i> ลบ
+                            </button>
+                        </div>
+                    </div>
+                </div><div class="p-4 rounded-2xl border border-slate-200/80 bg-slate-50/50 hover:bg-white transition shadow-2xs">
+                    <div class="flex justify-between items-start gap-3">
+                        <div class="flex items-start gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center text-base shrink-0 mt-0.5">
+                                <i class="fa-solid fa-hands-holding-child"></i>
+                            </div>
+                            <div>
+                                <div class="font-bold text-base text-slate-800">ประกันสุขภาพพ่อแม่</div>
+                                <div class="text-sm text-slate-500 mt-0.5">
+                                    <i class="fa-regular fa-calendar mr-1"></i>20 ก.ค. 69
+                                    <span class="mx-1">•</span><span class="text-slate-600">ประกันสุขภาพคุณพ่อ/คุณแม่</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-right shrink-0">
+                            <div class="text-lg font-bold text-sage-700">9,800 ฿</div>
+                        </div>
+                    </div>
+
+                    <!-- แถบปุ่มจัดการ (ดูรูป / แก้ไข / ลบ) -->
+                    <div class="flex items-center justify-between mt-3 pt-2.5 border-t border-slate-200/60">
+                        <div>
+                            
+                                <span class="text-xs text-slate-400"><i class="fa-regular fa-image mr-1"></i>ไม่มีรูปแนบ</span>
+                            
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button type="button" onclick="openModal('sample-4')" class="text-sm font-medium text-slate-600 hover:text-sage-700 bg-white border border-slate-200 px-3 py-1.5 rounded-xl flex items-center gap-1 transition">
+                                <i class="fa-solid fa-pen"></i> แก้ไข
+                            </button>
+                            <button type="button" onclick="askDeleteReceipt('sample-4')" class="text-sm font-medium text-red-600 hover:bg-red-50 bg-white border border-slate-200 px-3 py-1.5 rounded-xl flex items-center gap-1 transition">
+                                <i class="fa-solid fa-trash-can"></i> ลบ
+                            </button>
+                        </div>
+                    </div>
+                </div><div class="p-4 rounded-2xl border border-slate-200/80 bg-slate-50/50 hover:bg-white transition shadow-2xs">
+                    <div class="flex justify-between items-start gap-3">
+                        <div class="flex items-start gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-amber-600 text-white flex items-center justify-center text-base shrink-0 mt-0.5">
+                                <i class="fa-solid fa-hand-holding-heart"></i>
+                            </div>
+                            <div>
+                                <div class="font-bold text-base text-slate-800">เงินบริจาค</div>
+                                <div class="text-sm text-slate-500 mt-0.5">
+                                    <i class="fa-regular fa-calendar mr-1"></i>12 พ.ค. 69
+                                    <span class="mx-1">•</span><span class="text-slate-600">บริจาคโรงพยาบาล / มูลนิธิ</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-right shrink-0">
+                            <div class="text-lg font-bold text-sage-700">2,000 ฿</div>
+                        </div>
+                    </div>
+
+                    <!-- แถบปุ่มจัดการ (ดูรูป / แก้ไข / ลบ) -->
+                    <div class="flex items-center justify-between mt-3 pt-2.5 border-t border-slate-200/60">
+                        <div>
+                            
+                                <span class="text-xs text-slate-400"><i class="fa-regular fa-image mr-1"></i>ไม่มีรูปแนบ</span>
+                            
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button type="button" onclick="openModal('sample-3')" class="text-sm font-medium text-slate-600 hover:text-sage-700 bg-white border border-slate-200 px-3 py-1.5 rounded-xl flex items-center gap-1 transition">
+                                <i class="fa-solid fa-pen"></i> แก้ไข
+                            </button>
+                            <button type="button" onclick="askDeleteReceipt('sample-3')" class="text-sm font-medium text-red-600 hover:bg-red-50 bg-white border border-slate-200 px-3 py-1.5 rounded-xl flex items-center gap-1 transition">
+                                <i class="fa-solid fa-trash-can"></i> ลบ
+                            </button>
+                        </div>
+                    </div>
+                </div><div class="p-4 rounded-2xl border border-slate-200/80 bg-slate-50/50 hover:bg-white transition shadow-2xs">
+                    <div class="flex justify-between items-start gap-3">
+                        <div class="flex items-start gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center text-base shrink-0 mt-0.5">
+                                <i class="fa-solid fa-shield-heart"></i>
+                            </div>
+                            <div>
+                                <div class="font-bold text-base text-slate-800">ประกันชีวิต</div>
+                                <div class="text-sm text-slate-500 mt-0.5">
+                                    <i class="fa-regular fa-calendar mr-1"></i>3 มี.ค. 69
+                                    <span class="mx-1">•</span><span class="text-slate-600">เบี้ยประกันชีวิตสะสมทรัพย์</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-right shrink-0">
+                            <div class="text-lg font-bold text-sage-700">18,500 ฿</div>
+                        </div>
+                    </div>
+
+                    <!-- แถบปุ่มจัดการ (ดูรูป / แก้ไข / ลบ) -->
+                    <div class="flex items-center justify-between mt-3 pt-2.5 border-t border-slate-200/60">
+                        <div>
+                            
+                                <span class="text-xs text-slate-400"><i class="fa-regular fa-image mr-1"></i>ไม่มีรูปแนบ</span>
+                            
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button type="button" onclick="openModal('sample-2')" class="text-sm font-medium text-slate-600 hover:text-sage-700 bg-white border border-slate-200 px-3 py-1.5 rounded-xl flex items-center gap-1 transition">
+                                <i class="fa-solid fa-pen"></i> แก้ไข
+                            </button>
+                            <button type="button" onclick="askDeleteReceipt('sample-2')" class="text-sm font-medium text-red-600 hover:bg-red-50 bg-white border border-slate-200 px-3 py-1.5 rounded-xl flex items-center gap-1 transition">
+                                <i class="fa-solid fa-trash-can"></i> ลบ
+                            </button>
+                        </div>
+                    </div>
+                </div><div class="p-4 rounded-2xl border border-slate-200/80 bg-slate-50/50 hover:bg-white transition shadow-2xs">
+                    <div class="flex justify-between items-start gap-3">
+                        <div class="flex items-start gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-teal-600 text-white flex items-center justify-center text-base shrink-0 mt-0.5">
+                                <i class="fa-solid fa-heart-pulse"></i>
+                            </div>
+                            <div>
+                                <div class="font-bold text-base text-slate-800">ประกันสุขภาพ</div>
+                                <div class="text-sm text-slate-500 mt-0.5">
+                                    <i class="fa-regular fa-calendar mr-1"></i>15 ม.ค. 69
+                                    <span class="mx-1">•</span><span class="text-slate-600">เบี้ยประกันสุขภาพประจำปี</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-right shrink-0">
+                            <div class="text-lg font-bold text-sage-700">12,000 ฿</div>
+                        </div>
+                    </div>
+
+                    <!-- แถบปุ่มจัดการ (ดูรูป / แก้ไข / ลบ) -->
+                    <div class="flex items-center justify-between mt-3 pt-2.5 border-t border-slate-200/60">
+                        <div>
+                            
+                                <span class="text-xs text-slate-400"><i class="fa-regular fa-image mr-1"></i>ไม่มีรูปแนบ</span>
+                            
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button type="button" onclick="openModal('sample-1')" class="text-sm font-medium text-slate-600 hover:text-sage-700 bg-white border border-slate-200 px-3 py-1.5 rounded-xl flex items-center gap-1 transition">
+                                <i class="fa-solid fa-pen"></i> แก้ไข
+                            </button>
+                            <button type="button" onclick="askDeleteReceipt('sample-1')" class="text-sm font-medium text-red-600 hover:bg-red-50 bg-white border border-slate-200 px-3 py-1.5 rounded-xl flex items-center gap-1 transition">
+                                <i class="fa-solid fa-trash-can"></i> ลบ
+                            </button>
+                        </div>
+                    </div>
+                </div></div>
+            </section>
+
+        </div>
+
+        <!-- ================= ส่วนที่ 2: เช็คลิสต์เอกสาร ================= -->
+        <div id="view-checklist" class="hidden space-y-4">
+            <div class="bg-white rounded-3xl p-5 shadow-sm border border-slate-200/60">
+                <div class="mb-4 pb-3 border-b border-slate-100">
+                    <h2 class="text-xl font-bold text-slate-800">เช็คลิสต์เตรียมยื่นภาษี</h2>
+                    <p class="text-base text-slate-500 mt-1">ติ๊กถูกเมื่อรวบรวมเอกสารครบแล้ว</p>
+                </div>
+
+                <div id="checklistContainer" class="space-y-3"><label class="flex items-start gap-3.5 p-3.5 rounded-2xl border transition cursor-pointer bg-white border-slate-200 hover:bg-slate-50">
+                    <input type="checkbox" class="custom-checkbox mt-0.5 shrink-0" onchange="toggleChecklist(0)" style="">
+                    <span class="flex-1 text-base leading-snug text-slate-800 font-medium">
+                        หนังสือรับรองการหักภาษี ณ ที่จ่าย (ใบ 50 ทวิ) จากที่ทำงาน
+                    </span>
+                    
+                </label><label class="flex items-start gap-3.5 p-3.5 rounded-2xl border transition cursor-pointer bg-white border-slate-200 hover:bg-slate-50">
+                    <input type="checkbox" class="custom-checkbox mt-0.5 shrink-0" onchange="toggleChecklist(1)" style="">
+                    <span class="flex-1 text-base leading-snug text-slate-800 font-medium">
+                        หนังสือรับรองการชำระเบี้ยประกันชีวิต / ประกันสุขภาพ
+                    </span>
+                    
+                </label><label class="flex items-start gap-3.5 p-3.5 rounded-2xl border transition cursor-pointer bg-white border-slate-200 hover:bg-slate-50">
+                    <input type="checkbox" class="custom-checkbox mt-0.5 shrink-0" onchange="toggleChecklist(2)" style="">
+                    <span class="flex-1 text-base leading-snug text-slate-800 font-medium">
+                        หนังสือรับรองเบี้ยประกันสุขภาพบิดามารดา + เลขบัตรประชาชนพ่อแม่
+                    </span>
+                    
+                </label><label class="flex items-start gap-3.5 p-3.5 rounded-2xl border transition cursor-pointer bg-white border-slate-200 hover:bg-slate-50">
+                    <input type="checkbox" class="custom-checkbox mt-0.5 shrink-0" onchange="toggleChecklist(3)" style="">
+                    <span class="flex-1 text-base leading-snug text-slate-800 font-medium">
+                        หนังสือรับรองดอกเบี้ยเงินกู้ยืมเพื่อที่อยู่อาศัย (จากธนาคาร)
+                    </span>
+                    
+                </label><label class="flex items-start gap-3.5 p-3.5 rounded-2xl border transition cursor-pointer bg-white border-slate-200 hover:bg-slate-50">
+                    <input type="checkbox" class="custom-checkbox mt-0.5 shrink-0" onchange="toggleChecklist(4)" style="">
+                    <span class="flex-1 text-base leading-snug text-slate-800 font-medium">
+                        ใบอนุโมทนาบัตร / ใบเสร็จรับเงินบริจาค (ตรวจสอบในระบบ e-Donation)
+                    </span>
+                    
+                </label><label class="flex items-start gap-3.5 p-3.5 rounded-2xl border transition cursor-pointer bg-white border-slate-200 hover:bg-slate-50">
+                    <input type="checkbox" class="custom-checkbox mt-0.5 shrink-0" onchange="toggleChecklist(5)" style="">
+                    <span class="flex-1 text-base leading-snug text-slate-800 font-medium">
+                        เลขประจำตัวประชาชนคู่สมรส และบุตร (สำหรับใช้สิทธิ์ลดหย่อนครอบครัว)
+                    </span>
+                    
+                </label></div>
+
+                <!-- เพิ่มรายการเช็คลิสต์เอง -->
+                <div class="mt-5 pt-4 border-t border-slate-100 flex gap-2">
+                    <input type="text" id="newChecklistInput" placeholder="เพิ่มรายการเอกสารอื่น ๆ..." class="flex-1 bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-base focus:outline-none focus:border-sage-500" style="">
+                    <button onclick="addChecklistItem()" class="bg-sage-600 text-white font-semibold px-4 py-3 rounded-xl hover:bg-sage-700 active:scale-95 transition">
+                        เพิ่ม
+                    </button>
+                </div>
+            </div>
+
+            <div class="bg-amber-50 border border-amber-200 rounded-2xl p-4 text-amber-900 text-sm leading-relaxed">
+                <p class="font-semibold mb-1"><i class="fa-solid fa-lightbulb text-amber-600 mr-1"></i> คำแนะนำเพิ่มเติม</p>
+                <p>ปัจจุบันเบี้ยประกันและเงินบริจาคแบบ e-Donation มักส่งข้อมูลเข้ากรมสรรพากรอัตโนมัติ แต่ควรเก็บหลักฐานตัวจริงหรือไฟล์รูปภาพไว้เผื่อเจ้าหน้าที่ขอตรวจสอบย้อนหลัง และอย่าลืมเช็คสิทธิ์ล่าสุดกับกรมสรรพากรทุกปีครับ</p>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- ปุ่มลอยด้านล่างสำหรับเพิ่มใบเสร็จ (กดง่ายด้วยนิ้วโป้ง) -->
+    <div class="fixed bottom-5 left-0 right-0 px-4 z-30 pointer-events-none">
+        <div class="max-w-lg mx-auto flex justify-end">
+            <button onclick="openModal()" class="pointer-events-auto bg-sage-600 hover:bg-sage-700 active:scale-95 text-white font-bold py-4 px-6 rounded-full shadow-lg shadow-sage-600/30 flex items-center gap-2.5 text-lg transition">
+                <i class="fa-solid fa-plus text-xl"></i>
+                <span>เพิ่มใบเสร็จ</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- ================= Modal เพิ่ม / แก้ไข ใบเสร็จ ================= -->
+    <div id="receiptModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
+        <div class="bg-white w-full max-w-lg rounded-t-3xl sm:rounded-3xl p-6 max-h-[92vh] overflow-y-auto shadow-2xl animate-slide-up">
+            <div class="flex justify-between items-center mb-5 pb-3 border-b border-slate-100">
+                <h3 class="text-xl font-bold text-slate-800" id="modalTitle">เพิ่มใบเสร็จใหม่</h3>
+                <button onclick="closeModal()" class="w-10 h-10 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center text-xl hover:bg-slate-200">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <form id="receiptForm" onsubmit="saveReceipt(event)" class="space-y-4">
+                <input type="hidden" id="receiptId" style="">
+
+                <!-- เลือกหมวดหมู่ -->
+                <div>
+                    <label class="block text-base font-semibold text-slate-700 mb-1.5">หมวดหมู่ลดหย่อน *</label>
+                    <select id="receiptCategory" required="" class="w-full bg-slate-50 border border-slate-300 rounded-2xl px-4 py-3.5 text-base font-medium text-slate-800 focus:outline-none focus:border-sage-500">
+                        <option value="ประกันสุขภาพ">ประกันสุขภาพ</option>
+                        <option value="ประกันชีวิต">ประกันชีวิต</option>
+                        <option value="ประกันสุขภาพพ่อแม่">ประกันสุขภาพพ่อแม่</option>
+                        <option value="เงินบริจาค">เงินบริจาค</option>
+                        <option value="ดอกเบี้ยบ้าน">ดอกเบี้ยบ้าน</option>
+                        <option value="อื่น ๆ">อื่น ๆ</option>
+                    </select>
+                </div>
+
+                <!-- จำนวนเงิน -->
+                <div>
+                    <label class="block text-base font-semibold text-slate-700 mb-1.5">จำนวนเงิน (บาท) *</label>
+                    <input type="number" id="receiptAmount" inputmode="decimal" step="any" min="1" required="" placeholder="เช่น 12000" class="w-full bg-slate-50 border border-slate-300 rounded-2xl px-4 py-3.5 text-xl font-bold text-sage-700 focus:outline-none focus:border-sage-500" style="">
+                </div>
+
+                <!-- วันที่ใบเสร็จ -->
+                <div>
+                    <label class="block text-base font-semibold text-slate-700 mb-1.5">วันที่จ่าย / วันที่ใบเสร็จ *</label>
+                    <input type="date" id="receiptDate" required="" class="w-full bg-slate-50 border border-slate-300 rounded-2xl px-4 py-3.5 text-base text-slate-800 focus:outline-none focus:border-sage-500" style="">
+                </div>
+
+                <!-- รายละเอียดเพิ่มเติม -->
+                <div>
+                    <label class="block text-base font-semibold text-slate-700 mb-1.5">รายละเอียด / ชื่อบริษัท / หมายเหตุ</label>
+                    <input type="text" id="receiptNote" placeholder="เช่น AIA, โรงพยาบาล, ธนาคาร..." class="w-full bg-slate-50 border border-slate-300 rounded-2xl px-4 py-3.5 text-base text-slate-800 focus:outline-none focus:border-sage-500" style="">
+                </div>
+
+                <!-- แนบรูปภาพใบเสร็จ -->
+                <div>
+                    <label class="block text-base font-semibold text-slate-700 mb-1.5">รูปถ่ายใบเสร็จ (ถ้ามี)</label>
+                    <div class="flex gap-2">
+                        <label class="flex-1 bg-sage-50 border-2 border-dashed border-sage-400 rounded-2xl p-4 text-center cursor-pointer hover:bg-sage-100 transition flex flex-col items-center justify-center gap-1">
+                            <i class="fa-solid fa-camera text-2xl text-sage-600"></i>
+                            <span class="text-base font-semibold text-sage-700">ถ่ายรูป หรือ เลือกรูปจากเครื่อง</span>
+                            <span class="text-xs text-slate-500">ระบบจะย่อรูปอัตโนมัติเพื่อประหยัดพื้นที่</span>
+                            <input type="file" id="receiptImageInput" accept="image/*" class="hidden" onchange="handleImageUpload(event)" style="">
+                        </label>
+                    </div>
+
+                    <!-- แสดงตัวอย่างรูปภาพที่แนบ -->
+                    <div id="imagePreviewContainer" class="hidden mt-3 relative rounded-2xl overflow-hidden border border-slate-200 bg-slate-100">
+                        <img id="imagePreview" src="" alt="ตัวอย่างใบเสร็จ" class="w-full max-h-56 object-contain mx-auto">
+                        <button type="button" onclick="removeImage()" class="absolute top-2 right-2 bg-red-600 text-white px-3 py-1.5 rounded-xl text-sm font-semibold shadow">
+                            <i class="fa-solid fa-trash-can mr-1"></i> ลบรูป
+                        </button>
+                    </div>
+                </div>
+
+                <!-- ปุ่มบันทึกและยกเลิก -->
+                <div class="pt-3 flex gap-3">
+                    <button type="button" onclick="closeModal()" class="flex-1 bg-slate-100 text-slate-700 font-bold py-4 rounded-2xl text-base hover:bg-slate-200 transition">
+                        ยกเลิก
+                    </button>
+                    <button type="submit" class="flex-2 w-2/3 bg-sage-600 text-white font-bold py-4 rounded-2xl text-base shadow-md hover:bg-sage-700 transition">
+                        บันทึกใบเสร็จ
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ================= Modal ดูรูปใบเสร็จขนาดใหญ่ ================= -->
+    <div id="imageViewerModal" class="fixed inset-0 bg-black/90 z-50 hidden flex flex-col justify-between p-4" onclick="closeImageViewer()">
+        <div class="flex justify-between items-center text-white pt-2">
+            <span class="text-base font-medium" id="viewerCaption">รูปใบเสร็จ</span>
+            <button onclick="closeImageViewer()" class="w-11 h-11 rounded-full bg-white/20 flex items-center justify-center text-xl">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <div class="flex-1 flex items-center justify-center my-4 overflow-hidden">
+            <img id="fullImageView" src="" alt="รูปใบเสร็จขยาย" class="max-w-full max-h-[80vh] object-contain rounded-lg" onclick="event.stopPropagation()">
+        </div>
+        <div class="text-center text-white/70 text-sm pb-4">แตะพื้นที่ว่างเพื่อปิด</div>
+    </div>
+
+    <!-- ================= Modal ยืนยันการลบ (แทน confirm) ================= -->
+    <div id="deleteConfirmModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-sm rounded-3xl p-6 text-center shadow-2xl">
+            <div class="w-14 h-14 rounded-full bg-red-100 text-red-600 flex items-center justify-center text-2xl mx-auto mb-4">
+                <i class="fa-solid fa-trash-can"></i>
+            </div>
+            <h3 class="text-xl font-bold text-slate-800 mb-2">ลบใบเสร็จนี้ใช่ไหม?</h3>
+            <p class="text-base text-slate-500 mb-6" id="deleteConfirmText">ข้อมูลและรูปภาพของรายการนี้จะถูกลบออกจากเครื่อง</p>
+            <div class="flex gap-3">
+                <button onclick="closeDeleteModal()" class="flex-1 bg-slate-100 text-slate-700 font-bold py-3.5 rounded-2xl text-base">
+                    ยกเลิก
+                </button>
+                <button onclick="confirmDeleteReceipt()" class="flex-1 bg-red-600 text-white font-bold py-3.5 rounded-2xl text-base shadow">
+                    ลบรายการ
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= Toast แจ้งเตือนด้านบน ================= -->
+    <div id="toastNotification" class="fixed top-5 left-1/2 -translate-x-1/2 z-50 bg-slate-800 text-white px-5 py-3.5 rounded-2xl shadow-xl flex items-center gap-2.5 text-base font-medium transition-all duration-300 opacity-0 pointer-events-none translate-y-[-20px] w-max max-w-[90vw]">
+        <i id="toastIcon" class="fa-solid fa-circle-check text-emerald-400 text-xl"></i>
+        <span id="toastMessage">บันทึกสำเร็จ</span>
+    </div>
+
+    <script>
+        // ==========================================
+        // 1. การตั้งค่าหมวดหมู่และสี (สบายตา แยกชัดเจน)
+        // ==========================================
+        const CATEGORIES = [
+            {
+                id: 'ประกันสุขภาพ',
+                name: 'ประกันสุขภาพ',
+                icon: 'fa-heart-pulse',
+                bgClass: 'bg-teal-50 border-teal-200',
+                activeClass: 'ring-2 ring-teal-500 bg-teal-100/70',
+                iconBg: 'bg-teal-600 text-white',
+                textClass: 'text-teal-900',
+                amountClass: 'text-teal-700'
+            },
+            {
+                id: 'ประกันชีวิต',
+                name: 'ประกันชีวิต',
+                icon: 'fa-shield-heart',
+                bgClass: 'bg-blue-50 border-blue-200',
+                activeClass: 'ring-2 ring-blue-500 bg-blue-100/70',
+                iconBg: 'bg-blue-600 text-white',
+                textClass: 'text-blue-900',
+                amountClass: 'text-blue-700'
+            },
+            {
+                id: 'ประกันสุขภาพพ่อแม่',
+                name: 'ประกันสุขภาพพ่อแม่',
+                icon: 'fa-hands-holding-child',
+                bgClass: 'bg-indigo-50 border-indigo-200',
+                activeClass: 'ring-2 ring-indigo-500 bg-indigo-100/70',
+                iconBg: 'bg-indigo-600 text-white',
+                textClass: 'text-indigo-900',
+                amountClass: 'text-indigo-700'
+            },
+            {
+                id: 'เงินบริจาค',
+                name: 'เงินบริจาค',
+                icon: 'fa-hand-holding-heart',
+                bgClass: 'bg-amber-50 border-amber-200',
+                activeClass: 'ring-2 ring-amber-500 bg-amber-100/70',
+                iconBg: 'bg-amber-600 text-white',
+                textClass: 'text-amber-900',
+                amountClass: 'text-amber-700'
+            },
+            {
+                id: 'ดอกเบี้ยบ้าน',
+                name: 'ดอกเบี้ยบ้าน',
+                icon: 'fa-house-chimney',
+                bgClass: 'bg-emerald-50 border-emerald-200',
+                activeClass: 'ring-2 ring-emerald-500 bg-emerald-100/70',
+                iconBg: 'bg-emerald-600 text-white',
+                textClass: 'text-emerald-900',
+                amountClass: 'text-emerald-700'
+            },
+            {
+                id: 'อื่น ๆ',
+                name: 'อื่น ๆ',
+                icon: 'fa-folder-open',
+                bgClass: 'bg-slate-100 border-slate-200',
+                activeClass: 'ring-2 ring-slate-500 bg-slate-200/70',
+                iconBg: 'bg-slate-600 text-white',
+                textClass: 'text-slate-900',
+                amountClass: 'text-slate-700'
+            }
+        ];
+
+        // ==========================================
+        // 2. ข้อมูลเริ่มต้น (ตัวอย่าง 5 ใบเสร็จ + เช็คลิสต์)
+        // ==========================================
+        const currentYear = new Date().getFullYear();
+        const DEFAULT_RECEIPTS = [
+            {
+                id: 'sample-1',
+                category: 'ประกันสุขภาพ',
+                amount: 12000,
+                date: `${currentYear}-01-15`,
+                note: 'เบี้ยประกันสุขภาพประจำปี',
+                image: null
+            },
+            {
+                id: 'sample-2',
+                category: 'ประกันชีวิต',
+                amount: 18500,
+                date: `${currentYear}-03-03`,
+                note: 'เบี้ยประกันชีวิตสะสมทรัพย์',
+                image: null
+            },
+            {
+                id: 'sample-3',
+                category: 'เงินบริจาค',
+                amount: 2000,
+                date: `${currentYear}-05-12`,
+                note: 'บริจาคโรงพยาบาล / มูลนิธิ',
+                image: null
+            },
+            {
+                id: 'sample-4',
+                category: 'ประกันสุขภาพพ่อแม่',
+                amount: 9800,
+                date: `${currentYear}-07-20`,
+                note: 'ประกันสุขภาพคุณพ่อ/คุณแม่',
+                image: null
+            },
+            {
+                id: 'sample-5',
+                category: 'ดอกเบี้ยบ้าน',
+                amount: 42300,
+                date: `${currentYear}-10-31`,
+                note: 'หนังสือรับรองดอกเบี้ยเงินกู้ซื้อบ้าน',
+                image: null
+            }
+        ];
+
+        const DEFAULT_CHECKLIST = [
+            { id: 'chk-1', text: 'หนังสือรับรองการหักภาษี ณ ที่จ่าย (ใบ 50 ทวิ) จากที่ทำงาน', checked: false },
+            { id: 'chk-2', text: 'หนังสือรับรองการชำระเบี้ยประกันชีวิต / ประกันสุขภาพ', checked: false },
+            { id: 'chk-3', text: 'หนังสือรับรองเบี้ยประกันสุขภาพบิดามารดา + เลขบัตรประชาชนพ่อแม่', checked: false },
+            { id: 'chk-4', text: 'หนังสือรับรองดอกเบี้ยเงินกู้ยืมเพื่อที่อยู่อาศัย (จากธนาคาร)', checked: false },
+            { id: 'chk-5', text: 'ใบอนุโมทนาบัตร / ใบเสร็จรับเงินบริจาค (ตรวจสอบในระบบ e-Donation)', checked: false },
+            { id: 'chk-6', text: 'เลขประจำตัวประชาชนคู่สมรส และบุตร (สำหรับใช้สิทธิ์ลดหย่อนครอบครัว)', checked: false }
+        ];
+
+        // ==========================================
+        // 3. สถานะของแอปและการจัดการ LocalStorage
+        // ==========================================
+        const STORAGE_KEY_RECEIPTS = 'home_tax_receipts_v1';
+        const STORAGE_KEY_CHECKLIST = 'home_tax_checklist_v1';
+
+        let receipts = [];
+        let checklist = [];
+        let selectedCategory = 'all';
+        let currentUploadedImage = null;
+        let receiptIdToDelete = null;
+
+        // โหลดข้อมูลเมื่อเปิดหน้าเว็บ
+        function loadData() {
+            try {
+                const savedReceipts = localStorage.getItem(STORAGE_KEY_RECEIPTS);
+                if (savedReceipts !== null) {
+                    receipts = JSON.parse(savedReceipts);
+                } else {
+                    receipts = [...DEFAULT_RECEIPTS];
+                    saveReceiptsToStorage();
+                }
+
+                const savedChecklist = localStorage.getItem(STORAGE_KEY_CHECKLIST);
+                if (savedChecklist !== null) {
+                    checklist = JSON.parse(savedChecklist);
+                } else {
+                    checklist = [...DEFAULT_CHECKLIST];
+                    saveChecklistToStorage();
+                }
+            } catch (error) {
+                console.error('เกิดข้อผิดพลาดในการโหลดข้อมูล:', error);
+                receipts = [...DEFAULT_RECEIPTS];
+                checklist = [...DEFAULT_CHECKLIST];
+            }
+        }
+
+        function saveReceiptsToStorage() {
+            try {
+                localStorage.setItem(STORAGE_KEY_RECEIPTS, JSON.stringify(receipts));
+            } catch (e) {
+                showToast('พื้นที่เก็บข้อมูลในเครื่องเต็ม กรุณาลบรูปภาพบางรายการ', 'error');
+            }
+        }
+
+        function saveChecklistToStorage() {
+            try {
+                localStorage.setItem(STORAGE_KEY_CHECKLIST, JSON.stringify(checklist));
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        // ==========================================
+        // 4. ฟังก์ชันช่วยจัดรูปแบบ (ตัวเลข และ วันที่ภาษาไทย)
+        // ==========================================
+        function formatCurrency(num) {
+            return Number(num).toLocaleString('th-TH', {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 2
+            });
+        }
+
+        function formatThaiDate(dateStr) {
+            if (!dateStr) return '-';
+            const months = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+            const parts = dateStr.split('-');
+            if (parts.length !== 3) return dateStr;
+            const day = parseInt(parts[2], 10);
+            const month = months[parseInt(parts[1], 10) - 1];
+            const yearBE = parseInt(parts[0], 10) + 543;
+            return `${day} ${month} ${String(yearBE).slice(-2)}`;
+        }
+
+        // ==========================================
+        // 5. การแสดงผล UI (Render)
+        // ==========================================
+        function renderAll() {
+            renderTotal();
+            renderCategoryCards();
+            renderReceiptList();
+            renderChecklist();
+        }
+
+        // แสดงยอดรวมทั้งหมดด้านบน
+        function renderTotal() {
+            const total = receipts.reduce((sum, item) => sum + Number(item.amount || 0), 0);
+            document.getElementById('totalAmountDisplay').innerHTML = `${formatCurrency(total)} <span class="text-xl font-normal">บาท</span>`;
+        }
+
+        // แสดงการ์ดแยกหมวดหมู่
+        function renderCategoryCards() {
+            const container = document.getElementById('categoryCardsContainer');
+            container.innerHTML = '';
+
+            CATEGORIES.forEach(cat => {
+                const catItems = receipts.filter(r => r.category === cat.id);
+                const catTotal = catItems.reduce((sum, r) => sum + Number(r.amount || 0), 0);
+                const isSelected = selectedCategory === cat.id;
+
+                const card = document.createElement('button');
+                card.type = 'button';
+                card.onclick = () => selectCategory(cat.id);
+                card.className = `text-left p-4 rounded-2xl border transition active:scale-98 flex flex-col justify-between ${cat.bgClass} ${isSelected ? cat.activeClass : 'hover:opacity-90'}`;
+                
+                card.innerHTML = `
+                    <div class="flex items-center justify-between w-full mb-2.5">
+                        <div class="w-9 h-9 rounded-xl ${cat.iconBg} flex items-center justify-center text-base shadow-xs">
+                            <i class="fa-solid ${cat.icon}"></i>
+                        </div>
+                        <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-white/80 text-slate-600">
+                            ${catItems.length} ใบ
+                        </span>
+                    </div>
+                    <div>
+                        <div class="text-sm font-semibold ${cat.textClass} line-clamp-1">${cat.name}</div>
+                        <div class="text-xl font-bold ${cat.amountClass} mt-0.5">${formatCurrency(catTotal)} ฿</div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // เลือกดูตามหมวดหมู่
+        function selectCategory(catId) {
+            if (selectedCategory === catId && catId !== 'all') {
+                selectedCategory = 'all'; // แตะซ้ำเพื่อยกเลิกการกรอง
+            } else {
+                selectedCategory = catId;
+            }
+            
+            const clearBtn = document.getElementById('clearFilterBtn');
+            if (selectedCategory === 'all') {
+                clearBtn.classList.add('hidden');
+            } else {
+                clearBtn.classList.remove('hidden');
+            }
+
+            renderCategoryCards();
+            renderReceiptList();
+        }
+
+        // แสดงรายการใบเสร็จ
+        function renderReceiptList() {
+            const container = document.getElementById('receiptListContainer');
+            const titleEl = document.getElementById('listHeaderTitle');
+            const countEl = document.getElementById('listHeaderCount');
+
+            // กรองข้อมูล
+            let filtered = selectedCategory === 'all' 
+                ? [...receipts] 
+                : receipts.filter(r => r.category === selectedCategory);
+
+            // เรียงตามวันที่ล่าสุดขึ้นก่อน
+            filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            titleEl.textContent = selectedCategory === 'all' ? 'ใบเสร็จทั้งหมด' : `หมวด: ${selectedCategory}`;
+            countEl.textContent = `${filtered.length} รายการ`;
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-10 px-4">
+                        <div class="w-16 h-16 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center text-2xl mx-auto mb-3">
+                            <i class="fa-solid fa-receipt"></i>
+                        </div>
+                        <p class="text-base font-medium text-slate-600">ยังไม่มีใบเสร็จในหมวดนี้</p>
+                        <p class="text-sm text-slate-400 mt-1">กดปุ่ม "+ เพิ่มใบเสร็จ" เพื่อบันทึกข้อมูล</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = '';
+            filtered.forEach(item => {
+                const catInfo = CATEGORIES.find(c => c.id === item.category) || CATEGORIES[5];
+                
+                const itemEl = document.createElement('div');
+                itemEl.className = 'p-4 rounded-2xl border border-slate-200/80 bg-slate-50/50 hover:bg-white transition shadow-2xs';
+                
+                itemEl.innerHTML = `
+                    <div class="flex justify-between items-start gap-3">
+                        <div class="flex items-start gap-3">
+                            <div class="w-10 h-10 rounded-xl ${catInfo.iconBg} flex items-center justify-center text-base shrink-0 mt-0.5">
+                                <i class="fa-solid ${catInfo.icon}"></i>
+                            </div>
+                            <div>
+                                <div class="font-bold text-base text-slate-800">${item.category}</div>
+                                <div class="text-sm text-slate-500 mt-0.5">
+                                    <i class="fa-regular fa-calendar mr-1"></i>${formatThaiDate(item.date)}
+                                    ${item.note ? `<span class="mx-1">•</span><span class="text-slate-600">${escapeHtml(item.note)}</span>` : ''}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-right shrink-0">
+                            <div class="text-lg font-bold text-sage-700">${formatCurrency(item.amount)} ฿</div>
+                        </div>
+                    </div>
+
+                    <!-- แถบปุ่มจัดการ (ดูรูป / แก้ไข / ลบ) -->
+                    <div class="flex items-center justify-between mt-3 pt-2.5 border-t border-slate-200/60">
+                        <div>
+                            ${item.image ? `
+                                <button type="button" onclick="viewImage('${item.id}')" class="text-sm font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition">
+                                    <i class="fa-regular fa-image"></i> ดูรูปใบเสร็จ
+                                </button>
+                            ` : `
+                                <span class="text-xs text-slate-400"><i class="fa-regular fa-image mr-1"></i>ไม่มีรูปแนบ</span>
+                            `}
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button type="button" onclick="openModal('${item.id}')" class="text-sm font-medium text-slate-600 hover:text-sage-700 bg-white border border-slate-200 px-3 py-1.5 rounded-xl flex items-center gap-1 transition">
+                                <i class="fa-solid fa-pen"></i> แก้ไข
+                            </button>
+                            <button type="button" onclick="askDeleteReceipt('${item.id}')" class="text-sm font-medium text-red-600 hover:bg-red-50 bg-white border border-slate-200 px-3 py-1.5 rounded-xl flex items-center gap-1 transition">
+                                <i class="fa-solid fa-trash-can"></i> ลบ
+                            </button>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(itemEl);
+            });
+        }
+
+        // แสดงรายการเช็คลิสต์
+        function renderChecklist() {
+            const container = document.getElementById('checklistContainer');
+            container.innerHTML = '';
+
+            checklist.forEach((item, index) => {
+                const row = document.createElement('label');
+                row.className = `flex items-start gap-3.5 p-3.5 rounded-2xl border transition cursor-pointer ${item.checked ? 'bg-sage-50/70 border-sage-200' : 'bg-white border-slate-200 hover:bg-slate-50'}`;
+                
+                row.innerHTML = `
+                    <input type="checkbox" class="custom-checkbox mt-0.5 shrink-0" ${item.checked ? 'checked' : ''} onchange="toggleChecklist(${index})">
+                    <span class="flex-1 text-base leading-snug ${item.checked ? 'line-through text-slate-400' : 'text-slate-800 font-medium'}">
+                        ${escapeHtml(item.text)}
+                    </span>
+                    ${item.id.startsWith('custom-') ? `
+                        <button type="button" onclick="deleteChecklistItem(event, ${index})" class="text-slate-400 hover:text-red-500 p-1">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    ` : ''}
+                `;
+                container.appendChild(row);
+            });
+        }
+
+        // ==========================================
+        // 6. การจัดการ Modal เพิ่ม/แก้ไขใบเสร็จ และอัปโหลดรูป
+        // ==========================================
+        function openModal(editId = null) {
+            const modal = document.getElementById('receiptModal');
+            const form = document.getElementById('receiptForm');
+            const title = document.getElementById('modalTitle');
+            
+            form.reset();
+            currentUploadedImage = null;
+            document.getElementById('imagePreviewContainer').classList.add('hidden');
+            document.getElementById('receiptId').value = '';
+
+            if (editId) {
+                const item = receipts.find(r => r.id === editId);
+                if (item) {
+                    title.textContent = 'แก้ไขข้อมูลใบเสร็จ';
+                    document.getElementById('receiptId').value = item.id;
+                    document.getElementById('receiptCategory').value = item.category;
+                    document.getElementById('receiptAmount').value = item.amount;
+                    document.getElementById('receiptDate').value = item.date;
+                    document.getElementById('receiptNote').value = item.note || '';
+                    
+                    if (item.image) {
+                        currentUploadedImage = item.image;
+                        document.getElementById('imagePreview').src = item.image;
+                        document.getElementById('imagePreviewContainer').classList.remove('hidden');
+                    }
+                }
+            } else {
+                title.textContent = 'เพิ่มใบเสร็จใหม่';
+                // ตั้งค่าวันที่เริ่มต้นเป็นวันนี้
+                const today = new Date().toISOString().split('T')[0];
+                document.getElementById('receiptDate').value = today;
+                // ถ้ากำลังกรองหมวดหมู่อยู่ ให้เลือกหมวดนั้นให้อัตโนมัติ
+                if (selectedCategory !== 'all') {
+                    document.getElementById('receiptCategory').value = selectedCategory;
+                }
+            }
+
+            modal.classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('receiptModal').classList.add('hidden');
+        }
+
+        // ย่อขนาดรูปภาพก่อนเก็บลง LocalStorage เพื่อไม่ให้เต็มเร็ว
+        function handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    const MAX_WIDTH = 900; // ความกว้างสูงสุด 900px ชัดเจนพออ่านใบเสร็จได้
+                    let width = img.width;
+                    let height = img.height;
+
+                    if (width > MAX_WIDTH) {
+                        height *= MAX_WIDTH / width;
+                        width = MAX_WIDTH;
+                    }
+
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+
+                    // บีบอัดเป็น JPEG คุณภาพ 0.7
+                    currentUploadedImage = canvas.toDataURL('image/jpeg', 0.7);
+                    document.getElementById('imagePreview').src = currentUploadedImage;
+                    document.getElementById('imagePreviewContainer').classList.remove('hidden');
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function removeImage() {
+            currentUploadedImage = null;
+            document.getElementById('receiptImageInput').value = '';
+            document.getElementById('imagePreviewContainer').classList.add('hidden');
+        }
+
+        function saveReceipt(event) {
+            event.preventDefault();
+
+            const id = document.getElementById('receiptId').value;
+            const category = document.getElementById('receiptCategory').value;
+            const amount = parseFloat(document.getElementById('receiptAmount').value);
+            const date = document.getElementById('receiptDate').value;
+            const note = document.getElementById('receiptNote').value.trim();
+
+            if (isNaN(amount) || amount <= 0) {
+                showToast('กรุณากรอกจำนวนเงินให้ถูกต้อง', 'error');
+                return;
+            }
+
+            if (id) {
+                // แก้ไขรายการเดิม
+                const index = receipts.findIndex(r => r.id === id);
+                if (index !== -1) {
+                    receipts[index] = {
+                        ...receipts[index],
+                        category,
+                        amount,
+                        date,
+                        note,
+                        image: currentUploadedImage
+                    };
+                    showToast('แก้ไขใบเสร็จเรียบร้อยแล้ว');
+                }
+            } else {
+                // เพิ่มรายการใหม่
+                const newReceipt = {
+                    id: 'rec-' + Date.now(),
+                    category,
+                    amount,
+                    date,
+                    note,
+                    image: currentUploadedImage
+                };
+                receipts.unshift(newReceipt);
+                showToast('เพิ่มใบเสร็จเรียบร้อยแล้ว');
+            }
+
+            saveReceiptsToStorage();
+            closeModal();
+            renderAll();
+        }
+
+        // ==========================================
+        // 7. การดูรูปขยาย และการลบใบเสร็จ
+        // ==========================================
+        function viewImage(id) {
+            const item = receipts.find(r => r.id === id);
+            if (!item || !item.image) return;
+
+            document.getElementById('fullImageView').src = item.image;
+            document.getElementById('viewerCaption').textContent = `${item.category} - ${formatCurrency(item.amount)} บาท (${formatThaiDate(item.date)})`;
+            document.getElementById('imageViewerModal').classList.remove('hidden');
+        }
+
+        function closeImageViewer() {
+            document.getElementById('imageViewerModal').classList.add('hidden');
+        }
+
+        function askDeleteReceipt(id) {
+            const item = receipts.find(r => r.id === id);
+            if (!item) return;
+            receiptIdToDelete = id;
+            document.getElementById('deleteConfirmText').textContent = `ต้องการลบ "${item.category}" จำนวน ${formatCurrency(item.amount)} บาท ใช่หรือไม่?`;
+            document.getElementById('deleteConfirmModal').classList.remove('hidden');
+        }
+
+        function closeDeleteModal() {
+            receiptIdToDelete = null;
+            document.getElementById('deleteConfirmModal').classList.add('hidden');
+        }
+
+        function confirmDeleteReceipt() {
+            if (!receiptIdToDelete) return;
+            receipts = receipts.filter(r => r.id !== receiptIdToDelete);
+            saveReceiptsToStorage();
+            closeDeleteModal();
+            renderAll();
+            showToast('ลบรายการเรียบร้อยแล้ว');
+        }
+
+        // ==========================================
+        // 8. การจัดการเช็คลิสต์ และสลับหน้า Tab
+        // ==========================================
+        function toggleChecklist(index) {
+            checklist[index].checked = !checklist[index].checked;
+            saveChecklistToStorage();
+            renderChecklist();
+        }
+
+        function addChecklistItem() {
+            const input = document.getElementById('newChecklistInput');
+            const text = input.value.trim();
+            if (!text) return;
+
+            checklist.push({
+                id: 'custom-' + Date.now(),
+                text: text,
+                checked: false
+            });
+            input.value = '';
+            saveChecklistToStorage();
+            renderChecklist();
+            showToast('เพิ่มรายการเช็คลิสต์แล้ว');
+        }
+
+        function deleteChecklistItem(event, index) {
+            event.preventDefault();
+            event.stopPropagation();
+            checklist.splice(index, 1);
+            saveChecklistToStorage();
+            renderChecklist();
+        }
+
+        function switchTab(tabName) {
+            const receiptsView = document.getElementById('view-receipts');
+            const checklistView = document.getElementById('view-checklist');
+            const tabReceiptsBtn = document.getElementById('tab-receipts');
+            const tabChecklistBtn = document.getElementById('tab-checklist');
+
+            if (tabName === 'receipts') {
+                receiptsView.classList.remove('hidden');
+                checklistView.classList.add('hidden');
+                
+                tabReceiptsBtn.className = 'flex-1 py-3 px-3 rounded-xl font-semibold text-base transition bg-sage-600 text-white shadow-sm flex items-center justify-center gap-2';
+                tabChecklistBtn.className = 'flex-1 py-3 px-3 rounded-xl font-semibold text-base transition text-slate-600 hover:bg-slate-50 flex items-center justify-center gap-2';
+            } else {
+                receiptsView.classList.add('hidden');
+                checklistView.classList.remove('hidden');
+                
+                tabChecklistBtn.className = 'flex-1 py-3 px-3 rounded-xl font-semibold text-base transition bg-sage-600 text-white shadow-sm flex items-center justify-center gap-2';
+                tabReceiptsBtn.className = 'flex-1 py-3 px-3 rounded-xl font-semibold text-base transition text-slate-600 hover:bg-slate-50 flex items-center justify-center gap-2';
+            }
+        }
+
+        // ==========================================
+        // 9. ปุ่มคัดลอกสรุปยอดแต่ละหมวด (สำหรับใช้กรอกภาษี)
+        // ==========================================
+        function copySummary() {
+            const yearBE = new Date().getFullYear() + 543;
+            let lines = [`📋 สรุปยอดใบเสร็จลดหย่อนภาษี ปี ${yearBE}`, `------------------------------`];
+            
+            let grandTotal = 0;
+            CATEGORIES.forEach(cat => {
+                const catTotal = receipts
+                    .filter(r => r.category === cat.id)
+                    .reduce((sum, r) => sum + Number(r.amount || 0), 0);
+                grandTotal += catTotal;
+                lines.push(`• ${cat.name}: ${formatCurrency(catTotal)} บาท`);
+            });
+
+            lines.push(`------------------------------`);
+            lines.push(`💰 รวมทั้งหมด: ${formatCurrency(grandTotal)} บาท`);
+            lines.push(`(หมายเหตุ: โปรดตรวจสอบสิทธิ์และเพดานลดหย่อนล่าสุดกับกรมสรรพากร)`);
+
+            const summaryText = lines.join('\n');
+
+            // ใช้วิธีสร้าง textarea ชั่วคราวและ document.execCommand('copy') เพื่อรองรับ iOS Safari และ iFrame
+            const textArea = document.createElement('textarea');
+            textArea.value = summaryText;
+            textArea.style.position = 'fixed';
+            textArea.style.left = '-9999px';
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+
+            try {
+                document.execCommand('copy');
+                showToast('คัดลอกสรุปยอดเรียบร้อย นำไปวางได้เลย!');
+            } catch (err) {
+                showToast('ไม่สามารถคัดลอกได้ กรุณาลองใหม่อีกครั้ง', 'error');
+            }
+            document.body.removeChild(textArea);
+        }
+
+        // ==========================================
+        // 10. ระบบแจ้งเตือน Toast และความปลอดภัยข้อความ
+        // ==========================================
+        let toastTimeout;
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toastNotification');
+            const icon = document.getElementById('toastIcon');
+            const msgEl = document.getElementById('toastMessage');
+
+            msgEl.textContent = message;
+            if (type === 'error') {
+                icon.className = 'fa-solid fa-circle-exclamation text-red-400 text-xl';
+            } else {
+                icon.className = 'fa-solid fa-circle-check text-emerald-400 text-xl';
+            }
+
+            toast.classList.remove('opacity-0', 'translate-y-[-20px]');
+            toast.classList.add('opacity-100', 'translate-y-0');
+
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                toast.classList.remove('opacity-100', 'translate-y-0');
+                toast.classList.add('opacity-0', 'translate-y-[-20px]');
+            }, 3000);
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // เริ่มต้นทำงานเมื่อโหลดหน้าเว็บเสร็จ
+        window.onload = function() {
+            loadData();
+            renderAll();
+        };
+    </script>
+
+</body></html>
