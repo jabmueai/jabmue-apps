@@ -1,0 +1,1350 @@
+<!DOCTYPE html><html lang="th"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <!-- จับมือ AI: ไอคอน + ติดตั้งลงหน้าจอโฮม (เพิ่มทีหลัง โค้ดแอปเหมือนเดิม) -->
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="apple-touch-icon" href="icon-180.png">
+    <link rel="icon" type="image/png" href="icon-192.png">
+    <meta name="theme-color" content="#ea580c">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="หารค่าทริป">
+    <script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');</script>
+<meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>หารค่าใช้จ่ายทริป - TripSplit</title>
+    
+    <!-- Google Fonts: Kanit สำหรับภาษาไทยที่อ่านง่าย ชัดเจน ทันสมัย -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest" crossorigin="anonymous"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Kanit', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#fff7ed',
+                            100: '#ffedd5',
+                            500: '#f97316',
+                            600: '#ea580c',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* ปรับแต่งเพิ่มเติมสำหรับ iOS และความนุ่มนวล */
+        body {
+            font-family: 'Kanit', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+            background-color: #f8fafc;
+            padding-bottom: env(safe-area-inset-bottom, 24px);
+        }
+
+        /* ซ่อน Scrollbar แนวนอนแต่ยังเลื่อนได้ */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        /* แอนิเมชันสำหรับ Modal และ Toast */
+        @keyframes slideUp {
+            from { transform: translateY(100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .animate-slide-up {
+            animation: slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.2s ease-out forwards;
+        }
+    </style>
+</head>
+<body class="text-slate-800 antialiased selection:bg-orange-200">
+
+    <!-- Container หลัก ขนาดเหมาะกับมือถือ -->
+    <div id="app" class="max-w-lg mx-auto min-h-screen bg-slate-50 shadow-xl flex flex-col relative pb-28">
+        
+        <!-- Header สีสดใส -->
+        <header class="bg-gradient-to-br from-orange-500 via-amber-500 to-yellow-500 text-white pt-10 pb-6 px-5 rounded-b-3xl shadow-md sticky top-0 z-20">
+            <div class="flex justify-between items-start mb-3">
+                <div class="flex-1 pr-2">
+                    <div class="flex items-center gap-2">
+                        <span class="bg-white/25 text-white text-xs font-medium px-2.5 py-0.5 rounded-full backdrop-blur-sm">
+                            ทริปหารค่าใช้จ่าย
+                        </span>
+                    </div>
+                    <!-- ชื่อทริป (คลิกเพื่อแก้ไขได้) -->
+                    <div class="flex items-center gap-2 mt-1 group" onclick="openEditTripModal()">
+                        <h1 id="trip-title-display" class="text-2xl sm:text-3xl font-bold tracking-tight drop-shadow-sm cursor-pointer">ทริปเขาใหญ่</h1>
+                        <button class="p-1.5 bg-white/20 rounded-full hover:bg-white/30 transition" aria-label="แก้ไขชื่อทริป">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="pencil" aria-hidden="true" class="lucide lucide-pencil w-4 h-4 text-white"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"></path><path d="m15 5 4 4"></path></svg>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- ปุ่มรีเซ็ตข้อมูลตัวอย่าง -->
+                <button onclick="openResetModal()" class="text-xs bg-black/15 hover:bg-black/25 text-white px-3 py-1.5 rounded-full flex items-center gap-1 transition">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="rotate-ccw" aria-hidden="true" class="lucide lucide-rotate-ccw w-3.5 h-3.5"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
+                    <span>รีเซ็ต</span>
+                </button>
+            </div>
+
+            <!-- ยอดรวมทั้งทริป -->
+            <div class="bg-white/20 backdrop-blur-md rounded-2xl p-4 flex justify-between items-center border border-white/30">
+                <div>
+                    <p class="text-orange-50 text-sm font-medium">ยอดใช้จ่ายรวมทั้งทริป</p>
+                    <p id="total-trip-amount" class="text-3xl font-bold tracking-tight mt-0.5">8,040 ฿</p>
+                </div>
+                <div class="text-right">
+                    <p class="text-orange-50 text-sm font-medium">สมาชิก</p>
+                    <p id="total-members-count" class="text-xl font-bold mt-0.5">4 คน</p>
+                </div>
+            </div>
+        </header>
+
+        <!-- แถบเมนูสลับหน้า (Tabs) -->
+        <nav class="px-4 mt-4 sticky top-[178px] z-10">
+            <div class="bg-white p-1.5 rounded-2xl shadow-sm border border-slate-200/80 grid grid-cols-3 gap-1">
+                <button onclick="switchTab('expenses')" id="tab-expenses" class="tab-btn py-2.5 px-2 rounded-xl font-semibold text-base flex items-center justify-center gap-1.5 transition-all bg-orange-500 text-white shadow-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="receipt" aria-hidden="true" class="lucide lucide-receipt w-4 h-4"><path d="M12 17V7"></path><path d="M16 8h-6a2 2 0 0 0 0 4h4a2 2 0 0 1 0 4H8"></path><path d="M4 3a1 1 0 0 1 1-1 1.3 1.3 0 0 1 .7.2l.933.6a1.3 1.3 0 0 0 1.4 0l.934-.6a1.3 1.3 0 0 1 1.4 0l.933.6a1.3 1.3 0 0 0 1.4 0l.933-.6a1.3 1.3 0 0 1 1.4 0l.934.6a1.3 1.3 0 0 0 1.4 0l.933-.6A1.3 1.3 0 0 1 19 2a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1 1.3 1.3 0 0 1-.7-.2l-.933-.6a1.3 1.3 0 0 0-1.4 0l-.934.6a1.3 1.3 0 0 1-1.4 0l-.933-.6a1.3 1.3 0 0 0-1.4 0l-.933.6a1.3 1.3 0 0 1-1.4 0l-.934-.6a1.3 1.3 0 0 0-1.4 0l-.933.6a1.3 1.3 0 0 1-.7.2 1 1 0 0 1-1-1z"></path></svg>
+                    <span>รายการ</span>
+                </button>
+                <button onclick="switchTab('summary')" id="tab-summary" class="tab-btn py-2.5 px-2 rounded-xl font-semibold text-base flex items-center justify-center gap-1.5 transition-all text-slate-600 hover:bg-slate-100">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="arrow-left-right" aria-hidden="true" class="lucide lucide-arrow-left-right w-4 h-4"><path d="M8 3 4 7l4 4"></path><path d="M4 7h16"></path><path d="m16 21 4-4-4-4"></path><path d="M20 17H4"></path></svg>
+                    <span>สรุปโอน</span>
+                </button>
+                <button onclick="switchTab('members')" id="tab-members" class="tab-btn py-2.5 px-2 rounded-xl font-semibold text-base flex items-center justify-center gap-1.5 transition-all text-slate-600 hover:bg-slate-100">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="users" aria-hidden="true" class="lucide lucide-users w-4 h-4"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><path d="M16 3.128a4 4 0 0 1 0 7.744"></path><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><circle cx="9" cy="7" r="4"></circle></svg>
+                    <span>เพื่อน</span>
+                </button>
+            </div>
+        </nav>
+
+        <!-- เนื้อหาหลัก -->
+        <main class="flex-1 px-4 pt-4">
+            
+            <!-- ==================== 1. หน้าแสดงรายการค่าใช้จ่าย ==================== -->
+            <section id="view-expenses" class="space-y-3 animate-fade-in">
+                <div class="flex justify-between items-center px-1">
+                    <h2 class="text-lg font-bold text-slate-700">รายการค่าใช้จ่าย (<span id="expense-count">4</span>)</h2>
+                    <span class="text-xs text-slate-500">แตะรายการเพื่อแก้ไข</span>
+                </div>
+
+                <!-- รายการ Cards -->
+                <div id="expense-list" class="space-y-3">
+                    <div onclick="openExpenseModal('e1')" class="bg-white p-4 rounded-2xl shadow-xs border border-slate-200/80 hover:border-orange-300 active:scale-[0.99] transition cursor-pointer flex justify-between items-center gap-3">
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="text-xs font-bold px-2.5 py-0.5 rounded-full border bg-orange-100 text-orange-700 border-orange-300">
+                                    ต้น จ่าย
+                                </span>
+                                <span class="text-xs text-slate-400 truncate">
+                                    (คนละ 1,200 ฿)
+                                </span>
+                            </div>
+                            <h3 class="text-lg font-bold text-slate-800 truncate">ค่าที่พัก</h3>
+                            <p class="text-xs text-slate-500 truncate mt-0.5">หารทุกคน (4 คน)</p>
+                        </div>
+                        <div class="text-right shrink-0">
+                            <p class="text-xl font-bold text-orange-600">4,800 ฿</p>
+                            <span class="text-xs text-slate-400 inline-flex items-center gap-0.5">
+                                แก้ไข <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="chevron-right" aria-hidden="true" class="lucide lucide-chevron-right w-3.5 h-3.5"><path d="m9 18 6-6-6-6"></path></svg>
+                            </span>
+                        </div>
+                    </div>
+                
+                    <div onclick="openExpenseModal('e2')" class="bg-white p-4 rounded-2xl shadow-xs border border-slate-200/80 hover:border-orange-300 active:scale-[0.99] transition cursor-pointer flex justify-between items-center gap-3">
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="text-xs font-bold px-2.5 py-0.5 rounded-full border bg-emerald-100 text-emerald-700 border-emerald-300">
+                                    บอส จ่าย
+                                </span>
+                                <span class="text-xs text-slate-400 truncate">
+                                    (คนละ 400 ฿)
+                                </span>
+                            </div>
+                            <h3 class="text-lg font-bold text-slate-800 truncate">ค่าน้ำมัน</h3>
+                            <p class="text-xs text-slate-500 truncate mt-0.5">หารทุกคน (4 คน)</p>
+                        </div>
+                        <div class="text-right shrink-0">
+                            <p class="text-xl font-bold text-orange-600">1,600 ฿</p>
+                            <span class="text-xs text-slate-400 inline-flex items-center gap-0.5">
+                                แก้ไข <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="chevron-right" aria-hidden="true" class="lucide lucide-chevron-right w-3.5 h-3.5"><path d="m9 18 6-6-6-6"></path></svg>
+                            </span>
+                        </div>
+                    </div>
+                
+                    <div onclick="openExpenseModal('e3')" class="bg-white p-4 rounded-2xl shadow-xs border border-slate-200/80 hover:border-orange-300 active:scale-[0.99] transition cursor-pointer flex justify-between items-center gap-3">
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="text-xs font-bold px-2.5 py-0.5 rounded-full border bg-sky-100 text-sky-700 border-sky-300">
+                                    ฝน จ่าย
+                                </span>
+                                <span class="text-xs text-slate-400 truncate">
+                                    (คนละ 310 ฿)
+                                </span>
+                            </div>
+                            <h3 class="text-lg font-bold text-slate-800 truncate">หมูกระทะ</h3>
+                            <p class="text-xs text-slate-500 truncate mt-0.5">หารทุกคน (4 คน)</p>
+                        </div>
+                        <div class="text-right shrink-0">
+                            <p class="text-xl font-bold text-orange-600">1,240 ฿</p>
+                            <span class="text-xs text-slate-400 inline-flex items-center gap-0.5">
+                                แก้ไข <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="chevron-right" aria-hidden="true" class="lucide lucide-chevron-right w-3.5 h-3.5"><path d="m9 18 6-6-6-6"></path></svg>
+                            </span>
+                        </div>
+                    </div>
+                
+                    <div onclick="openExpenseModal('e4')" class="bg-white p-4 rounded-2xl shadow-xs border border-slate-200/80 hover:border-orange-300 active:scale-[0.99] transition cursor-pointer flex justify-between items-center gap-3">
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="text-xs font-bold px-2.5 py-0.5 rounded-full border bg-purple-100 text-purple-700 border-purple-300">
+                                    มิว จ่าย
+                                </span>
+                                <span class="text-xs text-slate-400 truncate">
+                                    (คนละ 100 ฿)
+                                </span>
+                            </div>
+                            <h3 class="text-lg font-bold text-slate-800 truncate">ค่าเข้าอุทยาน</h3>
+                            <p class="text-xs text-slate-500 truncate mt-0.5">หารทุกคน (4 คน)</p>
+                        </div>
+                        <div class="text-right shrink-0">
+                            <p class="text-xl font-bold text-orange-600">400 ฿</p>
+                            <span class="text-xs text-slate-400 inline-flex items-center gap-0.5">
+                                แก้ไข <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="chevron-right" aria-hidden="true" class="lucide lucide-chevron-right w-3.5 h-3.5"><path d="m9 18 6-6-6-6"></path></svg>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== 2. หน้าสรุปยอดและโอนเงิน ==================== -->
+            <section id="view-summary" class="hidden space-y-5 animate-fade-in">
+                
+                <!-- ส่วนที่ 1: ใครต้องโอนให้ใคร (Highlight ตัวใหญ่ชัดเจน) -->
+                <div class="bg-white rounded-3xl p-5 shadow-sm border-2 border-emerald-400/60">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center gap-2">
+                            <div class="w-9 h-9 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="banknote" aria-hidden="true" class="lucide lucide-banknote w-5 h-5"><rect width="20" height="12" x="2" y="6" rx="2"></rect><circle cx="12" cy="12" r="2"></circle><path d="M6 12h.01M18 12h.01"></path></svg>
+                            </div>
+                            <div>
+                                <h2 class="text-xl font-bold text-slate-800">สรุปยอดโอนเงิน</h2>
+                                <p class="text-xs text-slate-500">คำนวณให้โอนน้อยครั้งที่สุด</p>
+                            </div>
+                        </div>
+                        <span id="transfer-progress-badge" class="text-xs font-semibold bg-emerald-100 text-emerald-700 px-2.5 py-1 rounded-full">โอนแล้ว 0/3</span>
+                    </div>
+
+                    <!-- รายการโอน -->
+                    <div id="settlement-list" class="space-y-3 mt-4">
+                        <div onclick="toggleTransferPaid('m4_m1_1610')" class="p-4 rounded-2xl border-2 transition cursor-pointer select-none bg-gradient-to-r from-emerald-50/70 to-teal-50/70 border-emerald-400 shadow-xs">
+                            <div class="flex items-center justify-between gap-2">
+                                <!-- ฝั่งชื่อคนโอน -> คนรับ -->
+                                <div class="flex items-center gap-2 flex-wrap">
+                                    <span class="text-lg font-bold px-3 py-1 rounded-xl border bg-purple-100 text-purple-700 border-purple-300 ">
+                                        มิว
+                                    </span>
+                                    <div class="flex flex-col items-center text-slate-400 px-1">
+                                        <span class="text-[10px] font-semibold uppercase">โอนให้</span>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="arrow-right" aria-hidden="true" class="lucide lucide-arrow-right w-5 h-5 text-emerald-600"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+                                    </div>
+                                    <span class="text-lg font-bold px-3 py-1 rounded-xl border bg-orange-100 text-orange-700 border-orange-300 ">
+                                        ต้น
+                                    </span>
+                                </div>
+
+                                <!-- ยอดเงินตัวใหญ่ชัดเจน -->
+                                <div class="text-right">
+                                    <p class="text-2xl font-extrabold text-emerald-600">
+                                        1,610 ฿
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- แถบติ๊กสถานะ โอนแล้ว -->
+                            <div class="mt-3 pt-2.5 border-t border-slate-200/70 flex justify-between items-center">
+                                <span class="text-xs text-slate-500">
+                                    แตะเพื่อติ๊กว่าโอนแล้ว
+                                </span>
+                                <div class="w-6 h-6 rounded-full flex items-center justify-center border-2 transition border-slate-300 bg-white">
+                                    
+                                </div>
+                            </div>
+                        </div>
+                    
+                        <div onclick="toggleTransferPaid('m2_m1_770')" class="p-4 rounded-2xl border-2 transition cursor-pointer select-none bg-gradient-to-r from-emerald-50/70 to-teal-50/70 border-emerald-400 shadow-xs">
+                            <div class="flex items-center justify-between gap-2">
+                                <!-- ฝั่งชื่อคนโอน -> คนรับ -->
+                                <div class="flex items-center gap-2 flex-wrap">
+                                    <span class="text-lg font-bold px-3 py-1 rounded-xl border bg-sky-100 text-sky-700 border-sky-300 ">
+                                        ฝน
+                                    </span>
+                                    <div class="flex flex-col items-center text-slate-400 px-1">
+                                        <span class="text-[10px] font-semibold uppercase">โอนให้</span>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="arrow-right" aria-hidden="true" class="lucide lucide-arrow-right w-5 h-5 text-emerald-600"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+                                    </div>
+                                    <span class="text-lg font-bold px-3 py-1 rounded-xl border bg-orange-100 text-orange-700 border-orange-300 ">
+                                        ต้น
+                                    </span>
+                                </div>
+
+                                <!-- ยอดเงินตัวใหญ่ชัดเจน -->
+                                <div class="text-right">
+                                    <p class="text-2xl font-extrabold text-emerald-600">
+                                        770 ฿
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- แถบติ๊กสถานะ โอนแล้ว -->
+                            <div class="mt-3 pt-2.5 border-t border-slate-200/70 flex justify-between items-center">
+                                <span class="text-xs text-slate-500">
+                                    แตะเพื่อติ๊กว่าโอนแล้ว
+                                </span>
+                                <div class="w-6 h-6 rounded-full flex items-center justify-center border-2 transition border-slate-300 bg-white">
+                                    
+                                </div>
+                            </div>
+                        </div>
+                    
+                        <div onclick="toggleTransferPaid('m3_m1_410')" class="p-4 rounded-2xl border-2 transition cursor-pointer select-none bg-gradient-to-r from-emerald-50/70 to-teal-50/70 border-emerald-400 shadow-xs">
+                            <div class="flex items-center justify-between gap-2">
+                                <!-- ฝั่งชื่อคนโอน -> คนรับ -->
+                                <div class="flex items-center gap-2 flex-wrap">
+                                    <span class="text-lg font-bold px-3 py-1 rounded-xl border bg-emerald-100 text-emerald-700 border-emerald-300 ">
+                                        บอส
+                                    </span>
+                                    <div class="flex flex-col items-center text-slate-400 px-1">
+                                        <span class="text-[10px] font-semibold uppercase">โอนให้</span>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="arrow-right" aria-hidden="true" class="lucide lucide-arrow-right w-5 h-5 text-emerald-600"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+                                    </div>
+                                    <span class="text-lg font-bold px-3 py-1 rounded-xl border bg-orange-100 text-orange-700 border-orange-300 ">
+                                        ต้น
+                                    </span>
+                                </div>
+
+                                <!-- ยอดเงินตัวใหญ่ชัดเจน -->
+                                <div class="text-right">
+                                    <p class="text-2xl font-extrabold text-emerald-600">
+                                        410 ฿
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- แถบติ๊กสถานะ โอนแล้ว -->
+                            <div class="mt-3 pt-2.5 border-t border-slate-200/70 flex justify-between items-center">
+                                <span class="text-xs text-slate-500">
+                                    แตะเพื่อติ๊กว่าโอนแล้ว
+                                </span>
+                                <div class="w-6 h-6 rounded-full flex items-center justify-center border-2 transition border-slate-300 bg-white">
+                                    
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ปุ่มคัดลอกสรุปส่ง LINE -->
+                    <button onclick="copySummaryToClipboard()" class="mt-5 w-full bg-[#06C755] hover:bg-[#05b34c] active:scale-[0.99] text-white font-bold text-lg py-3.5 px-4 rounded-2xl shadow-md shadow-emerald-500/20 flex items-center justify-center gap-2 transition">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="copy" aria-hidden="true" class="lucide lucide-copy w-5 h-5"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></svg>
+                        <span>คัดลอกสรุปส่งเข้ากลุ่ม LINE</span>
+                    </button>
+                </div>
+
+                <!-- ส่วนที่ 2: สรุปรายบุคคล (จ่ายไป vs ต้องออกจริง) -->
+                <div class="bg-white rounded-3xl p-5 shadow-sm border border-slate-200/80">
+                    <h3 class="text-lg font-bold text-slate-800 mb-3 flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="pie-chart" aria-hidden="true" class="lucide lucide-pie-chart w-5 h-5 text-orange-500"><path d="M21 12c.552 0 1.005-.449.95-.998a10 10 0 0 0-8.953-8.951c-.55-.055-.998.398-.998.95v8a1 1 0 0 0 1 1z"></path><path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path></svg>
+                        <span>รายละเอียดแต่ละคน</span>
+                    </h3>
+                    <div id="member-breakdown-list" class="divide-y divide-slate-100">
+                    <div class="py-3.5 flex items-center justify-between gap-2">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full border flex items-center justify-center font-bold text-lg bg-orange-100 text-orange-700 border-orange-300">
+                                ต
+                            </div>
+                            <div>
+                                <p class="font-bold text-base text-slate-800">ต้น</p>
+                                <p class="text-xs text-slate-500">
+                                    จ่ายไป <span class="font-semibold text-slate-700">4,800</span> • 
+                                    ส่วนที่ต้องออก <span class="font-semibold text-slate-700">2,010</span>
+                                </p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-sm font-bold text-emerald-600">รอรับคืน +2,790 ฿</span>
+                        </div>
+                    </div>
+                
+                    <div class="py-3.5 flex items-center justify-between gap-2">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full border flex items-center justify-center font-bold text-lg bg-sky-100 text-sky-700 border-sky-300">
+                                ฝ
+                            </div>
+                            <div>
+                                <p class="font-bold text-base text-slate-800">ฝน</p>
+                                <p class="text-xs text-slate-500">
+                                    จ่ายไป <span class="font-semibold text-slate-700">1,240</span> • 
+                                    ส่วนที่ต้องออก <span class="font-semibold text-slate-700">2,010</span>
+                                </p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-sm font-bold text-rose-500">ต้องจ่ายเพิ่ม 770 ฿</span>
+                        </div>
+                    </div>
+                
+                    <div class="py-3.5 flex items-center justify-between gap-2">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full border flex items-center justify-center font-bold text-lg bg-emerald-100 text-emerald-700 border-emerald-300">
+                                บ
+                            </div>
+                            <div>
+                                <p class="font-bold text-base text-slate-800">บอส</p>
+                                <p class="text-xs text-slate-500">
+                                    จ่ายไป <span class="font-semibold text-slate-700">1,600</span> • 
+                                    ส่วนที่ต้องออก <span class="font-semibold text-slate-700">2,010</span>
+                                </p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-sm font-bold text-rose-500">ต้องจ่ายเพิ่ม 410 ฿</span>
+                        </div>
+                    </div>
+                
+                    <div class="py-3.5 flex items-center justify-between gap-2">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full border flex items-center justify-center font-bold text-lg bg-purple-100 text-purple-700 border-purple-300">
+                                ม
+                            </div>
+                            <div>
+                                <p class="font-bold text-base text-slate-800">มิว</p>
+                                <p class="text-xs text-slate-500">
+                                    จ่ายไป <span class="font-semibold text-slate-700">400</span> • 
+                                    ส่วนที่ต้องออก <span class="font-semibold text-slate-700">2,010</span>
+                                </p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-sm font-bold text-rose-500">ต้องจ่ายเพิ่ม 1,610 ฿</span>
+                        </div>
+                    </div>
+                </div>
+                </div>
+
+            </section>
+
+            <!-- ==================== 3. หน้าจัดการเพื่อนในทริป ==================== -->
+            <section id="view-members" class="hidden space-y-4 animate-fade-in">
+                <div class="bg-white rounded-3xl p-5 shadow-sm border border-slate-200/80">
+                    <h2 class="text-lg font-bold text-slate-800 mb-1">เพิ่มเพื่อนร่วมทริป</h2>
+                    <p class="text-sm text-slate-500 mb-4">เพิ่มชื่อเพื่อนเพื่อใช้เลือกคนจ่ายและคนหาร</p>
+                    
+                    <form onsubmit="handleAddMember(event)" class="flex gap-2">
+                        <input type="text" id="new-member-name" placeholder="ชื่อเพื่อน เช่น เต้, แพรว..." required="" class="flex-1 bg-slate-100 border border-slate-200 rounded-2xl px-4 py-3 text-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:bg-white transition" style="">
+                        <button type="submit" class="bg-orange-500 hover:bg-orange-600 active:scale-95 text-white font-bold px-5 py-3 rounded-2xl shadow-sm flex items-center gap-1 transition">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="plus" aria-hidden="true" class="lucide lucide-plus w-5 h-5"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg>
+                            <span>เพิ่ม</span>
+                        </button>
+                    </form>
+                </div>
+
+                <div class="bg-white rounded-3xl p-5 shadow-sm border border-slate-200/80">
+                    <h3 class="text-lg font-bold text-slate-800 mb-3">รายชื่อเพื่อนในทริป (<span id="members-list-count">4</span> คน)</h3>
+                    <div id="members-manage-list" class="space-y-2.5">
+                    <div class="flex items-center justify-between p-3 bg-slate-50 rounded-2xl border border-slate-200/70">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full border flex items-center justify-center font-bold text-lg bg-orange-100 text-orange-700 border-orange-300">
+                                ต
+                            </div>
+                            <span class="font-bold text-lg text-slate-800">ต้น</span>
+                        </div>
+                        <button onclick="removeMember('m1')" class="p-2 text-rose-500 hover:bg-rose-100 rounded-xl transition" title="ลบเพื่อน">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="trash-2" aria-hidden="true" class="lucide lucide-trash-2 w-5 h-5"><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M3 6h18"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                        </button>
+                    </div>
+                
+                    <div class="flex items-center justify-between p-3 bg-slate-50 rounded-2xl border border-slate-200/70">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full border flex items-center justify-center font-bold text-lg bg-sky-100 text-sky-700 border-sky-300">
+                                ฝ
+                            </div>
+                            <span class="font-bold text-lg text-slate-800">ฝน</span>
+                        </div>
+                        <button onclick="removeMember('m2')" class="p-2 text-rose-500 hover:bg-rose-100 rounded-xl transition" title="ลบเพื่อน">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="trash-2" aria-hidden="true" class="lucide lucide-trash-2 w-5 h-5"><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M3 6h18"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                        </button>
+                    </div>
+                
+                    <div class="flex items-center justify-between p-3 bg-slate-50 rounded-2xl border border-slate-200/70">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full border flex items-center justify-center font-bold text-lg bg-emerald-100 text-emerald-700 border-emerald-300">
+                                บ
+                            </div>
+                            <span class="font-bold text-lg text-slate-800">บอส</span>
+                        </div>
+                        <button onclick="removeMember('m3')" class="p-2 text-rose-500 hover:bg-rose-100 rounded-xl transition" title="ลบเพื่อน">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="trash-2" aria-hidden="true" class="lucide lucide-trash-2 w-5 h-5"><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M3 6h18"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                        </button>
+                    </div>
+                
+                    <div class="flex items-center justify-between p-3 bg-slate-50 rounded-2xl border border-slate-200/70">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full border flex items-center justify-center font-bold text-lg bg-purple-100 text-purple-700 border-purple-300">
+                                ม
+                            </div>
+                            <span class="font-bold text-lg text-slate-800">มิว</span>
+                        </div>
+                        <button onclick="removeMember('m4')" class="p-2 text-rose-500 hover:bg-rose-100 rounded-xl transition" title="ลบเพื่อน">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="trash-2" aria-hidden="true" class="lucide lucide-trash-2 w-5 h-5"><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M3 6h18"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                        </button>
+                    </div>
+                </div>
+                </div>
+            </section>
+
+        </main>
+
+        <!-- ปุ่มลอยด้านล่างสำหรับ "เพิ่มค่าใช้จ่าย" -->
+        <div id="floating-add-btn" class="fixed bottom-5 left-0 right-0 max-w-lg mx-auto px-4 z-20 pointer-events-none">
+            <button onclick="openExpenseModal()" class="pointer-events-auto w-full bg-gradient-to-r from-orange-500 to-rose-500 hover:from-orange-600 hover:to-rose-600 active:scale-[0.98] text-white font-bold text-lg py-4 px-6 rounded-2xl shadow-xl shadow-orange-500/30 flex items-center justify-center gap-2 transition">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="plus-circle" aria-hidden="true" class="lucide lucide-plus-circle w-6 h-6"><circle cx="12" cy="12" r="10"></circle><path d="M8 12h8"></path><path d="M12 8v8"></path></svg>
+                <span>เพิ่มรายการค่าใช้จ่าย</span>
+            </button>
+        </div>
+
+    </div>
+
+    <!-- ==================== MODAL: เพิ่ม / แก้ไข รายการค่าใช้จ่าย ==================== -->
+    <div id="expense-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden flex items-end sm:items-center justify-center">
+        <div class="bg-white w-full max-w-lg rounded-t-3xl sm:rounded-3xl p-6 max-h-[92vh] overflow-y-auto animate-slide-up shadow-2xl">
+            <div class="flex justify-between items-center mb-4">
+                <h3 id="expense-modal-title" class="text-xl font-bold text-slate-800">เพิ่มรายการค่าใช้จ่าย</h3>
+                <button onclick="closeExpenseModal()" class="p-2 bg-slate-100 rounded-full text-slate-500 hover:bg-slate-200">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="x" aria-hidden="true" class="lucide lucide-x w-5 h-5"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
+                </button>
+            </div>
+
+            <form id="expense-form" onsubmit="saveExpense(event)" class="space-y-4">
+                <input type="hidden" id="expense-id" style="">
+
+                <!-- ชื่อรายการ -->
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-1">ค่าอะไร?</label>
+                    <input type="text" id="expense-title" placeholder="เช่น ค่าอาหาร, ค่าน้ำมัน, ค่ากาแฟ..." required="" class="w-full bg-slate-100 border border-slate-200 rounded-2xl px-4 py-3 text-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:bg-white" style="">
+                </div>
+
+                <!-- จำนวนเงิน -->
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-1">จำนวนเงิน (บาท)</label>
+                    <input type="number" id="expense-amount" inputmode="decimal" step="any" min="1" placeholder="0" required="" class="w-full bg-slate-100 border border-slate-200 rounded-2xl px-4 py-3 text-2xl font-bold text-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:bg-white" style="">
+                </div>
+
+                <!-- ใครเป็นคนจ่าย -->
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">ใครจ่ายเงินไปก่อน?</label>
+                    <div id="payer-selector" class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                        <!-- ปุ่มเลือกคนจ่ายสร้างโดย JS -->
+                    </div>
+                </div>
+
+                <!-- หารกับใครบ้าง -->
+                <div>
+                    <div class="flex justify-between items-center mb-2">
+                        <label class="block text-sm font-semibold text-slate-700">หารกับใครบ้าง?</label>
+                        <button type="button" onclick="toggleSelectAllSplit()" id="select-all-btn" class="text-sm font-semibold text-orange-600 hover:underline">
+                            เลือกทุกคน
+                        </button>
+                    </div>
+                    <div id="split-selector" class="grid grid-cols-2 gap-2">
+                        <!-- Checkbox เลือกคนหารสร้างโดย JS -->
+                    </div>
+                    <p id="split-preview-text" class="text-sm text-slate-500 mt-2 text-right font-medium">
+                        ตกคนละ 0 บาท
+                    </p>
+                </div>
+
+                <!-- ปุ่มบันทึก และ ปุ่มลบ (ถ้าแก้ไข) -->
+                <div class="pt-2 flex gap-2">
+                    <button type="button" id="delete-expense-btn" onclick="deleteCurrentExpense()" class="hidden bg-rose-100 hover:bg-rose-200 text-rose-600 font-bold py-3.5 px-4 rounded-2xl flex items-center justify-center transition">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="trash-2" aria-hidden="true" class="lucide lucide-trash-2 w-5 h-5"><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M3 6h18"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                    </button>
+                    <button type="submit" class="flex-1 bg-orange-500 hover:bg-orange-600 text-white font-bold text-lg py-3.5 px-6 rounded-2xl shadow-lg shadow-orange-500/25 transition">
+                        บันทึกรายการ
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ==================== MODAL: แก้ไขชื่อทริป ==================== -->
+    <div id="trip-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-sm rounded-3xl p-6 animate-fade-in shadow-2xl">
+            <h3 class="text-xl font-bold text-slate-800 mb-3">เปลี่ยนชื่อทริป</h3>
+            <form onsubmit="saveTripName(event)" class="space-y-4">
+                <input type="text" id="edit-trip-name-input" required="" class="w-full bg-slate-100 border border-slate-200 rounded-2xl px-4 py-3 text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-orange-500" style="">
+                <div class="flex gap-2">
+                    <button type="button" onclick="closeEditTripModal()" class="flex-1 bg-slate-100 text-slate-700 font-semibold py-3 rounded-2xl">ยกเลิก</button>
+                    <button type="submit" class="flex-1 bg-orange-500 text-white font-bold py-3 rounded-2xl">บันทึก</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ==================== MODAL: ยืนยันการรีเซ็ต ==================== -->
+    <div id="reset-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-sm rounded-3xl p-6 animate-fade-in shadow-2xl text-center">
+            <div class="w-14 h-14 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="rotate-ccw" aria-hidden="true" class="lucide lucide-rotate-ccw w-7 h-7"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
+            </div>
+            <h3 class="text-xl font-bold text-slate-800 mb-1">รีเซ็ตเป็นข้อมูลตัวอย่าง?</h3>
+            <p class="text-sm text-slate-500 mb-5">ข้อมูลที่คุณเพิ่มไว้จะถูกล้าง และกลับไปเป็นข้อมูล "ทริปเขาใหญ่" เริ่มต้น</p>
+            <div class="flex gap-2">
+                <button onclick="closeResetModal()" class="flex-1 bg-slate-100 text-slate-700 font-semibold py-3 rounded-2xl">ยกเลิก</button>
+                <button onclick="confirmResetData()" class="flex-1 bg-rose-500 text-white font-bold py-3 rounded-2xl">รีเซ็ตเลย</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== TOAST แจ้งเตือน ==================== -->
+    <div id="toast" class="fixed top-6 left-1/2 -translate-x-1/2 bg-slate-900/90 text-white px-5 py-3 rounded-full shadow-xl text-sm font-medium flex items-center gap-2 z-50 opacity-0 pointer-events-none transition-opacity duration-300">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="check-circle-2" aria-hidden="true" class="lucide lucide-check-circle-2 w-4 h-4 text-emerald-400"><circle cx="12" cy="12" r="10"></circle><path d="m16 9-5.5 5.5L8 12"></path></svg>
+        <span id="toast-message">คัดลอกข้อความแล้ว</span>
+    </div>
+
+    <!-- ==================== JAVASCRIPT LOGIC ==================== -->
+    <script>
+        // คีย์สำหรับเก็บข้อมูลใน LocalStorage
+        const STORAGE_KEY = 'tripsplit_th_data_v1';
+
+        // ชุดสีสำหรับ Avatar ของเพื่อนแต่ละคน
+        const AVATAR_COLORS = [
+            'bg-orange-100 text-orange-700 border-orange-300',
+            'bg-sky-100 text-sky-700 border-sky-300',
+            'bg-emerald-100 text-emerald-700 border-emerald-300',
+            'bg-purple-100 text-purple-700 border-purple-300',
+            'bg-rose-100 text-rose-700 border-rose-300',
+            'bg-amber-100 text-amber-700 border-amber-300',
+            'bg-indigo-100 text-indigo-700 border-indigo-300',
+            'bg-teal-100 text-teal-700 border-teal-300'
+        ];
+
+        // ข้อมูลตัวอย่างเริ่มต้น: "ทริปเขาใหญ่"
+        const DEFAULT_DATA = {
+            tripName: 'ทริปเขาใหญ่',
+            members: [
+                { id: 'm1', name: 'ต้น' },
+                { id: 'm2', name: 'ฝน' },
+                { id: 'm3', name: 'บอส' },
+                { id: 'm4', name: 'มิว' }
+            ],
+            expenses: [
+                { id: 'e1', title: 'ค่าที่พัก', amount: 4800, payerId: 'm1', splitAmong: ['m1', 'm2', 'm3', 'm4'] },
+                { id: 'e2', title: 'ค่าน้ำมัน', amount: 1600, payerId: 'm3', splitAmong: ['m1', 'm2', 'm3', 'm4'] },
+                { id: 'e3', title: 'หมูกระทะ', amount: 1240, payerId: 'm2', splitAmong: ['m1', 'm2', 'm3', 'm4'] },
+                { id: 'e4', title: 'ค่าเข้าอุทยาน', amount: 400, payerId: 'm4', splitAmong: ['m1', 'm2', 'm3', 'm4'] }
+            ],
+            paidTransfers: {} // เก็บสถานะการติ๊ก "โอนแล้ว" เช่น { "m2_m1_770": true }
+        };
+
+        // ตัวแปร State หลักของแอป
+        let appData = loadData();
+        let activeTab = 'expenses';
+        let selectedPayerId = null;
+
+        // โหลดข้อมูลจาก LocalStorage
+        function loadData() {
+            try {
+                const saved = localStorage.getItem(STORAGE_KEY);
+                if (saved) {
+                    return JSON.parse(saved);
+                }
+            } catch (e) {
+                console.error('Error loading data:', e);
+            }
+            return JSON.parse(JSON.stringify(DEFAULT_DATA));
+        }
+
+        // บันทึกข้อมูลลง LocalStorage
+        function saveData() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+            } catch (e) {
+                console.error('Error saving data:', e);
+            }
+            renderAll();
+        }
+
+        // จัดรูปแบบตัวเลขเงิน (มีลูกน้ำคั่น)
+        function formatMoney(num) {
+            return Math.round(num * 100) / 100 === Math.floor(num)
+                ? num.toLocaleString('th-TH')
+                : num.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        // หาข้อมูลเพื่อนจาก ID
+        function getMember(id) {
+            return appData.members.find(m => m.id === id) || { id, name: 'ไม่ทราบชื่อ' };
+        }
+
+        // หาสีของเพื่อนตามลำดับ
+        function getMemberColor(id) {
+            const idx = appData.members.findIndex(m => m.id === id);
+            return AVATAR_COLORS[(idx >= 0 ? idx : 0) % AVATAR_COLORS.length];
+        }
+
+        // แสดง Toast แจ้งเตือน
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-message').textContent = msg;
+            toast.classList.remove('opacity-0');
+            setTimeout(() => {
+                toast.classList.add('opacity-0');
+            }, 2500);
+        }
+
+        // สลับแท็บหน้าจอ
+        function switchTab(tabName) {
+            activeTab = tabName;
+            
+            // ซ่อนทุกหน้า
+            ['expenses', 'summary', 'members'].forEach(t => {
+                document.getElementById(`view-${t}`).classList.add('hidden');
+                const btn = document.getElementById(`tab-${t}`);
+                btn.classList.remove('bg-orange-500', 'text-white', 'shadow-sm');
+                btn.classList.add('text-slate-600', 'hover:bg-slate-100');
+            });
+
+            // แสดงหน้าที่เลือก
+            document.getElementById(`view-${tabName}`).classList.remove('hidden');
+            const activeBtn = document.getElementById(`tab-${tabName}`);
+            activeBtn.classList.add('bg-orange-500', 'text-white', 'shadow-sm');
+            activeBtn.classList.remove('text-slate-600', 'hover:bg-slate-100');
+
+            // ซ่อนปุ่มเพิ่มค่าใช้จ่ายเมื่ออยู่หน้าจัดการเพื่อน
+            const floatBtn = document.getElementById('floating-add-btn');
+            if (tabName === 'members') {
+                floatBtn.classList.add('hidden');
+            } else {
+                floatBtn.classList.remove('hidden');
+            }
+
+            renderAll();
+        }
+
+        // ==================== อัลกอริทึมคำนวณยอดโอนให้น้อยครั้งที่สุด ====================
+        function calculateSummary() {
+            const paid = {};      // ยอดที่แต่ละคนสำรองจ่ายไป
+            const share = {};     // ยอดที่แต่ละคนต้องรับผิดชอบจริง
+            
+            appData.members.forEach(m => {
+                paid[m.id] = 0;
+                share[m.id] = 0;
+            });
+
+            let totalTrip = 0;
+
+            appData.expenses.forEach(exp => {
+                const amount = Number(exp.amount) || 0;
+                totalTrip += amount;
+
+                if (paid[exp.payerId] !== undefined) {
+                    paid[exp.payerId] += amount;
+                }
+
+                // กรองเฉพาะเพื่อนที่ยังมีตัวตนอยู่ในทริป
+                const validSplitters = exp.splitAmong.filter(id => share[id] !== undefined);
+                if (validSplitters.length > 0) {
+                    const perPerson = amount / validSplitters.length;
+                    validSplitters.forEach(id => {
+                        share[id] += perPerson;
+                    });
+                }
+            });
+
+            // คำนวณยอดสุทธิ (Net Balance): บวก = รอรับเงินคืน, ลบ = ต้องโอนจ่ายเพิ่ม
+            const debtors = [];   // คนติดลบ (ต้องโอนให้คนอื่น)
+            const creditors = []; // คนเป็นบวก (ต้องได้รับเงิน)
+
+            appData.members.forEach(m => {
+                const net = paid[m.id] - share[m.id];
+                if (net < -0.01) {
+                    debtors.push({ id: m.id, name: m.name, amount: -net });
+                } else if (net > 0.01) {
+                    creditors.push({ id: m.id, name: m.name, amount: net });
+                }
+            });
+
+            // เรียงจากยอดมากไปน้อย (Greedy Matching) เพื่อให้จำนวนครั้งในการโอนน้อยที่สุด
+            debtors.sort((a, b) => b.amount - a.amount);
+            creditors.sort((a, b) => b.amount - a.amount);
+
+            const transfers = [];
+            let i = 0; // index ของ debtors
+            let j = 0; // index ของ creditors
+
+            while (i < debtors.length && j < creditors.length) {
+                const debtor = debtors[i];
+                const creditor = creditors[j];
+                const transferAmount = Math.min(debtor.amount, creditor.amount);
+
+                if (transferAmount > 0.01) {
+                    const roundedAmount = Math.round(transferAmount * 100) / 100;
+                    // สร้าง Key เฉพาะตัวสำหรับเช็กสถานะ "โอนแล้ว"
+                    const transferKey = `${debtor.id}_${creditor.id}_${Math.round(roundedAmount)}`;
+                    transfers.push({
+                        key: transferKey,
+                        fromId: debtor.id,
+                        fromName: debtor.name,
+                        toId: creditor.id,
+                        toName: creditor.name,
+                        amount: roundedAmount
+                    });
+                }
+
+                debtor.amount -= transferAmount;
+                creditor.amount -= transferAmount;
+
+                if (debtor.amount < 0.01) i++;
+                if (creditor.amount < 0.01) j++;
+            }
+
+            return { totalTrip, paid, share, transfers };
+        }
+
+        // ==================== RENDER UI ทั้งหมด ====================
+        function renderAll() {
+            const { totalTrip, paid, share, transfers } = calculateSummary();
+
+            // 1. อัปเดต Header
+            document.getElementById('trip-title-display').textContent = appData.tripName;
+            document.getElementById('total-trip-amount').textContent = `${formatMoney(totalTrip)} ฿`;
+            document.getElementById('total-members-count').textContent = `${appData.members.length} คน`;
+
+            // 2. Render หน้า รายการค่าใช้จ่าย
+            renderExpensesList();
+
+            // 3. Render หน้า สรุปยอดและโอนเงิน
+            renderSummaryView(paid, share, transfers);
+
+            // 4. Render หน้า จัดการเพื่อน
+            renderMembersView();
+
+            // อัปเดตไอคอน Lucide
+            lucide.createIcons();
+        }
+
+        function renderExpensesList() {
+            const listEl = document.getElementById('expense-list');
+            document.getElementById('expense-count').textContent = appData.expenses.length;
+
+            if (appData.expenses.length === 0) {
+                listEl.innerHTML = `
+                    <div class="bg-white rounded-3xl p-8 text-center border border-dashed border-slate-300">
+                        <p class="text-slate-400 text-lg mb-1">ยังไม่มีรายการค่าใช้จ่าย</p>
+                        <p class="text-slate-400 text-sm">กดปุ่มด้านล่างเพื่อเพิ่มรายการแรกเลย!</p>
+                    </div>
+                `;
+                return;
+            }
+
+            listEl.innerHTML = appData.expenses.map(exp => {
+                const payer = getMember(exp.payerId);
+                const payerColor = getMemberColor(exp.payerId);
+                const validSplitters = exp.splitAmong.filter(id => appData.members.some(m => m.id === id));
+                const isAll = validSplitters.length === appData.members.length && appData.members.length > 0;
+                const perPerson = validSplitters.length > 0 ? exp.amount / validSplitters.length : 0;
+
+                const splitText = isAll 
+                    ? `หารทุกคน (${validSplitters.length} คน)` 
+                    : `หาร ${validSplitters.length} คน: ${validSplitters.map(id => getMember(id).name).join(', ')}`;
+
+                return `
+                    <div onclick="openExpenseModal('${exp.id}')" class="bg-white p-4 rounded-2xl shadow-xs border border-slate-200/80 hover:border-orange-300 active:scale-[0.99] transition cursor-pointer flex justify-between items-center gap-3">
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="text-xs font-bold px-2.5 py-0.5 rounded-full border ${payerColor}">
+                                    ${payer.name} จ่าย
+                                </span>
+                                <span class="text-xs text-slate-400 truncate">
+                                    (คนละ ${formatMoney(perPerson)} ฿)
+                                </span>
+                            </div>
+                            <h3 class="text-lg font-bold text-slate-800 truncate">${exp.title}</h3>
+                            <p class="text-xs text-slate-500 truncate mt-0.5">${splitText}</p>
+                        </div>
+                        <div class="text-right shrink-0">
+                            <p class="text-xl font-bold text-orange-600">${formatMoney(exp.amount)} ฿</p>
+                            <span class="text-xs text-slate-400 inline-flex items-center gap-0.5">
+                                แก้ไข <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+                            </span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderSummaryView(paid, share, transfers) {
+            const settlementListEl = document.getElementById('settlement-list');
+            const progressBadge = document.getElementById('transfer-progress-badge');
+
+            if (transfers.length === 0) {
+                progressBadge.textContent = 'เคลียร์ครบแล้ว';
+                settlementListEl.innerHTML = `
+                    <div class="bg-emerald-50 text-emerald-700 p-5 rounded-2xl text-center font-medium">
+                        🎉 ยอดลงตัวพอดี ไม่มีใครต้องโอนให้ใครเพิ่ม!
+                    </div>
+                `;
+            } else {
+                const paidCount = transfers.filter(t => appData.paidTransfers[t.key]).length;
+                progressBadge.textContent = `โอนแล้ว ${paidCount}/${transfers.length}`;
+
+                settlementListEl.innerHTML = transfers.map(t => {
+                    const isPaid = !!appData.paidTransfers[t.key];
+                    const fromColor = getMemberColor(t.fromId);
+                    const toColor = getMemberColor(t.toId);
+
+                    return `
+                        <div onclick="toggleTransferPaid('${t.key}')" 
+                            class="p-4 rounded-2xl border-2 transition cursor-pointer select-none ${
+                                isPaid 
+                                ? 'bg-slate-50 border-slate-200 opacity-65' 
+                                : 'bg-gradient-to-r from-emerald-50/70 to-teal-50/70 border-emerald-400 shadow-xs'
+                            }">
+                            <div class="flex items-center justify-between gap-2">
+                                <!-- ฝั่งชื่อคนโอน -> คนรับ -->
+                                <div class="flex items-center gap-2 flex-wrap">
+                                    <span class="text-lg font-bold px-3 py-1 rounded-xl border ${fromColor} ${isPaid ? 'line-through' : ''}">
+                                        ${t.fromName}
+                                    </span>
+                                    <div class="flex flex-col items-center text-slate-400 px-1">
+                                        <span class="text-[10px] font-semibold uppercase">โอนให้</span>
+                                        <i data-lucide="arrow-right" class="w-5 h-5 text-emerald-600"></i>
+                                    </div>
+                                    <span class="text-lg font-bold px-3 py-1 rounded-xl border ${toColor} ${isPaid ? 'line-through' : ''}">
+                                        ${t.toName}
+                                    </span>
+                                </div>
+
+                                <!-- ยอดเงินตัวใหญ่ชัดเจน -->
+                                <div class="text-right">
+                                    <p class="text-2xl font-extrabold ${isPaid ? 'text-slate-400 line-through' : 'text-emerald-600'}">
+                                        ${formatMoney(t.amount)} ฿
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- แถบติ๊กสถานะ โอนแล้ว -->
+                            <div class="mt-3 pt-2.5 border-t border-slate-200/70 flex justify-between items-center">
+                                <span class="text-xs ${isPaid ? 'text-emerald-600 font-semibold' : 'text-slate-500'}">
+                                    ${isPaid ? '✓ โอนเรียบร้อยแล้ว' : 'แตะเพื่อติ๊กว่าโอนแล้ว'}
+                                </span>
+                                <div class="w-6 h-6 rounded-full flex items-center justify-center border-2 transition ${
+                                    isPaid ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-slate-300 bg-white'
+                                }">
+                                    ${isPaid ? '<i data-lucide="check" class="w-4 h-4"></i>' : ''}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            // รายละเอียดแต่ละคน
+            const breakdownEl = document.getElementById('member-breakdown-list');
+            breakdownEl.innerHTML = appData.members.map(m => {
+                const p = paid[m.id] || 0;
+                const s = share[m.id] || 0;
+                const diff = p - s;
+                const color = getMemberColor(m.id);
+
+                let statusHtml = `<span class="text-xs font-semibold text-slate-500">พอดีตัว</span>`;
+                if (diff > 0.01) {
+                    statusHtml = `<span class="text-sm font-bold text-emerald-600">รอรับคืน +${formatMoney(diff)} ฿</span>`;
+                } else if (diff < -0.01) {
+                    statusHtml = `<span class="text-sm font-bold text-rose-500">ต้องจ่ายเพิ่ม ${formatMoney(Math.abs(diff))} ฿</span>`;
+                }
+
+                return `
+                    <div class="py-3.5 flex items-center justify-between gap-2">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full border flex items-center justify-center font-bold text-lg ${color}">
+                                ${m.name.charAt(0)}
+                            </div>
+                            <div>
+                                <p class="font-bold text-base text-slate-800">${m.name}</p>
+                                <p class="text-xs text-slate-500">
+                                    จ่ายไป <span class="font-semibold text-slate-700">${formatMoney(p)}</span> • 
+                                    ส่วนที่ต้องออก <span class="font-semibold text-slate-700">${formatMoney(s)}</span>
+                                </p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            ${statusHtml}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderMembersView() {
+            const listEl = document.getElementById('members-manage-list');
+            document.getElementById('members-list-count').textContent = appData.members.length;
+
+            listEl.innerHTML = appData.members.map(m => {
+                const color = getMemberColor(m.id);
+                return `
+                    <div class="flex items-center justify-between p-3 bg-slate-50 rounded-2xl border border-slate-200/70">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full border flex items-center justify-center font-bold text-lg ${color}">
+                                ${m.name.charAt(0)}
+                            </div>
+                            <span class="font-bold text-lg text-slate-800">${m.name}</span>
+                        </div>
+                        <button onclick="removeMember('${m.id}')" class="p-2 text-rose-500 hover:bg-rose-100 rounded-xl transition" title="ลบเพื่อน">
+                            <i data-lucide="trash-2" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // ==================== การจัดการสถานะ โอนแล้ว & คัดลอก LINE ====================
+        function toggleTransferPaid(key) {
+            if (appData.paidTransfers[key]) {
+                delete appData.paidTransfers[key];
+            } else {
+                appData.paidTransfers[key] = true;
+            }
+            saveData();
+        }
+
+        function copySummaryToClipboard() {
+            const { totalTrip, paid, share, transfers } = calculateSummary();
+            
+            let text = `สรุปค่าใช้จ่าย "${appData.tripName}" 🚗💨\n`;
+            text += `ยอดรวมทั้งหมด: ${formatMoney(totalTrip)} บาท\n`;
+            text += `------------------------\n`;
+            
+            text += `💸 สรุปยอดโอนเงิน:\n`;
+            if (transfers.length === 0) {
+                text += `- ลงตัวพอดี ไม่ต้องโอนเพิ่ม!\n`;
+            } else {
+                transfers.forEach(t => {
+                    const status = appData.paidTransfers[t.key] ? ' ✅(โอนแล้ว)' : '';
+                    text += `👉 ${t.fromName} โอนให้ ${t.toName} : ${formatMoney(t.amount)} บาท${status}\n`;
+                });
+            }
+
+            text += `------------------------\n`;
+            text += `📊 รายละเอียดแต่ละคน:\n`;
+            appData.members.forEach(m => {
+                text += `• ${m.name}: จ่ายไป ${formatMoney(paid[m.id])} / ต้องออก ${formatMoney(share[m.id])} บาท\n`;
+            });
+
+            text += `\n📋 รายการทั้งหมด (${appData.expenses.length} รายการ):\n`;
+            appData.expenses.forEach((exp, idx) => {
+                const payer = getMember(exp.payerId).name;
+                text += `${idx + 1}. ${exp.title} ${formatMoney(exp.amount)} บ. (${payer}จ่าย)\n`;
+            });
+
+            // คัดลอกลง Clipboard (รองรับ iOS Safari)
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            textarea.focus();
+            textarea.select();
+            try {
+                document.execCommand('copy');
+                showToast('คัดลอกสรุปแล้ว พร้อมวางใน LINE!');
+            } catch (err) {
+                showToast('ไม่สามารถคัดลอกได้ กรุณาลองใหม่');
+            }
+            document.body.removeChild(textarea);
+        }
+
+        // ==================== MODAL เพิ่ม / แก้ไข ค่าใช้จ่าย ====================
+        function openExpenseModal(expenseId = null) {
+            if (appData.members.length === 0) {
+                showToast('กรุณาเพิ่มเพื่อนในทริปก่อนอย่างน้อย 1 คน');
+                switchTab('members');
+                return;
+            }
+
+            const modal = document.getElementById('expense-modal');
+            const titleEl = document.getElementById('expense-modal-title');
+            const deleteBtn = document.getElementById('delete-expense-btn');
+            const idInput = document.getElementById('expense-id');
+            const nameInput = document.getElementById('expense-title');
+            const amountInput = document.getElementById('expense-amount');
+
+            let checkedMembers = appData.members.map(m => m.id); // เริ่มต้นหารทุกคน
+
+            if (expenseId) {
+                const exp = appData.expenses.find(e => e.id === expenseId);
+                titleEl.textContent = 'แก้ไขรายการค่าใช้จ่าย';
+                deleteBtn.classList.remove('hidden');
+                idInput.value = exp.id;
+                nameInput.value = exp.title;
+                amountInput.value = exp.amount;
+                selectedPayerId = exp.payerId;
+                checkedMembers = [...exp.splitAmong];
+            } else {
+                titleEl.textContent = 'เพิ่มรายการค่าใช้จ่าย';
+                deleteBtn.classList.add('hidden');
+                idInput.value = '';
+                nameInput.value = '';
+                amountInput.value = '';
+                selectedPayerId = appData.members[0].id;
+            }
+
+            renderPayerSelector();
+            renderSplitSelector(checkedMembers);
+            updateSplitPreview();
+
+            // อัปเดตยอดต่อคนแบบเรียลไทม์เมื่อพิมพ์จำนวนเงิน
+            amountInput.oninput = updateSplitPreview;
+
+            modal.classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function closeExpenseModal() {
+            document.getElementById('expense-modal').classList.add('hidden');
+        }
+
+        function renderPayerSelector() {
+            const container = document.getElementById('payer-selector');
+            container.innerHTML = appData.members.map(m => {
+                const isSelected = m.id === selectedPayerId;
+                return `
+                    <button type="button" onclick="selectPayer('${m.id}')" 
+                        class="py-2.5 px-3 rounded-xl font-bold text-base border-2 transition truncate ${
+                            isSelected 
+                            ? 'bg-orange-500 text-white border-orange-500 shadow-xs' 
+                            : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                        }">
+                        ${m.name}
+                    </button>
+                `;
+            }).join('');
+        }
+
+        function selectPayer(id) {
+            selectedPayerId = id;
+            renderPayerSelector();
+        }
+
+        function renderSplitSelector(checkedIds) {
+            const container = document.getElementById('split-selector');
+            container.innerHTML = appData.members.map(m => {
+                const isChecked = checkedIds.includes(m.id);
+                return `
+                    <label class="flex items-center gap-2.5 p-3 rounded-xl border-2 cursor-pointer transition select-none ${
+                        isChecked ? 'bg-orange-50/70 border-orange-400' : 'bg-slate-50 border-slate-200'
+                    }">
+                        <input type="checkbox" name="splitMember" value="${m.id}" ${isChecked ? 'checked' : ''} 
+                            onchange="handleSplitCheckboxChange(this)"
+                            class="w-5 h-5 accent-orange-500 rounded">
+                        <span class="font-bold text-base text-slate-800 truncate">${m.name}</span>
+                    </label>
+                `;
+            }).join('');
+        }
+
+        function handleSplitCheckboxChange(checkbox) {
+            const label = checkbox.closest('label');
+            if (checkbox.checked) {
+                label.classList.remove('bg-slate-50', 'border-slate-200');
+                label.classList.add('bg-orange-50/70', 'border-orange-400');
+            } else {
+                label.classList.add('bg-slate-50', 'border-slate-200');
+                label.classList.remove('bg-orange-50/70', 'border-orange-400');
+            }
+            updateSplitPreview();
+        }
+
+        function toggleSelectAllSplit() {
+            const checkboxes = document.querySelectorAll('input[name="splitMember"]');
+            const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+            checkboxes.forEach(cb => {
+                cb.checked = !allChecked;
+                handleSplitCheckboxChange(cb);
+            });
+        }
+
+        function updateSplitPreview() {
+            const amount = parseFloat(document.getElementById('expense-amount').value) || 0;
+            const checkedCount = document.querySelectorAll('input[name="splitMember"]:checked').length;
+            const previewEl = document.getElementById('split-preview-text');
+
+            if (checkedCount === 0) {
+                previewEl.innerHTML = `<span class="text-rose-500">กรุณาเลือกคนหารอย่างน้อย 1 คน</span>`;
+            } else {
+                const perPerson = amount / checkedCount;
+                previewEl.textContent = `หาร ${checkedCount} คน • ตกคนละ ${formatMoney(perPerson)} บาท`;
+            }
+        }
+
+        function saveExpense(event) {
+            event.preventDefault();
+            const id = document.getElementById('expense-id').value;
+            const title = document.getElementById('expense-title').value.trim();
+            const amount = parseFloat(document.getElementById('expense-amount').value);
+            const splitAmong = Array.from(document.querySelectorAll('input[name="splitMember"]:checked')).map(cb => cb.value);
+
+            if (!title || isNaN(amount) || amount <= 0) {
+                showToast('กรุณากรอกชื่อรายการและจำนวนเงินให้ถูกต้อง');
+                return;
+            }
+            if (splitAmong.length === 0) {
+                showToast('กรุณาเลือกคนหารอย่างน้อย 1 คน');
+                return;
+            }
+
+            if (id) {
+                // แก้ไขรายการเดิม
+                const idx = appData.expenses.findIndex(e => e.id === id);
+                if (idx !== -1) {
+                    appData.expenses[idx] = { id, title, amount, payerId: selectedPayerId, splitAmong };
+                }
+                showToast('แก้ไขรายการเรียบร้อย');
+            } else {
+                // เพิ่มรายการใหม่
+                const newExp = {
+                    id: 'e' + Date.now(),
+                    title,
+                    amount,
+                    payerId: selectedPayerId,
+                    splitAmong
+                };
+                appData.expenses.unshift(newExp); // ไว้บนสุดให้เห็นง่าย
+                showToast('เพิ่มรายการเรียบร้อย');
+            }
+
+            closeExpenseModal();
+            saveData();
+        }
+
+        function deleteCurrentExpense() {
+            const id = document.getElementById('expense-id').value;
+            appData.expenses = appData.expenses.filter(e => e.id !== id);
+            closeExpenseModal();
+            saveData();
+            showToast('ลบรายการเรียบร้อย');
+        }
+
+        // ==================== จัดการเพื่อนในทริป ====================
+        function handleAddMember(event) {
+            event.preventDefault();
+            const input = document.getElementById('new-member-name');
+            const name = input.value.trim();
+            if (!name) return;
+
+            if (appData.members.some(m => m.name === name)) {
+                showToast('มีชื่อนี้อยู่ในทริปแล้ว');
+                return;
+            }
+
+            const newMember = {
+                id: 'm' + Date.now(),
+                name: name
+            };
+            appData.members.push(newMember);
+            input.value = '';
+            saveData();
+            showToast(`เพิ่ม "${name}" เข้าทริปแล้ว`);
+        }
+
+        function removeMember(memberId) {
+            if (appData.members.length <= 1) {
+                showToast('ต้องมีเพื่อนในทริปอย่างน้อย 1 คน');
+                return;
+            }
+
+            // ตรวจสอบว่าเพื่อนคนนี้มีชื่อเป็นคนจ่ายในรายการไหนหรือไม่
+            const isPayer = appData.expenses.some(e => e.payerId === memberId);
+            if (isPayer) {
+                showToast('ลบไม่ได้ เพราะเพื่อนคนนี้มีรายการที่จ่ายเงินไว้');
+                return;
+            }
+
+            const memberName = getMember(memberId).name;
+            appData.members = appData.members.filter(m => m.id !== memberId);
+            // เอาชื่อออกจากรายการหารด้วย
+            appData.expenses.forEach(exp => {
+                exp.splitAmong = exp.splitAmong.filter(id => id !== memberId);
+            });
+
+            saveData();
+            showToast(`ลบ "${memberName}" ออกจากทริปแล้ว`);
+        }
+
+        // ==================== แก้ไขชื่อทริป & รีเซ็ตข้อมูล ====================
+        function openEditTripModal() {
+            document.getElementById('edit-trip-name-input').value = appData.tripName;
+            document.getElementById('trip-modal').classList.remove('hidden');
+        }
+
+        function closeEditTripModal() {
+            document.getElementById('trip-modal').classList.add('hidden');
+        }
+
+        function saveTripName(event) {
+            event.preventDefault();
+            const newName = document.getElementById('edit-trip-name-input').value.trim();
+            if (newName) {
+                appData.tripName = newName;
+                saveData();
+                showToast('เปลี่ยนชื่อทริปแล้ว');
+            }
+            closeEditTripModal();
+        }
+
+        function openResetModal() {
+            document.getElementById('reset-modal').classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function closeResetModal() {
+            document.getElementById('reset-modal').classList.add('hidden');
+        }
+
+        function confirmResetData() {
+            appData = JSON.parse(JSON.stringify(DEFAULT_DATA));
+            saveData();
+            closeResetModal();
+            showToast('รีเซ็ตเป็นข้อมูล "ทริปเขาใหญ่" แล้ว');
+        }
+
+        // เริ่มต้นทำงานเมื่อโหลดหน้าเว็บเสร็จ
+        window.addEventListener('DOMContentLoaded', () => {
+            renderAll();
+        });
+    </script>
+
+</body></html>
