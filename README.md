@@ -16,6 +16,7 @@
 | จับมือทำแอป ตอน 4: ส่งสลิปให้ AI สรุปรายจ่ายเดือนนี้ 🧾 (Gemini Canvas · สลิปตัวอย่างใน [slips/samples](slips/samples)) | [เล่นเลย](https://jabmueai.github.io/jabmue-apps/slips/) | [slips/index.html](slips/index.html) | [slips/prompt.txt](slips/prompt.txt) |
 | จับมือทำแอป ตอน 5: แอปเตือนพ่อแม่กินยา 💊 (Gemini Canvas) | [เล่นเลย](https://jabmueai.github.io/jabmue-apps/meds/) | [meds/index.html](meds/index.html) | [meds/prompt.txt](meds/prompt.txt) |
 | จับมือทำแอป ตอน 6: แอปเก็บใบเสร็จลดหย่อนภาษี 🧾 (Gemini Canvas · ใบเสร็จในแอปเป็นตัวอย่าง) | [เล่นเลย](https://jabmueai.github.io/jabmue-apps/receipts/) | [receipts/index.html](receipts/index.html) | [receipts/prompt.txt](receipts/prompt.txt) |
+| จับมือทำแอป ตอน 7: แอปหารค่าทริปกับเพื่อน 🧳 (Gemini Canvas · ชื่อเพื่อนในแอปเป็นตัวอย่าง) | [เล่นเลย](https://jabmueai.github.io/jabmue-apps/trip/) | [trip/index.html](trip/index.html) | [trip/prompt.txt](trip/prompt.txt) |
 | จับมือทำ ตอน 3: เกมทายศัพท์ภาษาอังกฤษให้ลูก 🎮 | [เล่นเลย](https://jabmueai.github.io/jabmue-apps/word-game/) | [word-game/index.html](word-game/index.html) | [word-game/prompt.txt](word-game/prompt.txt) |
 | จับมือทำ ตอน 4: แอปจดค่าไฟบ้าน ⚡ | [เล่นเลย](https://jabmueai.github.io/jabmue-apps/electric/) | [electric/index.html](electric/index.html) | [electric/prompt.txt](electric/prompt.txt) |
 
