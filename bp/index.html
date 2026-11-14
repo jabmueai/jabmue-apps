@@ -1,0 +1,1190 @@
+<!DOCTYPE html><html lang="th"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <!-- จับมือ AI: ไอคอน + ติดตั้งลงหน้าจอโฮม (เพิ่มทีหลัง โค้ดแอปเหมือนเดิม) -->
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="apple-touch-icon" href="icon-180.png">
+    <link rel="icon" type="image/png" href="icon-192.png">
+    <meta name="theme-color" content="#0d9488">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="จดความดัน">
+    <script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');</script>
+<meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <title>สมุดบันทึกความดันโลหิต</title>
+    
+    <!-- โหลดฟอนต์ภาษาไทยที่อ่านง่าย ชัดเจน (Sarabun / Prompt) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+    
+    <!-- โหลด Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- โหลด Chart.js สำหรับสร้างกราฟเส้น -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js" crossorigin="anonymous"></script>
+
+    <style>
+        body {
+            font-family: 'Prompt', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: #F4F6F9; /* สีพื้นหลังโทนอ่อน สบายตา */
+            color: #1E293B;
+            -webkit-tap-highlight-color: transparent;
+            padding-bottom: env(safe-area-inset-bottom, 24px);
+        }
+
+        /* ปรับแต่ง Scrollbar ให้ดูสะอาดตา */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #CBD5E1;
+            border-radius: 9999px;
+        }
+
+        /* เอฟเฟกต์กดปุ่มสำหรับมือถือ */
+        .btn-press:active {
+            transform: scale(0.97);
+            transition: transform 0.1s ease;
+        }
+
+        /* จัดการรูปภาพใน Modal */
+        .modal-backdrop {
+            background-color: rgba(15, 23, 42, 0.65);
+            backdrop-filter: blur(4px);
+        }
+    </style>
+</head>
+<body class="antialiased selection:bg-teal-100">
+
+    <!-- แถบหัวข้อด้านบน -->
+    <header class="bg-white shadow-sm sticky top-0 z-20 border-b border-slate-200/80">
+        <div class="max-w-lg mx-auto px-4 py-4 flex items-center justify-between">
+            <div class="flex items-center gap-2.5">
+                <div class="w-10 h-10 rounded-2xl bg-teal-600 text-white flex items-center justify-center shadow-sm">
+                    <!-- ไอคอนหัวใจและชีพจร -->
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold text-slate-800 leading-tight">บันทึกความดัน</h1>
+                    <p class="text-xs text-slate-500">ดูแลสุขภาพประจำวัน</p>
+                </div>
+            </div>
+            
+            <!-- ปุ่มคัดลอกสรุป -->
+            <button onclick="copySummary()" class="btn-press flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-3.5 py-2.5 rounded-2xl text-sm border border-slate-200 transition">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path>
+                </svg>
+                <span>คัดลอกสรุป</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- เนื้อหาหลัก -->
+    <main class="max-w-lg mx-auto px-4 pt-5 pb-12 space-y-6">
+
+        <!-- 1. การ์ดแสดงค่าล่าสุด (ตัวใหญ่ ชัดเจน บอกระดับด้วยสี) -->
+        <section id="latest-card" class="rounded-3xl p-6 shadow-md border-2 transition-colors duration-300 bg-red-50 border-red-300 text-red-950">
+            <div class="flex items-center justify-between mb-3">
+                <span class="text-sm font-semibold uppercase tracking-wider opacity-80" id="latest-label">ผลวัดล่าสุด</span>
+                <span id="latest-badge" class="px-4 py-1.5 rounded-full text-sm font-bold shadow-sm bg-red-600 text-white">ความดันสูง</span>
+            </div>
+
+            <div id="latest-datetime" class="text-base font-medium opacity-85 mb-4 flex items-center gap-1.5">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <span>14 พ.ย. 2569 เวลา 07:25 น.</span>
+            </div>
+
+            <!-- ตัวเลขความดันตัวบน / ตัวล่าง / ชีพจร -->
+            <div class="grid grid-cols-3 gap-2 items-end text-center bg-white/70 rounded-2xl p-4 backdrop-blur-sm border border-black/5">
+                <div>
+                    <p class="text-xs font-semibold text-slate-500 mb-1">ตัวบน (SYS)</p>
+                    <p id="latest-sys" class="text-4xl sm:text-5xl font-bold tracking-tight text-red-700">145</p>
+                    <p class="text-xs text-slate-400 mt-1">mmHg</p>
+                </div>
+                <div class="border-x border-slate-200/80 px-1">
+                    <p class="text-xs font-semibold text-slate-500 mb-1">ตัวล่าง (DIA)</p>
+                    <p id="latest-dia" class="text-4xl sm:text-5xl font-bold tracking-tight text-red-700">92</p>
+                    <p class="text-xs text-slate-400 mt-1">mmHg</p>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-slate-500 mb-1">ชีพจร</p>
+                    <p id="latest-pulse" class="text-3xl sm:text-4xl font-bold tracking-tight text-slate-700">84</p>
+                    <p class="text-xs text-slate-400 mt-1">ครั้ง/นาที</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ปุ่มเพิ่มค่าใหม่ขนาดใหญ่ กดง่าย -->
+        <button onclick="openFormModal()" class="btn-press w-full bg-teal-600 hover:bg-teal-700 text-white font-bold text-lg py-4 px-6 rounded-2xl shadow-lg shadow-teal-600/20 flex items-center justify-center gap-2.5 transition">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path>
+            </svg>
+            <span>จดค่าความดันใหม่</span>
+        </button>
+
+        <!-- 2. กราฟเส้นแสดงแนวโน้มความดันย้อนหลัง -->
+        <section class="bg-white rounded-3xl p-5 shadow-sm border border-slate-200/80">
+            <div class="flex items-center justify-between mb-3">
+                <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"></path>
+                    </svg>
+                    <span>กราฟแนวโน้มความดัน</span>
+                </h2>
+                <span class="text-xs text-slate-400">เรียงตามเวลา</span>
+            </div>
+            <div class="relative w-full h-56 sm:h-64">
+                <canvas id="bpChart" width="438" height="256" style="display: block; box-sizing: border-box; height: 256px; width: 438px;"></canvas>
+            </div>
+        </section>
+
+        <!-- 3. รายการประวัติย้อนหลัง -->
+        <section class="space-y-3">
+            <div class="flex items-center justify-between px-1">
+                <h2 class="text-lg font-bold text-slate-800">ประวัติการบันทึก (<span id="record-count">5</span>)</h2>
+                <button onclick="resetToDefaultData()" class="text-xs text-slate-400 hover:text-slate-600 underline">
+                    รีเซ็ตข้อมูลตัวอย่าง 5 วัน
+                </button>
+            </div>
+            
+            <div id="records-list" class="space-y-3">
+                    <div class="bg-white rounded-3xl p-4 sm:p-5 shadow-sm border border-slate-200/80 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <span class="w-3 h-3 rounded-full bg-red-500"></span>
+                                <span class="font-bold text-slate-800 text-base">14 พ.ย. 2569</span>
+                                <span class="text-sm text-slate-500">07:25 น.</span>
+                            </div>
+                            <span class="px-3 py-0.5 rounded-full text-xs font-bold bg-red-600 text-white">
+                                ความดันสูง
+                            </span>
+                        </div>
+
+                        <div class="flex items-center justify-between bg-slate-50 rounded-2xl px-4 py-3 border border-slate-100">
+                            <div>
+                                <span class="text-xs text-slate-500 block">ความดัน (บน/ล่าง)</span>
+                                <span class="text-2xl font-bold text-red-700">145 / 92</span>
+                                <span class="text-xs text-slate-400">mmHg</span>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-xs text-slate-500 block">ชีพจร</span>
+                                <span class="text-xl font-bold text-slate-700">84</span>
+                                <span class="text-xs text-slate-400">ครั้ง/นาที</span>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-between pt-1">
+                            <div>
+                    <button onclick="viewImage('bp-init-5')" class="btn-press flex items-center gap-1 text-xs font-semibold bg-teal-50 text-teal-700 border border-teal-200 px-3 py-1.5 rounded-xl hover:bg-teal-100">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                        </svg>
+                        <span>ดูรูปหน้าจอ</span>
+                    </button>
+                </div>
+                            <div class="flex items-center gap-2">
+                                <button onclick="editRecord('bp-init-5')" class="btn-press flex items-center gap-1 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-xl">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                    </svg>
+                                    <span>แก้ไข</span>
+                                </button>
+                                <button onclick="promptDelete('bp-init-5')" class="btn-press flex items-center gap-1 text-xs font-semibold text-red-600 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-xl">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                    </svg>
+                                    <span>ลบ</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                
+                    <div class="bg-white rounded-3xl p-4 sm:p-5 shadow-sm border border-slate-200/80 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <span class="w-3 h-3 rounded-full bg-emerald-500"></span>
+                                <span class="font-bold text-slate-800 text-base">13 พ.ย. 2569</span>
+                                <span class="text-sm text-slate-500">07:40 น.</span>
+                            </div>
+                            <span class="px-3 py-0.5 rounded-full text-xs font-bold bg-emerald-600 text-white">
+                                ปกติ
+                            </span>
+                        </div>
+
+                        <div class="flex items-center justify-between bg-slate-50 rounded-2xl px-4 py-3 border border-slate-100">
+                            <div>
+                                <span class="text-xs text-slate-500 block">ความดัน (บน/ล่าง)</span>
+                                <span class="text-2xl font-bold text-emerald-700">124 / 78</span>
+                                <span class="text-xs text-slate-400">mmHg</span>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-xs text-slate-500 block">ชีพจร</span>
+                                <span class="text-xl font-bold text-slate-700">70</span>
+                                <span class="text-xs text-slate-400">ครั้ง/นาที</span>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-between pt-1">
+                            <div>
+                    <button onclick="viewImage('bp-init-4')" class="btn-press flex items-center gap-1 text-xs font-semibold bg-teal-50 text-teal-700 border border-teal-200 px-3 py-1.5 rounded-xl hover:bg-teal-100">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                        </svg>
+                        <span>ดูรูปหน้าจอ</span>
+                    </button>
+                </div>
+                            <div class="flex items-center gap-2">
+                                <button onclick="editRecord('bp-init-4')" class="btn-press flex items-center gap-1 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-xl">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                    </svg>
+                                    <span>แก้ไข</span>
+                                </button>
+                                <button onclick="promptDelete('bp-init-4')" class="btn-press flex items-center gap-1 text-xs font-semibold text-red-600 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-xl">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                    </svg>
+                                    <span>ลบ</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                
+                    <div class="bg-white rounded-3xl p-4 sm:p-5 shadow-sm border border-slate-200/80 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <span class="w-3 h-3 rounded-full bg-amber-500"></span>
+                                <span class="font-bold text-slate-800 text-base">12 พ.ย. 2569</span>
+                                <span class="text-sm text-slate-500">07:20 น.</span>
+                            </div>
+                            <span class="px-3 py-0.5 rounded-full text-xs font-bold bg-amber-500 text-white">
+                                สูงเล็กน้อย
+                            </span>
+                        </div>
+
+                        <div class="flex items-center justify-between bg-slate-50 rounded-2xl px-4 py-3 border border-slate-100">
+                            <div>
+                                <span class="text-xs text-slate-500 block">ความดัน (บน/ล่าง)</span>
+                                <span class="text-2xl font-bold text-amber-700">138 / 88</span>
+                                <span class="text-xs text-slate-400">mmHg</span>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-xs text-slate-500 block">ชีพจร</span>
+                                <span class="text-xl font-bold text-slate-700">80</span>
+                                <span class="text-xs text-slate-400">ครั้ง/นาที</span>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-between pt-1">
+                            <div>
+                    <button onclick="viewImage('bp-init-3')" class="btn-press flex items-center gap-1 text-xs font-semibold bg-teal-50 text-teal-700 border border-teal-200 px-3 py-1.5 rounded-xl hover:bg-teal-100">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                        </svg>
+                        <span>ดูรูปหน้าจอ</span>
+                    </button>
+                </div>
+                            <div class="flex items-center gap-2">
+                                <button onclick="editRecord('bp-init-3')" class="btn-press flex items-center gap-1 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-xl">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                    </svg>
+                                    <span>แก้ไข</span>
+                                </button>
+                                <button onclick="promptDelete('bp-init-3')" class="btn-press flex items-center gap-1 text-xs font-semibold text-red-600 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-xl">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                    </svg>
+                                    <span>ลบ</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                
+                    <div class="bg-white rounded-3xl p-4 sm:p-5 shadow-sm border border-slate-200/80 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <span class="w-3 h-3 rounded-full bg-amber-500"></span>
+                                <span class="font-bold text-slate-800 text-base">11 พ.ย. 2569</span>
+                                <span class="text-sm text-slate-500">07:35 น.</span>
+                            </div>
+                            <span class="px-3 py-0.5 rounded-full text-xs font-bold bg-amber-500 text-white">
+                                สูงเล็กน้อย
+                            </span>
+                        </div>
+
+                        <div class="flex items-center justify-between bg-slate-50 rounded-2xl px-4 py-3 border border-slate-100">
+                            <div>
+                                <span class="text-xs text-slate-500 block">ความดัน (บน/ล่าง)</span>
+                                <span class="text-2xl font-bold text-amber-700">132 / 84</span>
+                                <span class="text-xs text-slate-400">mmHg</span>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-xs text-slate-500 block">ชีพจร</span>
+                                <span class="text-xl font-bold text-slate-700">76</span>
+                                <span class="text-xs text-slate-400">ครั้ง/นาที</span>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-between pt-1">
+                            <div>
+                    <button onclick="viewImage('bp-init-2')" class="btn-press flex items-center gap-1 text-xs font-semibold bg-teal-50 text-teal-700 border border-teal-200 px-3 py-1.5 rounded-xl hover:bg-teal-100">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                        </svg>
+                        <span>ดูรูปหน้าจอ</span>
+                    </button>
+                </div>
+                            <div class="flex items-center gap-2">
+                                <button onclick="editRecord('bp-init-2')" class="btn-press flex items-center gap-1 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-xl">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                    </svg>
+                                    <span>แก้ไข</span>
+                                </button>
+                                <button onclick="promptDelete('bp-init-2')" class="btn-press flex items-center gap-1 text-xs font-semibold text-red-600 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-xl">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                    </svg>
+                                    <span>ลบ</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                
+                    <div class="bg-white rounded-3xl p-4 sm:p-5 shadow-sm border border-slate-200/80 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <span class="w-3 h-3 rounded-full bg-emerald-500"></span>
+                                <span class="font-bold text-slate-800 text-base">10 พ.ย. 2569</span>
+                                <span class="text-sm text-slate-500">07:30 น.</span>
+                            </div>
+                            <span class="px-3 py-0.5 rounded-full text-xs font-bold bg-emerald-600 text-white">
+                                ปกติ
+                            </span>
+                        </div>
+
+                        <div class="flex items-center justify-between bg-slate-50 rounded-2xl px-4 py-3 border border-slate-100">
+                            <div>
+                                <span class="text-xs text-slate-500 block">ความดัน (บน/ล่าง)</span>
+                                <span class="text-2xl font-bold text-emerald-700">126 / 80</span>
+                                <span class="text-xs text-slate-400">mmHg</span>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-xs text-slate-500 block">ชีพจร</span>
+                                <span class="text-xl font-bold text-slate-700">72</span>
+                                <span class="text-xs text-slate-400">ครั้ง/นาที</span>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-between pt-1">
+                            <div>
+                    <button onclick="viewImage('bp-init-1')" class="btn-press flex items-center gap-1 text-xs font-semibold bg-teal-50 text-teal-700 border border-teal-200 px-3 py-1.5 rounded-xl hover:bg-teal-100">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                        </svg>
+                        <span>ดูรูปหน้าจอ</span>
+                    </button>
+                </div>
+                            <div class="flex items-center gap-2">
+                                <button onclick="editRecord('bp-init-1')" class="btn-press flex items-center gap-1 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-xl">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                    </svg>
+                                    <span>แก้ไข</span>
+                                </button>
+                                <button onclick="promptDelete('bp-init-1')" class="btn-press flex items-center gap-1 text-xs font-semibold text-red-600 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-xl">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                    </svg>
+                                    <span>ลบ</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+        </section>
+
+        <!-- 4. คำเตือนทางการแพทย์ (เล็กๆ ด้านล่าง) -->
+        <footer class="pt-4 pb-6 text-center space-y-2 border-t border-slate-200/80">
+            <p class="text-xs text-slate-500 leading-relaxed max-w-sm mx-auto">
+                ⚠️ <strong>หมายเหตุ:</strong> แอปพลิเคชันนี้เป็นเพียงเครื่องมือช่วยจดบันทึกข้อมูลส่วนตัวเท่านั้น ไม่ใช่การวินิจฉัยทางการแพทย์ หากมีค่าความดันผิดปกติหรือมีอาการผิดปกติ โปรดปรึกษาแพทย์ผู้เชี่ยวชาญ
+            </p>
+            <p class="text-[11px] text-slate-400">ข้อมูลทั้งหมดถูกบันทึกไว้ในเครื่องของคุณอย่างปลอดภัย</p>
+        </footer>
+
+    </main>
+
+    <!-- ========================================== -->
+    <!-- Modal: เพิ่ม / แก้ไขข้อมูลความดันโลหิต -->
+    <!-- ========================================== -->
+    <div id="form-modal" class="fixed inset-0 z-50 hidden modal-backdrop flex items-end sm:items-center justify-center p-0 sm:p-4">
+        <div class="bg-white w-full max-w-lg rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl max-h-[92vh] overflow-y-auto animate-slide-up">
+            <div class="flex items-center justify-between pb-4 border-b border-slate-100">
+                <h3 id="modal-title" class="text-xl font-bold text-slate-800">จดค่าความดันใหม่</h3>
+                <button onclick="closeFormModal()" class="p-2 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <form id="bp-form" onsubmit="saveRecord(event)" class="space-y-5 mt-5">
+                <input type="hidden" id="edit-id" style="">
+
+                <!-- วันที่และเวลา -->
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1.5">วันที่วัด</label>
+                        <input type="date" id="input-date" required="" class="w-full text-base bg-slate-50 border border-slate-300 rounded-2xl px-3.5 py-3 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:bg-white" style="">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1.5">เวลาที่วัด</label>
+                        <input type="time" id="input-time" required="" class="w-full text-base bg-slate-50 border border-slate-300 rounded-2xl px-3.5 py-3 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:bg-white" style="">
+                    </div>
+                </div>
+
+                <!-- ตัวเลขความดัน และ ชีพจร (ช่องใหญ่ กดง่ายบน iPhone) -->
+                <div class="grid grid-cols-3 gap-3">
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-1.5 text-center">ตัวบน (SYS)</label>
+                        <input type="number" inputmode="numeric" id="input-sys" placeholder="120" min="50" max="300" required="" class="w-full text-2xl font-bold text-center bg-slate-50 border border-slate-300 rounded-2xl py-3.5 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:bg-white" style="">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-1.5 text-center">ตัวล่าง (DIA)</label>
+                        <input type="number" inputmode="numeric" id="input-dia" placeholder="80" min="30" max="200" required="" class="w-full text-2xl font-bold text-center bg-slate-50 border border-slate-300 rounded-2xl py-3.5 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:bg-white" style="">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-1.5 text-center">ชีพจร</label>
+                        <input type="number" inputmode="numeric" id="input-pulse" placeholder="72" min="30" max="250" required="" class="w-full text-2xl font-bold text-center bg-slate-50 border border-slate-300 rounded-2xl py-3.5 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:bg-white" style="">
+                    </div>
+                </div>
+
+                <!-- แนบรูปหน้าจอเครื่องวัด -->
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-1.5">แนบรูปหน้าจอเครื่องวัด (ถ้ามี)</label>
+                    <div class="flex items-center gap-3">
+                        <label class="btn-press flex-1 cursor-pointer bg-slate-100 hover:bg-slate-200 border border-dashed border-slate-400 rounded-2xl py-3.5 px-4 flex items-center justify-center gap-2 text-slate-700 font-medium transition">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                            </svg>
+                            <span>ถ่ายรูป / เลือกรูปภาพ</span>
+                            <input type="file" id="input-image" accept="image/*" class="hidden" onchange="handleImageUpload(event)" style="">
+                        </label>
+                    </div>
+                    
+                    <!-- พรีวิวรูปภาพที่เลือก -->
+                    <div id="image-preview-container" class="hidden mt-3 relative rounded-2xl overflow-hidden border border-slate-200 bg-slate-50">
+                        <img id="image-preview" src="" alt="ตัวอย่างรูปหน้าจอ" class="w-full h-44 object-contain">
+                        <button type="button" onclick="removeAttachedImage()" class="absolute top-2 right-2 bg-red-600 text-white rounded-full p-1.5 shadow-md hover:bg-red-700" title="ลบรูปภาพ">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- ปุ่มบันทึก -->
+                <div class="pt-2 flex gap-3">
+                    <button type="button" onclick="closeFormModal()" class="btn-press flex-1 bg-slate-100 text-slate-700 font-bold text-base py-4 rounded-2xl hover:bg-slate-200 transition">
+                        ยกเลิก
+                    </button>
+                    <button type="submit" class="btn-press flex-[2] bg-teal-600 text-white font-bold text-lg py-4 rounded-2xl shadow-md hover:bg-teal-700 transition">
+                        บันทึกข้อมูล
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- Modal: ดูรูปภาพขนาดเต็ม -->
+    <!-- ========================================== -->
+    <div id="image-viewer-modal" class="fixed inset-0 z-50 hidden modal-backdrop flex items-center justify-center p-4" onclick="closeImageViewer()">
+        <div class="relative max-w-lg w-full bg-white rounded-3xl p-3 shadow-2xl" onclick="event.stopPropagation()">
+            <div class="flex justify-between items-center pb-2 px-2">
+                <span id="viewer-caption" class="text-sm font-semibold text-slate-700">รูปหน้าจอเครื่องวัด</span>
+                <button onclick="closeImageViewer()" class="p-1.5 rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <img id="viewer-img" src="" alt="รูปหน้าจอเครื่องวัด" class="w-full max-h-[75vh] object-contain rounded-2xl bg-slate-100">
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- Modal: ยืนยันการลบ (แทน confirm()) -->
+    <!-- ========================================== -->
+    <div id="delete-modal" class="fixed inset-0 z-50 hidden modal-backdrop flex items-center justify-center p-4">
+        <div class="bg-white max-w-sm w-full rounded-3xl p-6 shadow-2xl text-center space-y-4">
+            <div class="w-14 h-14 rounded-full bg-red-100 text-red-600 flex items-center justify-center mx-auto">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                </svg>
+            </div>
+            <h3 class="text-xl font-bold text-slate-800">ลบรายการนี้ใช่ไหม?</h3>
+            <p class="text-sm text-slate-500">ข้อมูลความดันของวันนี้จะถูกลบออกอย่างถาวร</p>
+            <div class="flex gap-3 pt-2">
+                <button onclick="closeDeleteModal()" class="btn-press flex-1 bg-slate-100 text-slate-700 font-bold py-3.5 rounded-2xl">
+                    ไม่ลบ
+                </button>
+                <button id="confirm-delete-btn" class="btn-press flex-1 bg-red-600 text-white font-bold py-3.5 rounded-2xl shadow-md">
+                    ยืนยันการลบ
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast แจ้งเตือนด้านล่าง -->
+    <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-slate-800 text-white px-5 py-3 rounded-full shadow-xl text-sm font-medium flex items-center gap-2 opacity-0 pointer-events-none transition-opacity duration-300 whitespace-nowrap">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path>
+        </svg>
+        <span id="toast-message">คัดลอกสรุปเรียบร้อยแล้ว</span>
+    </div>
+
+    <script>
+        // ==========================================
+        // 1. ข้อมูลตั้งต้นจากรูปภาพทั้ง 5 วัน (10 - 14 พ.ย. 2026)
+        // ==========================================
+        const STORAGE_KEY = 'thai_bp_tracker_records_v1';
+
+        // สร้างรูปจำลองหน้าจอเครื่องวัดสำหรับ 5 วันแรก เพื่อให้กดดูรูปตัวอย่างได้ทันที
+        function createSampleMonitorSVG(dateText, timeText, sys, dia, pulse) {
+            const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="320" viewBox="0 0 400 320">
+                <rect width="400" height="320" rx="28" fill="#F1F5F9"/>
+                <rect x="24" y="24" width="352" height="272" rx="20" fill="#D5E2CE" stroke="#94A3B8" stroke-width="3"/>
+                <text x="355" y="55" font-family="monospace" font-size="18" fill="#1E293B" text-anchor="end">${dateText} ${timeText}</text>
+                <text x="45" y="105" font-family="sans-serif" font-weight="bold" font-size="18" fill="#334155">SYS</text>
+                <text x="210" y="122" font-family="monospace" font-weight="bold" font-size="68" fill="#0F172A" text-anchor="middle">${sys}</text>
+                <text x="355" y="120" font-family="monospace" font-size="16" fill="#475569" text-anchor="end">mmHg</text>
+                <text x="45" y="185" font-family="sans-serif" font-weight="bold" font-size="18" fill="#334155">DIA</text>
+                <text x="210" y="202" font-family="monospace" font-weight="bold" font-size="64" fill="#0F172A" text-anchor="middle">${dia}</text>
+                <text x="355" y="200" font-family="monospace" font-size="16" fill="#475569" text-anchor="end">mmHg</text>
+                <text x="45" y="255" font-family="sans-serif" font-weight="bold" font-size="16" fill="#334155">PULSE</text>
+                <text x="210" y="266" font-family="monospace" font-weight="bold" font-size="44" fill="#0F172A" text-anchor="middle">${pulse}</text>
+                <text x="355" y="264" font-family="monospace" font-size="16" fill="#475569" text-anchor="end">/min</text>
+            </svg>`;
+            return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+        }
+
+        const INITIAL_RECORDS = [
+            {
+                id: 'bp-init-1',
+                date: '2026-11-10',
+                time: '07:30',
+                sys: 126,
+                dia: 80,
+                pulse: 72,
+                image: createSampleMonitorSVG('10 พ.ย.', '07:30', 126, 80, 72)
+            },
+            {
+                id: 'bp-init-2',
+                date: '2026-11-11',
+                time: '07:35',
+                sys: 132,
+                dia: 84,
+                pulse: 76,
+                image: createSampleMonitorSVG('11 พ.ย.', '07:35', 132, 84, 76)
+            },
+            {
+                id: 'bp-init-3',
+                date: '2026-11-12',
+                time: '07:20',
+                sys: 138,
+                dia: 88,
+                pulse: 80,
+                image: createSampleMonitorSVG('12 พ.ย.', '07:20', 138, 88, 80)
+            },
+            {
+                id: 'bp-init-4',
+                date: '2026-11-13',
+                time: '07:40',
+                sys: 124,
+                dia: 78,
+                pulse: 70,
+                image: createSampleMonitorSVG('13 พ.ย.', '07:40', 124, 78, 70)
+            },
+            {
+                id: 'bp-init-5',
+                date: '2026-11-14',
+                time: '07:25',
+                sys: 145,
+                dia: 92,
+                pulse: 84,
+                image: createSampleMonitorSVG('14 พ.ย.', '07:25', 145, 92, 84)
+            }
+        ];
+
+        let records = [];
+        let currentAttachedImage = null;
+        let bpChartInstance = null;
+        let recordIdToDelete = null;
+
+        // ==========================================
+        // 2. การจัดเก็บข้อมูลในเครื่อง (LocalStorage)
+        // ==========================================
+        function loadRecords() {
+            try {
+                const saved = localStorage.getItem(STORAGE_KEY);
+                if (saved) {
+                    records = JSON.parse(saved);
+                } else {
+                    records = [...INITIAL_RECORDS];
+                    saveToStorage();
+                }
+            } catch (e) {
+                console.error('เกิดข้อผิดพลาดในการโหลดข้อมูล:', e);
+                records = [...INITIAL_RECORDS];
+            }
+        }
+
+        function saveToStorage() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+            } catch (e) {
+                showToast('พื้นที่จัดเก็บเต็ม กรุณาลบรูปเก่าบางส่วนออก');
+            }
+        }
+
+        function resetToDefaultData() {
+            records = [...INITIAL_RECORDS];
+            saveToStorage();
+            renderApp();
+            showToast('รีเซ็ตข้อมูล 5 วันเรียบร้อยแล้ว');
+        }
+
+        // ==========================================
+        // 3. การประเมินระดับความดันโลหิตด้วยสี
+        // ==========================================
+        function getBPStatus(sys, dia) {
+            // สูง (แดง): ตัวบน >= 140 หรือ ตัวล่าง >= 90
+            if (sys >= 140 || dia >= 90) {
+                return {
+                    level: 'high',
+                    label: 'ความดันสูง',
+                    cardBg: 'bg-red-50 border-red-300 text-red-950',
+                    badgeBg: 'bg-red-600 text-white',
+                    dotColor: 'bg-red-500',
+                    textColor: 'text-red-700'
+                };
+            }
+            // สูงเล็กน้อย (เหลือง): ตัวบน 130-139 หรือ ตัวล่าง 85-89
+            if ((sys >= 130 && sys <= 139) || (dia >= 85 && dia <= 89)) {
+                return {
+                    level: 'elevated',
+                    label: 'สูงเล็กน้อย',
+                    cardBg: 'bg-amber-50 border-amber-300 text-amber-950',
+                    badgeBg: 'bg-amber-500 text-white',
+                    dotColor: 'bg-amber-500',
+                    textColor: 'text-amber-700'
+                };
+            }
+            // ปกติ (เขียว): ตัวบน < 130 และ ตัวล่าง < 85
+            return {
+                level: 'normal',
+                label: 'ปกติ',
+                cardBg: 'bg-emerald-50 border-emerald-300 text-emerald-950',
+                badgeBg: 'bg-emerald-600 text-white',
+                dotColor: 'bg-emerald-500',
+                textColor: 'text-emerald-700'
+            };
+        }
+
+        // แปลงวันที่ YYYY-MM-DD เป็นภาษาไทย เช่น "14 พ.ย. 2569"
+        function formatThaiDate(dateStr, includeYear = true) {
+            if (!dateStr) return '';
+            const months = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+            const parts = dateStr.split('-');
+            if (parts.length !== 3) return dateStr;
+            const yearBE = parseInt(parts[0], 10) + 543;
+            const monthName = months[parseInt(parts[1], 10) - 1] || '';
+            const day = parseInt(parts[2], 10);
+            return includeYear ? `${day} ${monthName} ${yearBE}` : `${day} ${monthName}`;
+        }
+
+        // เรียงลำดับข้อมูลตามวันที่และเวลา
+        function getSortedRecords(order = 'desc') {
+            return [...records].sort((a, b) => {
+                const dtA = `${a.date} ${a.time}`;
+                const dtB = `${b.date} ${b.time}`;
+                return order === 'desc' ? dtB.localeCompare(dtA) : dtA.localeCompare(dtB);
+            });
+        }
+
+        // ==========================================
+        // 4. การแสดงผลหน้าจอหลัก (Card ล่าสุด, กราฟ, รายการ)
+        // ==========================================
+        function renderApp() {
+            const descRecords = getSortedRecords('desc');
+            const ascRecords = getSortedRecords('asc');
+
+            renderLatestCard(descRecords[0]);
+            renderChart(ascRecords);
+            renderRecordsList(descRecords);
+        }
+
+        function renderLatestCard(latest) {
+            const card = document.getElementById('latest-card');
+            const badge = document.getElementById('latest-badge');
+            const datetimeEl = document.getElementById('latest-datetime').querySelector('span');
+            const sysEl = document.getElementById('latest-sys');
+            const diaEl = document.getElementById('latest-dia');
+            const pulseEl = document.getElementById('latest-pulse');
+
+            if (!latest) {
+                card.className = 'rounded-3xl p-6 shadow-md border-2 bg-white border-slate-200 text-slate-800';
+                badge.className = 'px-3.5 py-1 rounded-full text-sm font-bold bg-slate-200 text-slate-600';
+                badge.textContent = 'ยังไม่มีข้อมูล';
+                datetimeEl.textContent = 'กดปุ่มด้านล่างเพื่อเริ่มบันทึก';
+                sysEl.textContent = '-';
+                diaEl.textContent = '-';
+                pulseEl.textContent = '-';
+                return;
+            }
+
+            const status = getBPStatus(latest.sys, latest.dia);
+            card.className = `rounded-3xl p-6 shadow-md border-2 transition-colors duration-300 ${status.cardBg}`;
+            badge.className = `px-4 py-1.5 rounded-full text-sm font-bold shadow-sm ${status.badgeBg}`;
+            badge.textContent = status.label;
+
+            datetimeEl.textContent = `${formatThaiDate(latest.date)} เวลา ${latest.time} น.`;
+            sysEl.textContent = latest.sys;
+            sysEl.className = `text-4xl sm:text-5xl font-bold tracking-tight ${status.textColor}`;
+            diaEl.textContent = latest.dia;
+            diaEl.className = `text-4xl sm:text-5xl font-bold tracking-tight ${status.textColor}`;
+            pulseEl.textContent = latest.pulse;
+        }
+
+        function renderChart(ascRecords) {
+            const ctx = document.getElementById('bpChart').getContext('2d');
+            
+            const labels = ascRecords.map(r => `${formatThaiDate(r.date, false)} (${r.time})`);
+            const sysData = ascRecords.map(r => r.sys);
+            const diaData = ascRecords.map(r => r.dia);
+
+            if (bpChartInstance) {
+                bpChartInstance.destroy();
+            }
+
+            bpChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'ตัวบน (SYS)',
+                            data: sysData,
+                            borderColor: '#EF4444',
+                            backgroundColor: 'rgba(239, 68, 68, 0.12)',
+                            borderWidth: 3,
+                            pointBackgroundColor: '#EF4444',
+                            pointRadius: 5,
+                            pointHoverRadius: 7,
+                            tension: 0.3,
+                            fill: false
+                        },
+                        {
+                            label: 'ตัวล่าง (DIA)',
+                            data: diaData,
+                            borderColor: '#0D9488',
+                            backgroundColor: 'rgba(13, 148, 136, 0.12)',
+                            borderWidth: 3,
+                            pointBackgroundColor: '#0D9488',
+                            pointRadius: 5,
+                            pointHoverRadius: 7,
+                            tension: 0.3,
+                            fill: false
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                font: {
+                                    family: 'Prompt',
+                                    size: 13,
+                                    weight: '600'
+                                },
+                                usePointStyle: true,
+                                boxWidth: 8
+                            }
+                        },
+                        tooltip: {
+                            titleFont: { family: 'Prompt', size: 13 },
+                            bodyFont: { family: 'Prompt', size: 14 },
+                            padding: 10,
+                            cornerRadius: 12
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ticks: {
+                                font: { family: 'Prompt', size: 11 },
+                                maxRotation: 25,
+                                minRotation: 0
+                            },
+                            grid: { display: false }
+                        },
+                        y: {
+                            suggestedMin: 60,
+                            suggestedMax: 160,
+                            ticks: {
+                                font: { family: 'Prompt', size: 12 }
+                            },
+                            grid: {
+                                color: '#F1F5F9'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderRecordsList(descRecords) {
+            const container = document.getElementById('records-list');
+            const countEl = document.getElementById('record-count');
+            countEl.textContent = descRecords.length;
+
+            if (descRecords.length === 0) {
+                container.innerHTML = `
+                    <div class="bg-white rounded-3xl p-8 text-center border border-slate-200 text-slate-400">
+                        <p class="text-base">ยังไม่มีรายการบันทึก</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = descRecords.map(record => {
+                const status = getBPStatus(record.sys, record.dia);
+                const hasImageBtn = record.image ? `
+                    <button onclick="viewImage('${record.id}')" class="btn-press flex items-center gap-1 text-xs font-semibold bg-teal-50 text-teal-700 border border-teal-200 px-3 py-1.5 rounded-xl hover:bg-teal-100">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        <span>ดูรูปหน้าจอ</span>
+                    </button>
+                ` : '';
+
+                return `
+                    <div class="bg-white rounded-3xl p-4 sm:p-5 shadow-sm border border-slate-200/80 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <span class="w-3 h-3 rounded-full ${status.dotColor}"></span>
+                                <span class="font-bold text-slate-800 text-base">${formatThaiDate(record.date)}</span>
+                                <span class="text-sm text-slate-500">${record.time} น.</span>
+                            </div>
+                            <span class="px-3 py-0.5 rounded-full text-xs font-bold ${status.badgeBg}">
+                                ${status.label}
+                            </span>
+                        </div>
+
+                        <div class="flex items-center justify-between bg-slate-50 rounded-2xl px-4 py-3 border border-slate-100">
+                            <div>
+                                <span class="text-xs text-slate-500 block">ความดัน (บน/ล่าง)</span>
+                                <span class="text-2xl font-bold ${status.textColor}">${record.sys} / ${record.dia}</span>
+                                <span class="text-xs text-slate-400">mmHg</span>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-xs text-slate-500 block">ชีพจร</span>
+                                <span class="text-xl font-bold text-slate-700">${record.pulse}</span>
+                                <span class="text-xs text-slate-400">ครั้ง/นาที</span>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-between pt-1">
+                            <div>${hasImageBtn}</div>
+                            <div class="flex items-center gap-2">
+                                <button onclick="editRecord('${record.id}')" class="btn-press flex items-center gap-1 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-xl">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                    </svg>
+                                    <span>แก้ไข</span>
+                                </button>
+                                <button onclick="promptDelete('${record.id}')" class="btn-press flex items-center gap-1 text-xs font-semibold text-red-600 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-xl">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                    <span>ลบ</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // ==========================================
+        // 5. การเพิ่ม แก้ไข และบีบอัดรูปภาพสำหรับมือถือ
+        // ==========================================
+        function openFormModal(record = null) {
+            const modal = document.getElementById('form-modal');
+            const titleEl = document.getElementById('modal-title');
+            const editIdEl = document.getElementById('edit-id');
+            const dateEl = document.getElementById('input-date');
+            const timeEl = document.getElementById('input-time');
+            const sysEl = document.getElementById('input-sys');
+            const diaEl = document.getElementById('input-dia');
+            const pulseEl = document.getElementById('input-pulse');
+
+            if (record) {
+                titleEl.textContent = 'แก้ไขข้อมูลความดัน';
+                editIdEl.value = record.id;
+                dateEl.value = record.date;
+                timeEl.value = record.time;
+                sysEl.value = record.sys;
+                diaEl.value = record.dia;
+                pulseEl.value = record.pulse;
+                currentAttachedImage = record.image || null;
+            } else {
+                titleEl.textContent = 'จดค่าความดันใหม่';
+                editIdEl.value = '';
+                
+                // ตั้งค่าวันที่และเวลาปัจจุบัน
+                const now = new Date();
+                const year = now.getFullYear();
+                const month = String(now.getMonth() + 1).padStart(2, '0');
+                const day = String(now.getDate()).padStart(2, '0');
+                const hours = String(now.getHours()).padStart(2, '0');
+                const minutes = String(now.getMinutes()).padStart(2, '0');
+
+                dateEl.value = `${year}-${month}-${day}`;
+                timeEl.value = `${hours}:${minutes}`;
+                sysEl.value = '';
+                diaEl.value = '';
+                pulseEl.value = '';
+                currentAttachedImage = null;
+            }
+
+            updateImagePreviewUI();
+            modal.classList.remove('hidden');
+        }
+
+        function closeFormModal() {
+            document.getElementById('form-modal').classList.add('hidden');
+            document.getElementById('input-image').value = '';
+        }
+
+        // ย่อขนาดรูปภาพจากกล้อง iPhone ก่อนเก็บลง LocalStorage เพื่อไม่ให้หน่วยความจำเต็ม
+        function handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    const MAX_WIDTH = 700;
+                    const scaleSize = MAX_WIDTH / img.width;
+                    canvas.width = img.width > MAX_WIDTH ? MAX_WIDTH : img.width;
+                    canvas.height = img.width > MAX_WIDTH ? img.height * scaleSize : img.height;
+
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    
+                    currentAttachedImage = canvas.toDataURL('image/jpeg', 0.7);
+                    updateImagePreviewUI();
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function removeAttachedImage() {
+            currentAttachedImage = null;
+            document.getElementById('input-image').value = '';
+            updateImagePreviewUI();
+        }
+
+        function updateImagePreviewUI() {
+            const container = document.getElementById('image-preview-container');
+            const preview = document.getElementById('image-preview');
+            if (currentAttachedImage) {
+                preview.src = currentAttachedImage;
+                container.classList.remove('hidden');
+            } else {
+                preview.src = '';
+                container.classList.add('hidden');
+            }
+        }
+
+        function saveRecord(event) {
+            event.preventDefault();
+            
+            const editId = document.getElementById('edit-id').value;
+            const date = document.getElementById('input-date').value;
+            const time = document.getElementById('input-time').value;
+            const sys = parseInt(document.getElementById('input-sys').value, 10);
+            const dia = parseInt(document.getElementById('input-dia').value, 10);
+            const pulse = parseInt(document.getElementById('input-pulse').value, 10);
+
+            if (editId) {
+                const index = records.findIndex(r => r.id === editId);
+                if (index !== -1) {
+                    records[index] = {
+                        ...records[index],
+                        date,
+                        time,
+                        sys,
+                        dia,
+                        pulse,
+                        image: currentAttachedImage
+                    };
+                }
+                showToast('แก้ไขข้อมูลเรียบร้อยแล้ว');
+            } else {
+                const newRecord = {
+                    id: 'bp-' + Date.now(),
+                    date,
+                    time,
+                    sys,
+                    dia,
+                    pulse,
+                    image: currentAttachedImage
+                };
+                records.push(newRecord);
+                showToast('บันทึกค่าความดันเรียบร้อยแล้ว');
+            }
+
+            saveToStorage();
+            closeFormModal();
+            renderApp();
+        }
+
+        function editRecord(id) {
+            const record = records.find(r => r.id === id);
+            if (record) {
+                openFormModal(record);
+            }
+        }
+
+        // ==========================================
+        // 6. การดูรูปภาพ และ การลบรายการ
+        // ==========================================
+        function viewImage(id) {
+            const record = records.find(r => r.id === id);
+            if (!record || !record.image) return;
+
+            document.getElementById('viewer-img').src = record.image;
+            document.getElementById('viewer-caption').textContent = `วันที่ ${formatThaiDate(record.date)} เวลา ${record.time} น. (${record.sys}/${record.dia})`;
+            document.getElementById('image-viewer-modal').classList.remove('hidden');
+        }
+
+        function closeImageViewer() {
+            document.getElementById('image-viewer-modal').classList.add('hidden');
+        }
+
+        function promptDelete(id) {
+            recordIdToDelete = id;
+            document.getElementById('delete-modal').classList.remove('hidden');
+        }
+
+        function closeDeleteModal() {
+            recordIdToDelete = null;
+            document.getElementById('delete-modal').classList.add('hidden');
+        }
+
+        document.getElementById('confirm-delete-btn').addEventListener('click', () => {
+            if (recordIdToDelete) {
+                records = records.filter(r => r.id !== recordIdToDelete);
+                saveToStorage();
+                renderApp();
+                showToast('ลบรายการเรียบร้อยแล้ว');
+            }
+            closeDeleteModal();
+        });
+
+        // ==========================================
+        // 7. ปุ่ม "คัดลอกสรุป" ไว้ส่งให้แพทย์หรือครอบครัว
+        // ==========================================
+        function copySummary() {
+            const descRecords = getSortedRecords('desc');
+            if (descRecords.length === 0) {
+                showToast('ยังไม่มีข้อมูลสำหรับคัดลอก');
+                return;
+            }
+
+            // คำนวณค่าเฉลี่ย
+            const totalSys = descRecords.reduce((sum, r) => sum + r.sys, 0);
+            const totalDia = descRecords.reduce((sum, r) => sum + r.dia, 0);
+            const totalPulse = descRecords.reduce((sum, r) => sum + r.pulse, 0);
+            const count = descRecords.length;
+
+            const avgSys = Math.round(totalSys / count);
+            const avgDia = Math.round(totalDia / count);
+            const avgPulse = Math.round(totalPulse / count);
+
+            let text = `📋 สรุปผลบันทึกความดันโลหิต (${count} ครั้ง)\n`;
+            text += `ค่าเฉลี่ย: ${avgSys}/${avgDia} mmHg | ชีพจร ${avgPulse} ครั้ง/นาที\n`;
+            text += `------------------------\n`;
+
+            descRecords.forEach(r => {
+                const status = getBPStatus(r.sys, r.dia);
+                text += `• ${formatThaiDate(r.date, false)} ${r.time} น. : ${r.sys}/${r.dia} (ชีพจร ${r.pulse}) [${status.label}]\n`;
+            });
+
+            text += `------------------------\n`;
+            text += `*บันทึกเพื่อประกอบการปรึกษาแพทย์`;
+
+            // คัดลอกลงคลิปบอร์ด (รองรับ iOS Safari และ iFrame)
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            textarea.focus();
+            textarea.select();
+
+            try {
+                document.execCommand('copy');
+                showToast('คัดลอกสรุปแล้ว! นำไปวางใน LINE ได้เลย');
+            } catch (err) {
+                showToast('ไม่สามารถคัดลอกได้ กรุณาลองใหม่');
+            }
+            document.body.removeChild(textarea);
+        }
+
+        // แสดงแถบแจ้งเตือน Toast
+        let toastTimeout;
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            const msgEl = document.getElementById('toast-message');
+            msgEl.textContent = message;
+            
+            toast.classList.remove('opacity-0');
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                toast.classList.add('opacity-0');
+            }, 2800);
+        }
+
+        // เริ่มต้นทำงานเมื่อโหลดหน้าเว็บเสร็จ
+        window.addEventListener('DOMContentLoaded', () => {
+            loadRecords();
+            renderApp();
+        });
+    </script>
+
+</body></html>
