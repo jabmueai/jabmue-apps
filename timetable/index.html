@@ -1,0 +1,1056 @@
+<!DOCTYPE html><html lang="th"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <!-- จับมือ AI: ไอคอน + ติดตั้งลงหน้าจอโฮม (เพิ่มทีหลัง โค้ดแอปเหมือนเดิม) -->
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="apple-touch-icon" href="icon-180.png">
+    <link rel="icon" type="image/png" href="icon-192.png">
+    <meta name="theme-color" content="#d97706">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="ตารางเรียน">
+    <script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');</script>
+<!-- รองรับการบันทึกไว้ที่หน้าจอโฮมของ iPhone -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="ตารางเรียน ป.3/2">
+    <title>ตารางเรียน ป.3/2 · โรงเรียนตัวอย่าง</title>
+    
+    <!-- โหลด Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- โหลดฟอนต์ภาษาไทย Anuphan และ Prompt จาก Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+    <link href="https://fonts.googleapis.com/css2?family=Anuphan:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Anuphan', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: #FAF8F5; /* สีครีมอ่อน สบายตา */
+            color: #2D2A26;
+            -webkit-tap-highlight-color: transparent;
+            padding-bottom: env(safe-area-inset-bottom, 24px);
+        }
+
+        /* ซ่อน Scrollbar แนวนอนแต่ยังเลื่อนได้ */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        /* แอนิเมชันนุ่มนวล */
+        @keyframes pulse-soft {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.75; transform: scale(0.98); }
+        }
+        .animate-pulse-soft {
+            animation: pulse-soft 2.5s infinite ease-in-out;
+        }
+    </style>
+</head>
+<body class="antialiased selection:bg-amber-200 selection:text-amber-900">
+
+    <!-- ส่วนหัวแอป (Header) -->
+    <header class="sticky top-0 z-30 bg-[#FAF8F5]/95 backdrop-blur-md border-b border-stone-200/80 px-4 pt-4 pb-3">
+        <div class="max-w-lg mx-auto">
+            <div class="flex items-center justify-between gap-2 mb-3">
+                <div>
+                    <span class="inline-block text-xs font-semibold tracking-wide uppercase px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 mb-1">
+                        ภาคเรียนที่ 2 · โรงเรียนตัวอย่าง
+                    </span>
+                    <h1 class="text-2xl sm:text-3xl font-bold text-stone-800 tracking-tight" id="header-title">พรุ่งนี้เรียนอะไร</h1>
+                </div>
+                
+                <!-- ปุ่มลัด "วันนี้" และ "พรุ่งนี้" -->
+                <div class="flex items-center gap-1.5 shrink-0">
+                    <button id="btn-today" onclick="selectToday()" class="px-3 py-2.5 rounded-2xl text-sm font-semibold bg-stone-200/80 text-stone-700 active:scale-95 transition">
+                        วันนี้
+                    </button>
+                    <button id="btn-tomorrow" onclick="selectTomorrow()" class="px-3.5 py-2.5 rounded-2xl text-sm font-bold bg-amber-500 text-white shadow-sm shadow-amber-500/30 active:scale-95 transition flex items-center gap-1">
+                        <span>พรุ่งนี้</span>
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"></path></svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- แถบเลือกวัน จันทร์ - ศุกร์ -->
+            <nav class="grid grid-cols-5 gap-1.5 bg-stone-200/60 p-1.5 rounded-2xl" aria-label="เลือกวัน">
+                <button onclick="selectDay('mon')" id="tab-mon" class="day-tab py-2.5 rounded-xl text-base font-bold transition-all bg-white text-stone-900 shadow-sm scale-[1.02]">จันทร์</button>
+                <button onclick="selectDay('tue')" id="tab-tue" class="day-tab py-2.5 rounded-xl text-base font-semibold transition-all text-stone-600 hover:text-stone-900">อังคาร</button>
+                <button onclick="selectDay('wed')" id="tab-wed" class="day-tab py-2.5 rounded-xl text-base font-semibold transition-all text-stone-600 hover:text-stone-900">พุธ</button>
+                <button onclick="selectDay('thu')" id="tab-thu" class="day-tab py-2.5 rounded-xl text-base font-semibold transition-all text-stone-600 hover:text-stone-900">พฤหัสฯ</button>
+                <button onclick="selectDay('fri')" id="tab-fri" class="day-tab py-2.5 rounded-xl text-base font-semibold transition-all text-stone-600 hover:text-stone-900">ศุกร์</button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- เนื้อหาหลัก -->
+    <main class="max-w-lg mx-auto px-4 pt-4 pb-28 space-y-6">
+
+        <!-- แบนเนอร์แจ้งเตือนวันหยุด / วันนี้วันอะไร -->
+        <div id="status-banner" class="rounded-2xl p-4 bg-white border border-stone-200/80 shadow-sm flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div id="status-icon" class="w-11 h-11 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center text-xl shrink-0">🎒</div>
+                <div>
+                    <p id="status-subtitle" class="text-sm font-medium text-stone-500">เปิดเรียนวันจันทร์หน้า</p>
+                    <p id="status-main" class="text-lg font-bold text-stone-800">วันจันทร์</p>
+                </div>
+            </div>
+            <div class="text-right">
+                <span id="live-clock" class="text-base font-bold text-stone-700 bg-stone-100 px-3 py-1.5 rounded-xl inline-block">19:55 น.</span>
+            </div>
+        </div>
+
+        <!-- ส่วนที่ 1: ตารางเรียนตามคาบ -->
+        <section aria-labelledby="schedule-heading">
+            <div class="flex items-center justify-between mb-3">
+                <h2 id="schedule-heading" class="text-xl font-bold text-stone-800 flex items-center gap-2">
+                    <span>📚</span> ตารางเรียน ป.3/2
+                </h2>
+                <span class="text-sm font-medium text-stone-500">6 คาบเรียน</span>
+            </div>
+
+            <div id="schedule-list" class="space-y-3">
+                    <div class="relative rounded-3xl p-4 border-2 transition-all flex items-center justify-between gap-3 bg-rose-50 border-rose-200">
+                        <div class="flex items-center gap-3.5 min-w-0">
+                            <!-- หมายเลขคาบและไอคอน -->
+                            <div class="w-14 h-14 rounded-2xl bg-white shadow-xs border border-stone-100 flex flex-col items-center justify-center shrink-0">
+                                <span class="text-xs font-bold text-stone-400 leading-none mb-0.5">คาบ 1</span>
+                                <span class="text-2xl leading-none">🇹🇭</span>
+                            </div>
+                            
+                            <!-- ชื่อวิชาและเวลา -->
+                            <div class="min-w-0">
+                                <div class="flex items-center gap-2 flex-wrap">
+                                    <h3 class="text-xl sm:text-2xl font-bold text-stone-900 truncate">
+                                        ภาษาไทย
+                                    </h3>
+                                </div>
+                                <p class="text-base font-semibold text-stone-600 mt-0.5 flex items-center gap-1.5">
+                                    <span>🕒 08:30 - 09:20 น.</span>
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- ป้ายบอกสถานะคาบ (ตอนนี้ / คาบถัดไป / เรียนแล้ว) -->
+                        <div class="shrink-0 text-right">
+                            
+                        </div>
+                    </div>
+                
+                    <div class="relative rounded-3xl p-4 border-2 transition-all flex items-center justify-between gap-3 bg-blue-50 border-blue-200">
+                        <div class="flex items-center gap-3.5 min-w-0">
+                            <!-- หมายเลขคาบและไอคอน -->
+                            <div class="w-14 h-14 rounded-2xl bg-white shadow-xs border border-stone-100 flex flex-col items-center justify-center shrink-0">
+                                <span class="text-xs font-bold text-stone-400 leading-none mb-0.5">คาบ 2</span>
+                                <span class="text-2xl leading-none">🔢</span>
+                            </div>
+                            
+                            <!-- ชื่อวิชาและเวลา -->
+                            <div class="min-w-0">
+                                <div class="flex items-center gap-2 flex-wrap">
+                                    <h3 class="text-xl sm:text-2xl font-bold text-stone-900 truncate">
+                                        คณิตศาสตร์
+                                    </h3>
+                                </div>
+                                <p class="text-base font-semibold text-stone-600 mt-0.5 flex items-center gap-1.5">
+                                    <span>🕒 09:20 - 10:10 น.</span>
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- ป้ายบอกสถานะคาบ (ตอนนี้ / คาบถัดไป / เรียนแล้ว) -->
+                        <div class="shrink-0 text-right">
+                            
+                        </div>
+                    </div>
+                
+                    <div class="relative rounded-3xl p-4 border-2 transition-all flex items-center justify-between gap-3 bg-indigo-50 border-indigo-200">
+                        <div class="flex items-center gap-3.5 min-w-0">
+                            <!-- หมายเลขคาบและไอคอน -->
+                            <div class="w-14 h-14 rounded-2xl bg-white shadow-xs border border-stone-100 flex flex-col items-center justify-center shrink-0">
+                                <span class="text-xs font-bold text-stone-400 leading-none mb-0.5">คาบ 3</span>
+                                <span class="text-2xl leading-none">🔤</span>
+                            </div>
+                            
+                            <!-- ชื่อวิชาและเวลา -->
+                            <div class="min-w-0">
+                                <div class="flex items-center gap-2 flex-wrap">
+                                    <h3 class="text-xl sm:text-2xl font-bold text-stone-900 truncate">
+                                        ภาษาอังกฤษ
+                                    </h3>
+                                </div>
+                                <p class="text-base font-semibold text-stone-600 mt-0.5 flex items-center gap-1.5">
+                                    <span>🕒 10:10 - 11:00 น.</span>
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- ป้ายบอกสถานะคาบ (ตอนนี้ / คาบถัดไป / เรียนแล้ว) -->
+                        <div class="shrink-0 text-right">
+                            
+                        </div>
+                    </div>
+                
+                    <div class="relative rounded-3xl p-4 border-2 transition-all flex items-center justify-between gap-3 bg-amber-50 border-amber-200">
+                        <div class="flex items-center gap-3.5 min-w-0">
+                            <!-- หมายเลขคาบและไอคอน -->
+                            <div class="w-14 h-14 rounded-2xl bg-white shadow-xs border border-stone-100 flex flex-col items-center justify-center shrink-0">
+                                <span class="text-xs font-bold text-stone-400 leading-none mb-0.5">คาบ 4</span>
+                                <span class="text-2xl leading-none">🌏</span>
+                            </div>
+                            
+                            <!-- ชื่อวิชาและเวลา -->
+                            <div class="min-w-0">
+                                <div class="flex items-center gap-2 flex-wrap">
+                                    <h3 class="text-xl sm:text-2xl font-bold text-stone-900 truncate">
+                                        สังคมศึกษา
+                                    </h3>
+                                </div>
+                                <p class="text-base font-semibold text-stone-600 mt-0.5 flex items-center gap-1.5">
+                                    <span>🕒 11:00 - 11:50 น.</span>
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- ป้ายบอกสถานะคาบ (ตอนนี้ / คาบถัดไป / เรียนแล้ว) -->
+                        <div class="shrink-0 text-right">
+                            
+                        </div>
+                    </div>
+                
+                        <div class="flex items-center justify-center gap-2 py-2 px-4 rounded-2xl bg-stone-200/50 text-stone-500 text-sm font-medium">
+                            <span>🍱</span>
+                            <span>พักกลางวัน (11:50 - 13:00 น.)</span>
+                            
+                        </div>
+                    
+                    <div class="relative rounded-3xl p-4 border-2 transition-all flex items-center justify-between gap-3 bg-cyan-50 border-cyan-200">
+                        <div class="flex items-center gap-3.5 min-w-0">
+                            <!-- หมายเลขคาบและไอคอน -->
+                            <div class="w-14 h-14 rounded-2xl bg-white shadow-xs border border-stone-100 flex flex-col items-center justify-center shrink-0">
+                                <span class="text-xs font-bold text-stone-400 leading-none mb-0.5">คาบ 5</span>
+                                <span class="text-2xl leading-none">💻</span>
+                            </div>
+                            
+                            <!-- ชื่อวิชาและเวลา -->
+                            <div class="min-w-0">
+                                <div class="flex items-center gap-2 flex-wrap">
+                                    <h3 class="text-xl sm:text-2xl font-bold text-stone-900 truncate">
+                                        คอมพิวเตอร์
+                                    </h3>
+                                </div>
+                                <p class="text-base font-semibold text-stone-600 mt-0.5 flex items-center gap-1.5">
+                                    <span>🕒 13:00 - 13:50 น.</span>
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- ป้ายบอกสถานะคาบ (ตอนนี้ / คาบถัดไป / เรียนแล้ว) -->
+                        <div class="shrink-0 text-right">
+                            
+                        </div>
+                    </div>
+                
+                    <div class="relative rounded-3xl p-4 border-2 transition-all flex items-center justify-between gap-3 bg-lime-50 border-lime-200">
+                        <div class="flex items-center gap-3.5 min-w-0">
+                            <!-- หมายเลขคาบและไอคอน -->
+                            <div class="w-14 h-14 rounded-2xl bg-white shadow-xs border border-stone-100 flex flex-col items-center justify-center shrink-0">
+                                <span class="text-xs font-bold text-stone-400 leading-none mb-0.5">คาบ 6</span>
+                                <span class="text-2xl leading-none">🧭</span>
+                            </div>
+                            
+                            <!-- ชื่อวิชาและเวลา -->
+                            <div class="min-w-0">
+                                <div class="flex items-center gap-2 flex-wrap">
+                                    <h3 class="text-xl sm:text-2xl font-bold text-stone-900 truncate">
+                                        แนะแนว
+                                    </h3>
+                                </div>
+                                <p class="text-base font-semibold text-stone-600 mt-0.5 flex items-center gap-1.5">
+                                    <span>🕒 13:50 - 14:40 น.</span>
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- ป้ายบอกสถานะคาบ (ตอนนี้ / คาบถัดไป / เรียนแล้ว) -->
+                        <div class="shrink-0 text-right">
+                            
+                        </div>
+                    </div>
+                </div>
+        </section>
+
+        <!-- ส่วนที่ 2: ของที่ต้องเตรียมใส่กระเป๋า -->
+        <section aria-labelledby="checklist-heading" class="bg-white rounded-3xl p-5 border border-stone-200/80 shadow-sm">
+            <div class="flex items-center justify-between mb-1">
+                <h2 id="checklist-heading" class="text-xl font-bold text-stone-800 flex items-center gap-2">
+                    <span>🎒</span> ของที่ต้องเตรียม
+                </h2>
+                <span id="checklist-progress" class="text-sm font-bold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800">0/2 ชิ้น</span>
+            </div>
+            <p class="text-sm text-stone-500 mb-4">แตะเพื่อติ๊กว่าจัดใส่กระเป๋าแล้ว</p>
+
+            <!-- ฟอร์มเพิ่มของที่ต้องเตรียม -->
+            <form onsubmit="addChecklistItem(event)" class="flex gap-2 mb-4">
+                <input type="text" id="new-item-input" placeholder="เช่น ชุดพละ, สมุด, สีไม้..." class="flex-1 min-w-0 bg-stone-100 text-stone-800 placeholder-stone-400 text-base px-4 py-3 rounded-2xl border border-transparent focus:border-amber-400 focus:bg-white focus:outline-none transition" style="">
+                <button type="submit" class="px-5 py-3 rounded-2xl bg-emerald-600 text-white font-bold text-base shrink-0 active:scale-95 transition shadow-sm">
+                    + เพิ่ม
+                </button>
+            </form>
+
+            <!-- รายการเช็กลิสต์ -->
+            <ul id="checklist-container" class="space-y-2.5">
+                <li class="flex items-center justify-between gap-2 p-3.5 rounded-2xl border transition-all bg-stone-50 border-stone-200/80">
+                    <button type="button" onclick="toggleChecklistItem('m1')" class="flex items-center gap-3.5 flex-1 text-left min-w-0">
+                        <div class="w-7 h-7 rounded-xl flex items-center justify-center shrink-0 transition-colors bg-white border-2 border-stone-300">
+                            
+                        </div>
+                        <span class="text-lg font-medium break-words text-stone-800">
+                            กระเป๋านักเรียน + กล่องดินสอ
+                        </span>
+                    </button>
+                    <button type="button" onclick="deleteChecklistItem('m1')" aria-label="ลบรายการ" class="p-2 text-stone-400 hover:text-rose-600 active:scale-90 transition shrink-0">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                    </button>
+                </li>
+            
+                <li class="flex items-center justify-between gap-2 p-3.5 rounded-2xl border transition-all bg-stone-50 border-stone-200/80">
+                    <button type="button" onclick="toggleChecklistItem('m2')" class="flex items-center gap-3.5 flex-1 text-left min-w-0">
+                        <div class="w-7 h-7 rounded-xl flex items-center justify-center shrink-0 transition-colors bg-white border-2 border-stone-300">
+                            
+                        </div>
+                        <span class="text-lg font-medium break-words text-stone-800">
+                            สมุดการบ้าน / แฟ้มเอกสาร
+                        </span>
+                    </button>
+                    <button type="button" onclick="deleteChecklistItem('m2')" aria-label="ลบรายการ" class="p-2 text-stone-400 hover:text-rose-600 active:scale-90 transition shrink-0">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                    </button>
+                </li>
+            </ul>
+            <p id="checklist-empty" class="text-center text-stone-400 text-base py-4 hidden">
+                ยังไม่มีรายการของที่ต้องเตรียมสำหรับวันนี้
+            </p>
+        </section>
+
+        <!-- ส่วนที่ 3: โน้ตเตือนความจำ -->
+        <section aria-labelledby="notes-heading" class="bg-white rounded-3xl p-5 border border-stone-200/80 shadow-sm">
+            <div class="flex items-center justify-between mb-1">
+                <h2 id="notes-heading" class="text-xl font-bold text-stone-800 flex items-center gap-2">
+                    <span>📝</span> โน้ตเตือนความจำ
+                </h2>
+            </div>
+            <p class="text-sm text-stone-500 mb-4">เช่น ส่งการบ้าน, เงินค่าอาหาร, กิจกรรมพิเศษ</p>
+
+            <!-- ฟอร์มเพิ่มโน้ต -->
+            <form onsubmit="addNote(event)" class="flex gap-2 mb-4">
+                <input type="text" id="new-note-input" placeholder="พิมพ์โน้ตเตือนสำหรับวันนี้..." class="flex-1 min-w-0 bg-stone-100 text-stone-800 placeholder-stone-400 text-base px-4 py-3 rounded-2xl border border-transparent focus:border-amber-400 focus:bg-white focus:outline-none transition" style="">
+                <button type="submit" class="px-5 py-3 rounded-2xl bg-amber-500 text-white font-bold text-base shrink-0 active:scale-95 transition shadow-sm">
+                    + บันทึก
+                </button>
+            </form>
+
+            <!-- รายการโน้ต -->
+            <div id="notes-container" class="space-y-2.5"></div>
+            <p id="notes-empty" class="text-center text-stone-400 text-base py-4">
+                ไม่มีโน้ตเตือนสำหรับวันนี้
+            </p>
+        </section>
+
+        <!-- ส่วนที่ 4: ปุ่มคัดลอกตารางพรุ่งนี้ส่งให้คนในบ้าน -->
+        <section class="pt-2">
+            <button onclick="copyTomorrowSchedule()" class="w-full py-4 px-5 rounded-3xl bg-stone-800 hover:bg-stone-900 text-white font-bold text-lg shadow-lg shadow-stone-800/20 active:scale-[0.98] transition flex items-center justify-center gap-3">
+                <svg class="w-6 h-6 text-amber-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path>
+                </svg>
+                <span>คัดลอกตารางพรุ่งนี้ส่งให้คนในบ้าน</span>
+            </button>
+            <p class="text-center text-xs text-stone-400 mt-2.5">
+                คัดลอกทั้งวิชาเรียน ของที่ต้องเตรียม และโน้ตของวันพรุ่งนี้เพื่อวางใน LINE ได้ทันที
+            </p>
+        </section>
+
+    </main>
+
+    <!-- กล่องแก้ไขโน้ต (Modal) -->
+    <div id="edit-modal" class="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs hidden items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl transform transition-all">
+            <h3 class="text-xl font-bold text-stone-800 mb-3">แก้ไขโน้ตเตือน</h3>
+            <textarea id="edit-note-textarea" rows="3" class="w-full bg-stone-100 text-stone-800 text-lg p-4 rounded-2xl border border-stone-200 focus:border-amber-500 focus:bg-white focus:outline-none mb-4" style=""></textarea>
+            <div class="flex gap-2 justify-end">
+                <button onclick="closeEditModal()" class="px-5 py-3 rounded-2xl bg-stone-200 text-stone-700 font-bold text-base active:scale-95 transition">
+                    ยกเลิก
+                </button>
+                <button onclick="saveEditedNote()" class="px-6 py-3 rounded-2xl bg-amber-500 text-white font-bold text-base active:scale-95 transition">
+                    บันทึกการแก้ไข
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- แถบแจ้งเตือนด้านล่าง (Toast Message แทน alert) -->
+    <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-stone-900 text-white px-5 py-3.5 rounded-2xl shadow-xl font-semibold text-base flex items-center gap-2.5 opacity-0 pointer-events-none transition-all duration-300 w-max max-w-[90vw]">
+        <span id="toast-icon">✅</span>
+        <span id="toast-message">คัดลอกข้อความเรียบร้อยแล้ว</span>
+    </div>
+
+    <!-- ช่องซ่อนสำหรับช่วยคัดลอกข้อความบน iOS/iFrame -->
+    <textarea id="clipboard-helper" class="fixed -top-96 left-0 opacity-0 pointer-events-none" readonly="" style=""></textarea>
+
+    <script>
+        /**
+         * ข้อมูลตารางเรียน ป.3/2 ภาคเรียนที่ 2 (อ้างอิงจากรูปภาพต้นฉบับ)
+         * แบ่งตามคาบเวลา: 08:30, 09:20, 10:10, 11:00, (พักกลางวัน 11:50-13:00), 13:00, 13:50
+         */
+        const SCHEDULE_DATA = {
+            mon: {
+                name: 'วันจันทร์',
+                shortName: 'จันทร์',
+                periods: [
+                    { period: 1, start: '08:30', end: '09:20', subject: 'ภาษาไทย' },
+                    { period: 2, start: '09:20', end: '10:10', subject: 'คณิตศาสตร์' },
+                    { period: 3, start: '10:10', end: '11:00', subject: 'ภาษาอังกฤษ' },
+                    { period: 4, start: '11:00', end: '11:50', subject: 'สังคมศึกษา' },
+                    { period: 5, start: '13:00', end: '13:50', subject: 'คอมพิวเตอร์' },
+                    { period: 6, start: '13:50', end: '14:40', subject: 'แนะแนว' }
+                ]
+            },
+            tue: {
+                name: 'วันอังคาร',
+                shortName: 'อังคาร',
+                periods: [
+                    { period: 1, start: '08:30', end: '09:20', subject: 'คณิตศาสตร์' },
+                    { period: 2, start: '09:20', end: '10:10', subject: 'ภาษาอังกฤษ' },
+                    { period: 3, start: '10:10', end: '11:00', subject: 'วิทยาศาสตร์' },
+                    { period: 4, start: '11:00', end: '11:50', subject: 'ภาษาไทย' },
+                    { period: 5, start: '13:00', end: '13:50', subject: 'ห้องสมุด' },
+                    { period: 6, start: '13:50', end: '14:40', subject: 'ศิลปะ' }
+                ]
+            },
+            wed: {
+                name: 'วันพุธ',
+                shortName: 'พุธ',
+                periods: [
+                    { period: 1, start: '08:30', end: '09:20', subject: 'ภาษาไทย' },
+                    { period: 2, start: '09:20', end: '10:10', subject: 'สังคมศึกษา' },
+                    { period: 3, start: '10:10', end: '11:00', subject: 'พลศึกษา' },
+                    { period: 4, start: '11:00', end: '11:50', subject: 'พลศึกษา' },
+                    { period: 5, start: '13:00', end: '13:50', subject: 'ภาษาอังกฤษ' },
+                    { period: 6, start: '13:50', end: '14:40', subject: 'ชุมนุม' }
+                ]
+            },
+            thu: {
+                name: 'วันพฤหัสบดี',
+                shortName: 'พฤหัสฯ',
+                periods: [
+                    { period: 1, start: '08:30', end: '09:20', subject: 'คณิตศาสตร์' },
+                    { period: 2, start: '09:20', end: '10:10', subject: 'ภาษาไทย' },
+                    { period: 3, start: '10:10', end: '11:00', subject: 'ศิลปะ' },
+                    { period: 4, start: '11:00', end: '11:50', subject: 'วิทยาศาสตร์' },
+                    { period: 5, start: '13:00', end: '13:50', subject: 'สุขศึกษา' },
+                    { period: 6, start: '13:50', end: '14:40', subject: 'ภาษาไทย' }
+                ]
+            },
+            fri: {
+                name: 'วันศุกร์',
+                shortName: 'ศุกร์',
+                periods: [
+                    { period: 1, start: '08:30', end: '09:20', subject: 'วิทยาศาสตร์' },
+                    { period: 2, start: '09:20', end: '10:10', subject: 'ภาษาอังกฤษ' },
+                    { period: 3, start: '10:10', end: '11:00', subject: 'ดนตรี' },
+                    { period: 4, start: '11:00', end: '11:50', subject: 'คณิตศาสตร์' },
+                    { period: 5, start: '13:00', end: '13:50', subject: 'ลูกเสือ' },
+                    { period: 6, start: '13:50', end: '14:40', subject: 'ลูกเสือ' }
+                ]
+            }
+        };
+
+        // ไอคอนและสีประจำวิชาเพื่อให้อ่านง่ายและสบายตา
+        const SUBJECT_STYLES = {
+            'ภาษาไทย': { icon: '🇹🇭', bg: 'bg-rose-50', border: 'border-rose-200', badge: 'bg-rose-100 text-rose-800' },
+            'คณิตศาสตร์': { icon: '🔢', bg: 'bg-blue-50', border: 'border-blue-200', badge: 'bg-blue-100 text-blue-800' },
+            'ภาษาอังกฤษ': { icon: '🔤', bg: 'bg-indigo-50', border: 'border-indigo-200', badge: 'bg-indigo-100 text-indigo-800' },
+            'วิทยาศาสตร์': { icon: '🔬', bg: 'bg-emerald-50', border: 'border-emerald-200', badge: 'bg-emerald-100 text-emerald-800' },
+            'สังคมศึกษา': { icon: '🌏', bg: 'bg-amber-50', border: 'border-amber-200', badge: 'bg-amber-100 text-amber-800' },
+            'พลศึกษา': { icon: '⚽', bg: 'bg-orange-50', border: 'border-orange-200', badge: 'bg-orange-100 text-orange-800' },
+            'ศิลปะ': { icon: '🎨', bg: 'bg-fuchsia-50', border: 'border-fuchsia-200', badge: 'bg-fuchsia-100 text-fuchsia-800' },
+            'ดนตรี': { icon: '🎵', bg: 'bg-purple-50', border: 'border-purple-200', badge: 'bg-purple-100 text-purple-800' },
+            'คอมพิวเตอร์': { icon: '💻', bg: 'bg-cyan-50', border: 'border-cyan-200', badge: 'bg-cyan-100 text-cyan-800' },
+            'สุขศึกษา': { icon: '🩺', bg: 'bg-teal-50', border: 'border-teal-200', badge: 'bg-teal-100 text-teal-800' },
+            'ลูกเสือ': { icon: '⚜️', bg: 'bg-yellow-50', border: 'border-yellow-300', badge: 'bg-yellow-100 text-yellow-900' },
+            'ห้องสมุด': { icon: '📖', bg: 'bg-stone-100', border: 'border-stone-200', badge: 'bg-stone-200 text-stone-800' },
+            'แนะแนว': { icon: '🧭', bg: 'bg-lime-50', border: 'border-lime-200', badge: 'bg-lime-100 text-lime-800' },
+            'ชุมนุม': { icon: '🤝', bg: 'bg-sky-50', border: 'border-sky-200', badge: 'bg-sky-100 text-sky-800' }
+        };
+
+        // รายการของเตรียมเริ่มต้นอัจฉริยะ (จะใส่ให้เฉพาะครั้งแรกที่เปิดแอปเพื่อให้ใช้งานง่าย)
+        const DEFAULT_USER_DATA = {
+            checklist: {
+                mon: [
+                    { id: 'm1', text: 'กระเป๋านักเรียน + กล่องดินสอ', checked: false },
+                    { id: 'm2', text: 'สมุดการบ้าน / แฟ้มเอกสาร', checked: false }
+                ],
+                tue: [
+                    { id: 't1', text: 'อุปกรณ์ศิลปะ / สีไม้', checked: false },
+                    { id: 't2', text: 'หนังสือยืมห้องสมุด (ถ้ามี)', checked: false }
+                ],
+                wed: [
+                    { id: 'w1', text: 'ชุดพละ + รองเท้าผ้าใบ', checked: false },
+                    { id: 'w2', text: 'ขวดน้ำดื่ม', checked: false }
+                ],
+                thu: [
+                    { id: 'th1', text: 'อุปกรณ์วาดเขียน / ศิลปะ', checked: false }
+                ],
+                fri: [
+                    { id: 'f1', text: 'ชุดลูกเสือ + ผ้าพันคอ + หมวก', checked: false }
+                ]
+            },
+            notes: {
+                mon: [],
+                tue: [],
+                wed: [{ id: 'nw1', text: 'มีเรียนพละ 2 คาบติด อย่าลืมขวดน้ำ' }],
+                thu: [],
+                fri: [{ id: 'nf1', text: 'แต่งกายชุดลูกเสือ' }]
+            }
+        };
+
+        const STORAGE_KEY = 'p3_2_school_app_data_v1';
+        const DAY_KEYS = ['mon', 'tue', 'wed', 'thu', 'fri'];
+
+        // สถานะปัจจุบันของแอป
+        let currentSelectedDay = 'mon';
+        let userData = { checklist: {}, notes: {} };
+        let editingNoteId = null;
+
+        /**
+         * โหลดข้อมูลจาก LocalStorage (เก็บในเครื่อง ปิดแล้วเปิดใหม่ยังอยู่)
+         */
+        function loadUserData() {
+            try {
+                const saved = localStorage.getItem(STORAGE_KEY);
+                if (saved) {
+                    userData = JSON.parse(saved);
+                    // ตรวจสอบโครงสร้างเผื่อขาดวันใดวันหนึ่ง
+                    DAY_KEYS.forEach(d => {
+                        if (!userData.checklist[d]) userData.checklist[d] = [];
+                        if (!userData.notes[d]) userData.notes[d] = [];
+                    });
+                } else {
+                    userData = JSON.parse(JSON.stringify(DEFAULT_USER_DATA));
+                    saveUserData();
+                }
+            } catch (e) {
+                console.error('ไม่สามารถอ่านข้อมูลจากเครื่องได้:', e);
+                userData = JSON.parse(JSON.stringify(DEFAULT_USER_DATA));
+            }
+        }
+
+        /**
+         * บันทึกข้อมูลลง LocalStorage
+         */
+        function saveUserData() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(userData));
+            } catch (e) {
+                console.error('ไม่สามารถบันทึกข้อมูลลงเครื่องได้:', e);
+                showToast('⚠️ พื้นที่จัดเก็บเต็ม ไม่สามารถบันทึกได้');
+            }
+        }
+
+        /**
+         * หาคีย์วันของ "วันนี้" และ "วันเรียนถัดไป (พรุ่งนี้)"
+         */
+        function getSystemDayInfo() {
+            const now = new Date();
+            const dayIndex = now.getDay(); // 0 = อาทิตย์, 1 = จันทร์, ..., 5 = ศุกร์, 6 = เสาร์
+            const mapIndexToKey = { 1: 'mon', 2: 'tue', 3: 'wed', 4: 'thu', 5: 'fri' };
+            
+            const isWeekend = (dayIndex === 0 || dayIndex === 6);
+            const todayKey = isWeekend ? 'mon' : mapIndexToKey[dayIndex];
+
+            // คำนวณวันพรุ่งนี้ (ถ้าศุกร์/เสาร์/อาทิตย์ วันเรียนพรุ่งนี้คือวันจันทร์)
+            let tomorrowKey = 'mon';
+            if (dayIndex === 1) tomorrowKey = 'tue';
+            else if (dayIndex === 2) tomorrowKey = 'wed';
+            else if (dayIndex === 3) tomorrowKey = 'thu';
+            else if (dayIndex === 4) tomorrowKey = 'fri';
+            else tomorrowKey = 'mon'; // ศุกร์ เสาร์ อาทิตย์ -> จันทร์
+
+            return { now, dayIndex, isWeekend, todayKey, tomorrowKey };
+        }
+
+        /**
+         * แปลงเวลา "HH:MM" เป็นนาทีตั้งแต่เที่ยงคืนเพื่อเปรียบเทียบ
+         */
+        function timeToMinutes(timeStr) {
+            const [h, m] = timeStr.split(':').map(Number);
+            return h * 60 + m;
+        }
+
+        /**
+         * เลือกดูวันต่างๆ
+         */
+        function selectDay(dayKey) {
+            currentSelectedDay = dayKey;
+            renderAll();
+        }
+
+        function selectToday() {
+            const { todayKey, isWeekend } = getSystemDayInfo();
+            selectDay(todayKey);
+            if (isWeekend) {
+                showToast('📅 วันนี้วันหยุด แสดงตารางวันจันทร์ให้ครับ');
+            }
+        }
+
+        function selectTomorrow() {
+            const { tomorrowKey } = getSystemDayInfo();
+            selectDay(tomorrowKey);
+        }
+
+        /**
+         * แสดงผลทั้งหมดบนหน้าจอ
+         */
+        function renderAll() {
+            renderHeaderAndTabs();
+            renderSchedule();
+            renderChecklist();
+            renderNotes();
+        }
+
+        /**
+         * อัปเดตแถบแท็บวันและหัวข้อด้านบน
+         */
+        function renderHeaderAndTabs() {
+            const { isWeekend, todayKey, tomorrowKey } = getSystemDayInfo();
+            const headerTitle = document.getElementById('header-title');
+            const statusSubtitle = document.getElementById('status-subtitle');
+            const statusMain = document.getElementById('status-main');
+            const statusIcon = document.getElementById('status-icon');
+
+            // ปรับหัวข้อใหญ่ให้ตรงบริบท
+            if (!isWeekend && currentSelectedDay === todayKey) {
+                headerTitle.textContent = 'วันนี้เรียนอะไร';
+                statusSubtitle.textContent = 'ตารางเรียนวันนี้';
+                statusMain.textContent = SCHEDULE_DATA[currentSelectedDay].name;
+                statusIcon.textContent = '☀️';
+            } else if (currentSelectedDay === tomorrowKey) {
+                headerTitle.textContent = 'พรุ่งนี้เรียนอะไร';
+                statusSubtitle.textContent = isWeekend ? 'เปิดเรียนวันจันทร์หน้า' : 'เตรียมตัวสำหรับพรุ่งนี้';
+                statusMain.textContent = SCHEDULE_DATA[currentSelectedDay].name;
+                statusIcon.textContent = '🎒';
+            } else {
+                headerTitle.textContent = `ตาราง${SCHEDULE_DATA[currentSelectedDay].name}`;
+                statusSubtitle.textContent = 'กำลังดูตารางเรียนของ';
+                statusMain.textContent = SCHEDULE_DATA[currentSelectedDay].name;
+                statusIcon.textContent = '📅';
+            }
+
+            // อัปเดตสถานะปุ่มเลือกวัน จ-ศ
+            DAY_KEYS.forEach(key => {
+                const tab = document.getElementById(`tab-${key}`);
+                if (key === currentSelectedDay) {
+                    tab.className = 'day-tab py-2.5 rounded-xl text-base font-bold transition-all bg-white text-stone-900 shadow-sm scale-[1.02]';
+                } else {
+                    tab.className = 'day-tab py-2.5 rounded-xl text-base font-semibold transition-all text-stone-600 hover:text-stone-900';
+                }
+            });
+        }
+
+        /**
+         * แสดงตารางเรียนเรียงตามคาบ พร้อมไฮไลต์คาบปัจจุบัน
+         */
+        function renderSchedule() {
+            const container = document.getElementById('schedule-list');
+            const dayData = SCHEDULE_DATA[currentSelectedDay];
+            const { now, isWeekend, todayKey } = getSystemDayInfo();
+            
+            const currentMinutes = now.getHours() * 60 + now.getMinutes();
+            const isViewingRealToday = (!isWeekend && currentSelectedDay === todayKey);
+
+            let html = '';
+
+            dayData.periods.forEach((item, index) => {
+                const startMin = timeToMinutes(item.start);
+                const endMin = timeToMinutes(item.end);
+                const style = SUBJECT_STYLES[item.subject] || { icon: '📘', bg: 'bg-white', border: 'border-stone-200', badge: 'bg-stone-100 text-stone-800' };
+
+                // ตรวจสอบสถานะคาบเรียน (เฉพาะเมื่อดูตารางของ "วันนี้" จริงๆ)
+                let isCurrentPeriod = false;
+                let isNextPeriod = false;
+                let isPastPeriod = false;
+
+                if (isViewingRealToday) {
+                    if (currentMinutes >= startMin && currentMinutes < endMin) {
+                        isCurrentPeriod = true;
+                    } else if (currentMinutes >= endMin) {
+                        isPastPeriod = true;
+                    } else if (index === 0 && currentMinutes < startMin) {
+                        isNextPeriod = true;
+                    } else if (index > 0) {
+                        const prevEndMin = timeToMinutes(dayData.periods[index - 1].end);
+                        if (currentMinutes >= prevEndMin && currentMinutes < startMin) {
+                            isNextPeriod = true;
+                        }
+                    }
+                }
+
+                // แทรกแถบพักกลางวันระหว่างคาบ 4 (11:50) และคาบ 5 (13:00)
+                if (item.period === 5) {
+                    const isLunchNow = isViewingRealToday && (currentMinutes >= 710 && currentMinutes < 780); // 11:50 - 13:00
+                    html += `
+                        <div class="flex items-center justify-center gap-2 py-2 px-4 rounded-2xl ${isLunchNow ? 'bg-amber-100 border-2 border-amber-400 text-amber-900 font-bold' : 'bg-stone-200/50 text-stone-500 text-sm font-medium'}">
+                            <span>🍱</span>
+                            <span>พักกลางวัน (11:50 - 13:00 น.)</span>
+                            ${isLunchNow ? '<span class="ml-1 px-2 py-0.5 text-xs bg-amber-500 text-white rounded-full">ตอนนี้</span>' : ''}
+                        </div>
+                    `;
+                }
+
+                // คลาสตกแต่งตามสถานะคาบ
+                let cardClasses = `relative rounded-3xl p-4 border-2 transition-all flex items-center justify-between gap-3 `;
+                if (isCurrentPeriod) {
+                    cardClasses += `bg-amber-50 border-amber-500 shadow-md shadow-amber-500/15 ring-2 ring-amber-400/40`;
+                } else if (isNextPeriod) {
+                    cardClasses += `bg-white border-sky-400 shadow-sm`;
+                } else if (isPastPeriod) {
+                    cardClasses += `bg-stone-100/70 border-stone-200/70 opacity-65`;
+                } else {
+                    cardClasses += `${style.bg} ${style.border}`;
+                }
+
+                html += `
+                    <div class="${cardClasses}">
+                        <div class="flex items-center gap-3.5 min-w-0">
+                            <!-- หมายเลขคาบและไอคอน -->
+                            <div class="w-14 h-14 rounded-2xl bg-white shadow-xs border border-stone-100 flex flex-col items-center justify-center shrink-0">
+                                <span class="text-xs font-bold text-stone-400 leading-none mb-0.5">คาบ ${item.period}</span>
+                                <span class="text-2xl leading-none">${style.icon}</span>
+                            </div>
+                            
+                            <!-- ชื่อวิชาและเวลา -->
+                            <div class="min-w-0">
+                                <div class="flex items-center gap-2 flex-wrap">
+                                    <h3 class="text-xl sm:text-2xl font-bold text-stone-900 truncate">
+                                        ${item.subject}
+                                    </h3>
+                                </div>
+                                <p class="text-base font-semibold text-stone-600 mt-0.5 flex items-center gap-1.5">
+                                    <span>🕒 ${item.start} - ${item.end} น.</span>
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- ป้ายบอกสถานะคาบ (ตอนนี้ / คาบถัดไป / เรียนแล้ว) -->
+                        <div class="shrink-0 text-right">
+                            ${isCurrentPeriod ? `
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-2xl bg-amber-500 text-white text-sm font-bold shadow-xs animate-pulse-soft">
+                                    <span class="w-2 h-2 rounded-full bg-white"></span>
+                                    กำลังเรียน
+                                </span>
+                            ` : isNextPeriod ? `
+                                <span class="inline-block px-3 py-1.5 rounded-2xl bg-sky-100 text-sky-800 text-sm font-bold">
+                                    คาบถัดไป
+                                </span>
+                            ` : isPastPeriod ? `
+                                <span class="inline-block px-2.5 py-1 rounded-xl bg-stone-200 text-stone-500 text-xs font-bold">
+                                    เรียนแล้ว
+                                </span>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        /**
+         * แสดงรายการของที่ต้องเตรียม (Checklist)
+         */
+        function renderChecklist() {
+            const items = userData.checklist[currentSelectedDay] || [];
+            const container = document.getElementById('checklist-container');
+            const emptyMsg = document.getElementById('checklist-empty');
+            const progressBadge = document.getElementById('checklist-progress');
+
+            const checkedCount = items.filter(i => i.checked).length;
+            progressBadge.textContent = `${checkedCount}/${items.length} ชิ้น`;
+
+            if (items.length > 0 && checkedCount === items.length) {
+                progressBadge.className = 'text-sm font-bold px-3 py-1 rounded-full bg-emerald-600 text-white';
+                progressBadge.textContent = `ครบแล้ว! (${checkedCount}/${items.length})`;
+            } else {
+                progressBadge.className = 'text-sm font-bold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800';
+            }
+
+            if (items.length === 0) {
+                container.innerHTML = '';
+                emptyMsg.classList.remove('hidden');
+                return;
+            }
+
+            emptyMsg.classList.add('hidden');
+            container.innerHTML = items.map(item => `
+                <li class="flex items-center justify-between gap-2 p-3.5 rounded-2xl border transition-all ${item.checked ? 'bg-emerald-50/70 border-emerald-200' : 'bg-stone-50 border-stone-200/80'}">
+                    <button type="button" onclick="toggleChecklistItem('${item.id}')" class="flex items-center gap-3.5 flex-1 text-left min-w-0">
+                        <div class="w-7 h-7 rounded-xl flex items-center justify-center shrink-0 transition-colors ${item.checked ? 'bg-emerald-600 text-white' : 'bg-white border-2 border-stone-300'}">
+                            ${item.checked ? '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>' : ''}
+                        </div>
+                        <span class="text-lg font-medium break-words ${item.checked ? 'line-through text-stone-400' : 'text-stone-800'}">
+                            ${escapeHTML(item.text)}
+                        </span>
+                    </button>
+                    <button type="button" onclick="deleteChecklistItem('${item.id}')" aria-label="ลบรายการ"
+                        class="p-2 text-stone-400 hover:text-rose-600 active:scale-90 transition shrink-0">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                    </button>
+                </li>
+            `).join('');
+        }
+
+        function addChecklistItem(event) {
+            event.preventDefault();
+            const input = document.getElementById('new-item-input');
+            const text = input.value.trim();
+            if (!text) return;
+
+            userData.checklist[currentSelectedDay].push({
+                id: 'item_' + Date.now(),
+                text: text,
+                checked: false
+            });
+            input.value = '';
+            saveUserData();
+            renderChecklist();
+            showToast('🎒 เพิ่มของที่ต้องเตรียมแล้ว');
+        }
+
+        function toggleChecklistItem(id) {
+            const items = userData.checklist[currentSelectedDay];
+            const target = items.find(i => i.id === id);
+            if (target) {
+                target.checked = !target.checked;
+                saveUserData();
+                renderChecklist();
+            }
+        }
+
+        function deleteChecklistItem(id) {
+            userData.checklist[currentSelectedDay] = userData.checklist[currentSelectedDay].filter(i => i.id !== id);
+            saveUserData();
+            renderChecklist();
+            showToast('🗑️ ลบรายการแล้ว');
+        }
+
+        /**
+         * แสดงและจัดการโน้ตเตือนความจำ (Notes)
+         */
+        function renderNotes() {
+            const notes = userData.notes[currentSelectedDay] || [];
+            const container = document.getElementById('notes-container');
+            const emptyMsg = document.getElementById('notes-empty');
+
+            if (notes.length === 0) {
+                container.innerHTML = '';
+                emptyMsg.classList.remove('hidden');
+                return;
+            }
+
+            emptyMsg.classList.add('hidden');
+            container.innerHTML = notes.map(note => `
+                <div class="p-4 rounded-2xl bg-amber-50/80 border border-amber-200/90 flex items-start justify-between gap-3">
+                    <p class="text-lg font-medium text-stone-800 break-words flex-1 leading-relaxed">
+                        📌 ${escapeHTML(note.text)}
+                    </p>
+                    <div class="flex items-center gap-1 shrink-0">
+                        <button type="button" onclick="openEditModal('${note.id}')" aria-label="แก้ไขโน้ต"
+                            class="px-3 py-1.5 rounded-xl bg-white border border-stone-200 text-stone-700 text-sm font-bold active:scale-95 transition">
+                            แก้
+                        </button>
+                        <button type="button" onclick="deleteNote('${note.id}')" aria-label="ลบโน้ต"
+                            class="px-3 py-1.5 rounded-xl bg-rose-100 text-rose-700 text-sm font-bold active:scale-95 transition">
+                            ลบ
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function addNote(event) {
+            event.preventDefault();
+            const input = document.getElementById('new-note-input');
+            const text = input.value.trim();
+            if (!text) return;
+
+            userData.notes[currentSelectedDay].push({
+                id: 'note_' + Date.now(),
+                text: text
+            });
+            input.value = '';
+            saveUserData();
+            renderNotes();
+            showToast('📝 บันทึกโน้ตเรียบร้อย');
+        }
+
+        function openEditModal(id) {
+            const notes = userData.notes[currentSelectedDay];
+            const note = notes.find(n => n.id === id);
+            if (!note) return;
+
+            editingNoteId = id;
+            const textarea = document.getElementById('edit-note-textarea');
+            textarea.value = note.text;
+            
+            const modal = document.getElementById('edit-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            setTimeout(() => textarea.focus(), 100);
+        }
+
+        function closeEditModal() {
+            editingNoteId = null;
+            const modal = document.getElementById('edit-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function saveEditedNote() {
+            if (!editingNoteId) return;
+            const newText = document.getElementById('edit-note-textarea').value.trim();
+            if (!newText) {
+                showToast('⚠️ กรุณาพิมพ์ข้อความโน้ต');
+                return;
+            }
+
+            const notes = userData.notes[currentSelectedDay];
+            const note = notes.find(n => n.id === editingNoteId);
+            if (note) {
+                note.text = newText;
+                saveUserData();
+                renderNotes();
+                showToast('✅ แก้ไขโน้ตแล้ว');
+            }
+            closeEditModal();
+        }
+
+        function deleteNote(id) {
+            userData.notes[currentSelectedDay] = userData.notes[currentSelectedDay].filter(n => n.id !== id);
+            saveUserData();
+            renderNotes();
+            showToast('🗑️ ลบโน้ตแล้ว');
+        }
+
+        /**
+         * คัดลอกตารางเรียนวันพรุ่งนี้ (พร้อมของเตรียมและโน้ต) เพื่อส่งในแชทให้คนในบ้าน
+         */
+        function copyTomorrowSchedule() {
+            const { tomorrowKey } = getSystemDayInfo();
+            const dayInfo = SCHEDULE_DATA[tomorrowKey];
+            const items = userData.checklist[tomorrowKey] || [];
+            const notes = userData.notes[tomorrowKey] || [];
+
+            let text = `📚 ตารางเรียนลูก ป.3/2 (${dayInfo.name})\n`;
+            text += `------------------------\n`;
+            dayInfo.periods.forEach(p => {
+                text += `คาบ ${p.period} (${p.start}) : ${p.subject}\n`;
+            });
+
+            if (items.length > 0) {
+                text += `\n🎒 ของที่ต้องเตรียม:\n`;
+                items.forEach(item => {
+                    text += `${item.checked ? '✅' : '⬜'} ${item.text}\n`;
+                });
+            }
+
+            if (notes.length > 0) {
+                text += `\n📝 โน้ตเตือน:\n`;
+                notes.forEach(n => {
+                    text += `• ${n.text}\n`;
+                });
+            }
+
+            // ใช้วิธีคัดลอกที่รองรับทั้ง iPhone Safari และ WebView
+            const helper = document.getElementById('clipboard-helper');
+            helper.value = text;
+            helper.select();
+            helper.setSelectionRange(0, 99999); // สำหรับ iOS
+
+            let copied = false;
+            try {
+                copied = document.execCommand('copy');
+            } catch (err) {
+                copied = false;
+            }
+
+            if (copied) {
+                showToast(`📋 คัดลอกตาราง${dayInfo.name}แล้ว ส่งใน LINE ได้เลย!`);
+            } else if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(() => {
+                    showToast(`📋 คัดลอกตาราง${dayInfo.name}แล้ว ส่งใน LINE ได้เลย!`);
+                }).catch(() => {
+                    showToast('⚠️ ไม่สามารถคัดลอกอัตโนมัติได้');
+                });
+            }
+        }
+
+        /**
+         * อัปเดตนาฬิกาเวลาปัจจุบัน และเช็กคาบเรียนทุกๆ 30 วินาที
+         */
+        function updateLiveClock() {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            document.getElementById('live-clock').textContent = `${hours}:${minutes} น.`;
+            renderSchedule();
+        }
+
+        /**
+         * แสดงแถบแจ้งเตือน (Toast)
+         */
+        let toastTimer = null;
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            const msgEl = document.getElementById('toast-message');
+            msgEl.textContent = message;
+            
+            toast.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-2');
+            toast.classList.add('opacity-100', 'translate-y-0');
+
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => {
+                toast.classList.add('opacity-0', 'pointer-events-none', 'translate-y-2');
+                toast.classList.remove('opacity-100', 'translate-y-0');
+            }, 3000);
+        }
+
+        /**
+         * ป้องกัน XSS สำหรับข้อความที่ผู้ใช้พิมพ์เอง
+         */
+        function escapeHTML(str) {
+            return str.replace(/[&<>'"]/g, tag => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                "'": '&#39;',
+                '"': '&quot;'
+            }[tag]));
+        }
+
+        // เริ่มต้นทำงานเมื่อโหลดหน้าเว็บเสร็จ
+        window.addEventListener('DOMContentLoaded', () => {
+            loadUserData();
+            const { todayKey } = getSystemDayInfo();
+            currentSelectedDay = todayKey;
+            renderAll();
+            updateLiveClock();
+            setInterval(updateLiveClock, 30000);
+        });
+    </script>
+
+</body></html>
