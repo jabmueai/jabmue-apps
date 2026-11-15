@@ -1,0 +1,904 @@
+<!DOCTYPE html><html lang="th"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <!-- จับมือ AI: ไอคอน + ติดตั้งลงหน้าจอโฮม (เพิ่มทีหลัง โค้ดแอปเหมือนเดิม) -->
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="apple-touch-icon" href="icon-180.png">
+    <link rel="icon" type="image/png" href="icon-192.png">
+    <meta name="theme-color" content="#047857">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="บิลน้ำไฟ">
+    <script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');</script>
+<!-- รองรับการเพิ่มลงหน้าจอโฮมของ iPhone (PWA-like experience) -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="ค่าน้ำค่าไฟ">
+    <title>บันทึกค่าน้ำค่าไฟรายเดือน</title>
+    
+    <!-- โหลดฟอนต์ภาษาไทยอ่านง่าย (Prompt และ Sarabun) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+    
+    <!-- โหลด Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- โหลด Chart.js สำหรับสร้างกราฟแท่งเปรียบเทียบ -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js" crossorigin="anonymous"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Prompt', 'sans-serif'],
+                    },
+                    colors: {
+                        cream: '#FAF9F6',
+                        sage: {
+                            50: '#F2F7F4',
+                            100: '#E1ECE6',
+                            600: '#3B7A57',
+                            700: '#2E6144',
+                        },
+                        elec: {
+                            light: '#FEF3C7',
+                            main: '#F59E0B',
+                            dark: '#B45309'
+                        },
+                        water: {
+                            light: '#E0F2FE',
+                            main: '#0EA5E9',
+                            dark: '#0369A1'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #F4F5F7;
+            color: #1F2937;
+            -webkit-tap-highlight-color: transparent;
+            padding-bottom: env(safe-area-inset-bottom, 24px);
+        }
+        /* ปรับแต่ง Scrollbar ให้อ่อนโยน */
+        ::-webkit-scrollbar {
+            width: 4px;
+            height: 4px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #CBD5E1;
+            border-radius: 4px;
+        }
+        /* Animation สำหรับ Modal */
+        @keyframes slideUp {
+            from { transform: translateY(100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .animate-slide-up {
+            animation: slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+    </style>
+</head>
+<body class="antialiased selection:bg-sage-100">
+
+    <!-- Container หลักจำกัดความกว้างให้เหมาะกับจอมือถือและอ่านง่ายบนจอใหญ่ -->
+    <div class="max-w-md mx-auto min-h-screen bg-[#FAF9F6] shadow-sm flex flex-col relative pb-28">
+        
+        <!-- ส่วนหัว (Header) -->
+        <header class="bg-white px-5 pt-6 pb-4 rounded-b-3xl shadow-sm border-b border-gray-100 sticky top-0 z-10">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-800 tracking-tight">บิลค่าน้ำ-ค่าไฟ</h1>
+                    <p class="text-sm text-gray-500 mt-0.5">จดบันทึกและเช็กยอดย้อนหลัง</p>
+                </div>
+                <button onclick="openResetModal()" class="text-xs font-medium text-gray-500 bg-gray-100 hover:bg-gray-200 active:bg-gray-300 px-3 py-2 rounded-xl transition">
+                    รีเซ็ตตัวอย่าง
+                </button>
+            </div>
+        </header>
+
+        <!-- เนื้อหาหลัก -->
+        <main class="px-4 pt-5 space-y-5 flex-1">
+
+            <!-- ป้ายแจ้งเตือนสีส้ม (แสดงเมื่อค่าไฟเดือนล่าสุดสูงกว่าค่าเฉลี่ยเกิน 20%) -->
+            <div id="warningBanner" class="bg-orange-50 border-2 border-orange-400 rounded-2xl p-4 shadow-sm transition-all">
+                <div class="flex items-start gap-3">
+                    <div class="bg-orange-500 text-white p-2 rounded-xl shrink-0 mt-0.5">
+                        <!-- ไอคอนตกใจ SVG -->
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="text-base font-bold text-orange-800">แจ้งเตือน: ค่าไฟเดือนนี้สูงผิดปกติ!</h3>
+                        <p id="warningText" class="text-sm text-orange-700 mt-1 leading-relaxed">ค่าไฟเดือนนี้ (<strong>1,890 บ.</strong>) สูงกว่าค่าเฉลี่ย (<strong>1,350 บ.</strong>) ถึง <strong>40%</strong></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- การ์ดสรุปยอดเดือนล่าสุด (ตัวใหญ่ อ่านง่าย) -->
+            <section class="bg-white rounded-3xl p-5 shadow-sm border border-gray-100">
+                <div class="flex justify-between items-center mb-2">
+                    <span class="text-base font-medium text-gray-500">ยอดรวมเดือนล่าสุด</span>
+                    <span id="latestMonthBadge" class="bg-sage-100 text-sage-700 text-sm font-semibold px-3 py-1 rounded-full">ตุลาคม 2569</span>
+                </div>
+
+                <!-- ยอดเงินรวมตัวใหญ่ -->
+                <div class="flex items-baseline gap-2 my-1">
+                    <span id="latestTotalAmount" class="text-4xl sm:text-5xl font-bold text-gray-900 tracking-tight">2,140</span>
+                    <span class="text-xl font-medium text-gray-500">บาท</span>
+                </div>
+
+                <!-- เทียบกับเดือนก่อน -->
+                <div id="comparisonBox" class="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-semibold bg-red-50 text-red-700 border border-red-100">
+                    <span id="comparisonIcon">▲</span>
+                    <span id="comparisonText">เพิ่มขึ้น 570 บาท จากเดือนก่อน (ก.ย.)</span>
+                </div>
+
+                <!-- แยกย่อย ค่าไฟ และ ค่าน้ำ -->
+                <div class="grid grid-cols-2 gap-3 mt-5 pt-4 border-t border-gray-100">
+                    <!-- กล่องค่าไฟ -->
+                    <div class="bg-amber-50/70 rounded-2xl p-3.5 border border-amber-100">
+                        <div class="flex items-center gap-2 text-amber-700 font-semibold text-base mb-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-amber-500" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd"></path>
+                            </svg>
+                            <span>ค่าไฟ</span>
+                        </div>
+                        <div class="text-2xl font-bold text-gray-800"><span id="latestElecCost">1,890</span> <span class="text-sm font-normal text-gray-500">บ.</span></div>
+                        <div class="text-sm text-amber-800/80 mt-0.5"><span id="latestElecUnits">410</span> หน่วย</div>
+                    </div>
+
+                    <!-- กล่องค่าน้ำ -->
+                    <div class="bg-sky-50/70 rounded-2xl p-3.5 border border-sky-100">
+                        <div class="flex items-center gap-2 text-sky-700 font-semibold text-base mb-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-sky-500" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"></path>
+                            </svg>
+                            <span>ค่าน้ำ</span>
+                        </div>
+                        <div class="text-2xl font-bold text-gray-800"><span id="latestWaterCost">250</span> <span class="text-sm font-normal text-gray-500">บ.</span></div>
+                        <div class="text-sm text-sky-800/80 mt-0.5"><span id="latestWaterUnits">16</span> หน่วย</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ส่วนกราฟแท่งเปรียบเทียบ 6 เดือน -->
+            <section class="bg-white rounded-3xl p-5 shadow-sm border border-gray-100">
+                <div class="flex justify-between items-center mb-3">
+                    <h2 class="text-lg font-bold text-gray-800">เปรียบเทียบ 6 เดือนล่าสุด</h2>
+                    <span class="text-xs text-gray-400">หน่วย: บาท</span>
+                </div>
+                
+                <!-- คำอธิบายสีกราฟ (Legend) แบบอ่านง่าย -->
+                <div class="flex items-center gap-5 mb-3 text-sm font-medium">
+                    <div class="flex items-center gap-2">
+                        <span class="w-3.5 h-3.5 rounded-full bg-amber-500 inline-block"></span>
+                        <span class="text-gray-700">ค่าไฟฟ้า</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="w-3.5 h-3.5 rounded-full bg-sky-500 inline-block"></span>
+                        <span class="text-gray-700">ค่าน้ำประปา</span>
+                    </div>
+                </div>
+
+                <!-- พื้นที่แสดงกราฟ -->
+                <div class="relative w-full h-60">
+                    <canvas id="utilityChart" width="374" height="240" style="display: block; box-sizing: border-box; height: 240px; width: 374px;"></canvas>
+                </div>
+                
+                <p id="avgElecInfo" class="text-xs text-gray-500 text-center mt-3 bg-gray-50 py-1.5 px-3 rounded-lg">ค่าไฟเฉลี่ยก่อนหน้า: 1,350 บาท/เดือน</p>
+            </section>
+
+            <!-- ประวัติการบันทึกย้อนหลัง -->
+            <section class="space-y-3">
+                <div class="flex justify-between items-center px-1">
+                    <h2 class="text-lg font-bold text-gray-800">ประวัติบิลทั้งหมด</h2>
+                    <span id="recordCount" class="text-sm text-gray-500">6 รายการ</span>
+                </div>
+                
+                <!-- รายการการ์ดประวัติแต่ละเดือน -->
+                <div id="historyList" class="space-y-3"><div class="bg-white rounded-2xl p-4 shadow-xs border border-gray-100 flex flex-col gap-2.5">
+                    <div class="flex justify-between items-center border-b border-gray-50 pb-2">
+                        <div class="flex items-center gap-2">
+                            <span class="font-bold text-lg text-gray-800">ตุลาคม 2569</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <span class="font-bold text-lg text-sage-700">2,140 บ.</span>
+                            <button onclick="confirmDeleteBill('2569-10')" aria-label="ลบรายการ" class="text-gray-400 hover:text-red-500 p-1.5 rounded-lg hover:bg-red-50 transition">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 text-sm">
+                        <div class="flex items-center justify-between bg-amber-50/50 px-3 py-2 rounded-xl">
+                            <span class="text-amber-800 font-medium">⚡ ไฟ (410 หน่วย)</span>
+                            <span class="font-bold text-gray-800">1,890 บ.</span>
+                        </div>
+                        <div class="flex items-center justify-between bg-sky-50/50 px-3 py-2 rounded-xl">
+                            <span class="text-sky-800 font-medium">💧 น้ำ (16 หน่วย)</span>
+                            <span class="font-bold text-gray-800">250 บ.</span>
+                        </div>
+                    </div>
+                </div><div class="bg-white rounded-2xl p-4 shadow-xs border border-gray-100 flex flex-col gap-2.5">
+                    <div class="flex justify-between items-center border-b border-gray-50 pb-2">
+                        <div class="flex items-center gap-2">
+                            <span class="font-bold text-lg text-gray-800">กันยายน 2569</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <span class="font-bold text-lg text-sage-700">1,570 บ.</span>
+                            <button onclick="confirmDeleteBill('2569-09')" aria-label="ลบรายการ" class="text-gray-400 hover:text-red-500 p-1.5 rounded-lg hover:bg-red-50 transition">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 text-sm">
+                        <div class="flex items-center justify-between bg-amber-50/50 px-3 py-2 rounded-xl">
+                            <span class="text-amber-800 font-medium">⚡ ไฟ (295 หน่วย)</span>
+                            <span class="font-bold text-gray-800">1,350 บ.</span>
+                        </div>
+                        <div class="flex items-center justify-between bg-sky-50/50 px-3 py-2 rounded-xl">
+                            <span class="text-sky-800 font-medium">💧 น้ำ (14 หน่วย)</span>
+                            <span class="font-bold text-gray-800">220 บ.</span>
+                        </div>
+                    </div>
+                </div><div class="bg-white rounded-2xl p-4 shadow-xs border border-gray-100 flex flex-col gap-2.5">
+                    <div class="flex justify-between items-center border-b border-gray-50 pb-2">
+                        <div class="flex items-center gap-2">
+                            <span class="font-bold text-lg text-gray-800">สิงหาคม 2569</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <span class="font-bold text-lg text-sage-700">1,625 บ.</span>
+                            <button onclick="confirmDeleteBill('2569-08')" aria-label="ลบรายการ" class="text-gray-400 hover:text-red-500 p-1.5 rounded-lg hover:bg-red-50 transition">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 text-sm">
+                        <div class="flex items-center justify-between bg-amber-50/50 px-3 py-2 rounded-xl">
+                            <span class="text-amber-800 font-medium">⚡ ไฟ (305 หน่วย)</span>
+                            <span class="font-bold text-gray-800">1,390 บ.</span>
+                        </div>
+                        <div class="flex items-center justify-between bg-sky-50/50 px-3 py-2 rounded-xl">
+                            <span class="text-sky-800 font-medium">💧 น้ำ (15 หน่วย)</span>
+                            <span class="font-bold text-gray-800">235 บ.</span>
+                        </div>
+                    </div>
+                </div><div class="bg-white rounded-2xl p-4 shadow-xs border border-gray-100 flex flex-col gap-2.5">
+                    <div class="flex justify-between items-center border-b border-gray-50 pb-2">
+                        <div class="flex items-center gap-2">
+                            <span class="font-bold text-lg text-gray-800">กรกฎาคม 2569</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <span class="font-bold text-lg text-sage-700">1,490 บ.</span>
+                            <button onclick="confirmDeleteBill('2569-07')" aria-label="ลบรายการ" class="text-gray-400 hover:text-red-500 p-1.5 rounded-lg hover:bg-red-50 transition">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 text-sm">
+                        <div class="flex items-center justify-between bg-amber-50/50 px-3 py-2 rounded-xl">
+                            <span class="text-amber-800 font-medium">⚡ ไฟ (280 หน่วย)</span>
+                            <span class="font-bold text-gray-800">1,280 บ.</span>
+                        </div>
+                        <div class="flex items-center justify-between bg-sky-50/50 px-3 py-2 rounded-xl">
+                            <span class="text-sky-800 font-medium">💧 น้ำ (13 หน่วย)</span>
+                            <span class="font-bold text-gray-800">210 บ.</span>
+                        </div>
+                    </div>
+                </div><div class="bg-white rounded-2xl p-4 shadow-xs border border-gray-100 flex flex-col gap-2.5">
+                    <div class="flex justify-between items-center border-b border-gray-50 pb-2">
+                        <div class="flex items-center gap-2">
+                            <span class="font-bold text-lg text-gray-800">มิถุนายน 2569</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <span class="font-bold text-lg text-sage-700">1,645 บ.</span>
+                            <button onclick="confirmDeleteBill('2569-06')" aria-label="ลบรายการ" class="text-gray-400 hover:text-red-500 p-1.5 rounded-lg hover:bg-red-50 transition">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 text-sm">
+                        <div class="flex items-center justify-between bg-amber-50/50 px-3 py-2 rounded-xl">
+                            <span class="text-amber-800 font-medium">⚡ ไฟ (310 หน่วย)</span>
+                            <span class="font-bold text-gray-800">1,410 บ.</span>
+                        </div>
+                        <div class="flex items-center justify-between bg-sky-50/50 px-3 py-2 rounded-xl">
+                            <span class="text-sky-800 font-medium">💧 น้ำ (15 หน่วย)</span>
+                            <span class="font-bold text-gray-800">235 บ.</span>
+                        </div>
+                    </div>
+                </div><div class="bg-white rounded-2xl p-4 shadow-xs border border-gray-100 flex flex-col gap-2.5">
+                    <div class="flex justify-between items-center border-b border-gray-50 pb-2">
+                        <div class="flex items-center gap-2">
+                            <span class="font-bold text-lg text-gray-800">พฤษภาคม 2569</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <span class="font-bold text-lg text-sage-700">1,540 บ.</span>
+                            <button onclick="confirmDeleteBill('2569-05')" aria-label="ลบรายการ" class="text-gray-400 hover:text-red-500 p-1.5 rounded-lg hover:bg-red-50 transition">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 text-sm">
+                        <div class="flex items-center justify-between bg-amber-50/50 px-3 py-2 rounded-xl">
+                            <span class="text-amber-800 font-medium">⚡ ไฟ (290 หน่วย)</span>
+                            <span class="font-bold text-gray-800">1,320 บ.</span>
+                        </div>
+                        <div class="flex items-center justify-between bg-sky-50/50 px-3 py-2 rounded-xl">
+                            <span class="text-sky-800 font-medium">💧 น้ำ (14 หน่วย)</span>
+                            <span class="font-bold text-gray-800">220 บ.</span>
+                        </div>
+                    </div>
+                </div></div>
+            </section>
+
+        </main>
+
+        <!-- ปุ่มลอยด้านล่างสุด (Sticky Bottom Action) กดง่ายด้วยนิ้วโป้ง -->
+        <div class="fixed bottom-0 left-0 right-0 max-w-md mx-auto p-4 bg-gradient-to-t from-[#FAF9F6] via-[#FAF9F6] to-transparent z-20">
+            <button onclick="openAddModal()" class="w-full bg-sage-600 hover:bg-sage-700 active:scale-[0.98] text-white font-bold text-lg py-4 px-6 rounded-2xl shadow-lg shadow-sage-600/30 flex items-center justify-center gap-2 transition-all">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path>
+                </svg>
+                <span>เพิ่มบิลเดือนนี้</span>
+            </button>
+        </div>
+
+    </div>
+
+    <!-- Modal: ฟอร์มเพิ่มบิลใหม่ -->
+    <div id="addModal" class="fixed inset-0 bg-black/50 backdrop-blur-xs z-50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
+        <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl animate-slide-up max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-5">
+                <h3 class="text-xl font-bold text-gray-800">เพิ่มบิลค่าน้ำ-ค่าไฟ</h3>
+                <button onclick="closeAddModal()" class="p-2 bg-gray-100 rounded-full text-gray-500 hover:bg-gray-200">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <form id="billForm" onsubmit="handleSaveBill(event)" class="space-y-4">
+                <!-- เลือกเดือนและปี -->
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">เดือน</label>
+                        <select id="inputMonth" class="w-full bg-gray-50 border border-gray-300 text-gray-900 text-base rounded-xl focus:ring-sage-600 focus:border-sage-600 block p-3">
+                            <option value="01">มกราคม</option>
+                            <option value="02">กุมภาพันธ์</option>
+                            <option value="03">มีนาคม</option>
+                            <option value="04">เมษายน</option>
+                            <option value="05">พฤษภาคม</option>
+                            <option value="06">มิถุนายน</option>
+                            <option value="07">กรกฎาคม</option>
+                            <option value="08">สิงหาคม</option>
+                            <option value="09">กันยายน</option>
+                            <option value="10">ตุลาคม</option>
+                            <option value="11">พฤศจิกายน</option>
+                            <option value="12">ธันวาคม</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">ปี (พ.ศ.)</label>
+                        <select id="inputYear" class="w-full bg-gray-50 border border-gray-300 text-gray-900 text-base rounded-xl focus:ring-sage-600 focus:border-sage-600 block p-3">
+                            <option value="2568">2568</option>
+                            <option value="2569" selected="">2569</option>
+                            <option value="2570">2570</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- ส่วนกรอกค่าไฟฟ้า -->
+                <div class="bg-amber-50/70 p-4 rounded-2xl border border-amber-200 space-y-3">
+                    <div class="font-bold text-amber-800 flex items-center gap-1.5 text-base">
+                        <span>⚡ ข้อมูลค่าไฟฟ้า</span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">หน่วยที่ใช้ (ยูนิต)</label>
+                            <input type="number" id="inputElecUnits" inputmode="decimal" step="any" required="" placeholder="เช่น 320" class="w-full bg-white border border-amber-300 text-gray-900 text-lg font-semibold rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-amber-500" style="">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">ยอดเงิน (บาท)</label>
+                            <input type="number" id="inputElecCost" inputmode="decimal" step="any" required="" placeholder="เช่น 1450" class="w-full bg-white border border-amber-300 text-gray-900 text-lg font-semibold rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-amber-500" style="">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ส่วนกรอกค่าน้ำประปา -->
+                <div class="bg-sky-50/70 p-4 rounded-2xl border border-sky-200 space-y-3">
+                    <div class="font-bold text-sky-800 flex items-center gap-1.5 text-base">
+                        <span>💧 ข้อมูลค่าน้ำประปา</span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">หน่วยที่ใช้ (ลบ.ม.)</label>
+                            <input type="number" id="inputWaterUnits" inputmode="decimal" step="any" required="" placeholder="เช่น 15" class="w-full bg-white border border-sky-300 text-gray-900 text-lg font-semibold rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-sky-500" style="">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">ยอดเงิน (บาท)</label>
+                            <input type="number" id="inputWaterCost" inputmode="decimal" step="any" required="" placeholder="เช่น 240" class="w-full bg-white border border-sky-300 text-gray-900 text-lg font-semibold rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-sky-500" style="">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ปุ่มบันทึก -->
+                <div class="pt-2">
+                    <button type="submit" class="w-full bg-sage-600 hover:bg-sage-700 active:scale-[0.98] text-white font-bold text-lg py-4 rounded-2xl shadow-md transition">
+                        บันทึกข้อมูล
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: ยืนยันการลบ หรือ รีเซ็ตข้อมูล (แทนการใช้ confirm() แบบเดิม) -->
+    <div id="confirmModal" class="fixed inset-0 bg-black/50 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-sm rounded-3xl p-6 shadow-xl text-center">
+            <h3 id="confirmTitle" class="text-xl font-bold text-gray-800 mb-2">ยืนยันการทำรายการ</h3>
+            <p id="confirmMessage" class="text-base text-gray-600 mb-6">คุณต้องการดำเนินการนี้ใช่หรือไม่?</p>
+            <div class="grid grid-cols-2 gap-3">
+                <button onclick="closeConfirmModal()" class="py-3 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl text-base">
+                    ยกเลิก
+                </button>
+                <button id="confirmActionBtn" class="py-3 px-4 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-xl text-base">
+                    ยืนยัน
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast แจ้งเตือนสั้นๆ ด้านบน -->
+    <div id="toast" class="fixed top-5 left-1/2 -translate-x-1/2 bg-gray-800 text-white px-5 py-3 rounded-2xl shadow-lg text-sm font-medium z-50 transition-all duration-300 opacity-0 pointer-events-none">
+        บันทึกเรียบร้อยแล้ว
+    </div>
+
+    <script>
+        // คีย์สำหรับเก็บข้อมูลใน LocalStorage ของเครื่อง
+        const STORAGE_KEY = 'thai_utility_bills_v1';
+
+        // ชื่อเดือนภาษาไทยแบบย่อและเต็ม
+        const THAI_MONTHS_SHORT = {
+            '01': 'ม.ค.', '02': 'ก.พ.', '03': 'มี.ค.', '04': 'เม.ย.',
+            '05': 'พ.ค.', '06': 'มิ.ย.', '07': 'ก.ค.', '08': 'ส.ค.',
+            '09': 'ก.ย.', '10': 'ต.ค.', '11': 'พ.ย.', '12': 'ธ.ค.'
+        };
+        const THAI_MONTHS_FULL = {
+            '01': 'มกราคม', '02': 'กุมภาพันธ์', '03': 'มีนาคม', '04': 'เมษายน',
+            '05': 'พฤษภาคม', '06': 'มิถุนายน', '07': 'กรกฎาคม', '08': 'สิงหาคม',
+            '09': 'กันยายน', '10': 'ตุลาคม', '11': 'พฤศจิกายน', '12': 'ธันวาคม'
+        };
+
+        // ข้อมูลตัวอย่างย้อนหลัง 6 เดือน (พ.ค. 2569 - ต.ค. 2569)
+        // ตั้งค่าให้เดือนล่าสุด (ต.ค. 2569) ค่าไฟสูงกว่าค่าเฉลี่ยเกิน 20% เพื่อให้เห็นป้ายเตือนสีส้มทันทีที่เปิดแอป
+        const SAMPLE_DATA = [
+            { id: '2569-05', year: '2569', month: '05', elecUnits: 290, elecCost: 1320, waterUnits: 14, waterCost: 220 },
+            { id: '2569-06', year: '2569', month: '06', elecUnits: 310, elecCost: 1410, waterUnits: 15, waterCost: 235 },
+            { id: '2569-07', year: '2569', month: '07', elecUnits: 280, elecCost: 1280, waterUnits: 13, waterCost: 210 },
+            { id: '2569-08', year: '2569', month: '08', elecUnits: 305, elecCost: 1390, waterUnits: 15, waterCost: 235 },
+            { id: '2569-09', year: '2569', month: '09', elecUnits: 295, elecCost: 1350, waterUnits: 14, waterCost: 220 },
+            { id: '2569-10', year: '2569', month: '10', elecUnits: 410, elecCost: 1890, waterUnits: 16, waterCost: 250 }
+        ];
+
+        let billsData = [];
+        let chartInstance = null;
+
+        // โหลดข้อมูลเมื่อเปิดหน้าเว็บ
+        function initApp() {
+            try {
+                const saved = localStorage.getItem(STORAGE_KEY);
+                if (saved) {
+                    billsData = JSON.parse(saved);
+                } else {
+                    // ถ้าเปิดครั้งแรก ให้ใส่ข้อมูลตัวอย่าง 6 เดือนลงเครื่องทันที
+                    billsData = [...SAMPLE_DATA];
+                    saveToStorage();
+                }
+            } catch (e) {
+                console.error('เกิดข้อผิดพลาดในการโหลดข้อมูล:', e);
+                billsData = [...SAMPLE_DATA];
+            }
+
+            // เรียงลำดับข้อมูลตามปีและเดือน (เก่าไปใหม่)
+            sortBills();
+            renderAll();
+        }
+
+        // บันทึกลง LocalStorage
+        function saveToStorage() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(billsData));
+            } catch (e) {
+                showToast('ไม่สามารถบันทึกข้อมูลลงเครื่องได้');
+            }
+        }
+
+        // เรียงลำดับข้อมูลตามรหัส YYYY-MM
+        function sortBills() {
+            billsData.sort((a, b) => a.id.localeCompare(b.id));
+        }
+
+        // จัดรูปแบบตัวเลขใส่ลูกน้ำ (เช่น 1,890)
+        function formatNumber(num) {
+            return Number(num).toLocaleString('th-TH', { maximumFractionDigits: 2 });
+        }
+
+        // แสดงผลทุกส่วนของหน้าจอ
+        function renderAll() {
+            renderSummaryAndWarning();
+            renderChart();
+            renderHistoryList();
+        }
+
+        // 1. แสดงผลการ์ดสรุปยอดเดือนล่าสุด + เทียบเดือนก่อน + ป้ายเตือนสีส้ม
+        function renderSummaryAndWarning() {
+            const warningBanner = document.getElementById('warningBanner');
+            const warningText = document.getElementById('warningText');
+            const latestMonthBadge = document.getElementById('latestMonthBadge');
+            const latestTotalAmount = document.getElementById('latestTotalAmount');
+            const latestElecCost = document.getElementById('latestElecCost');
+            const latestElecUnits = document.getElementById('latestElecUnits');
+            const latestWaterCost = document.getElementById('latestWaterCost');
+            const latestWaterUnits = document.getElementById('latestWaterUnits');
+            const comparisonBox = document.getElementById('comparisonBox');
+            const comparisonIcon = document.getElementById('comparisonIcon');
+            const comparisonText = document.getElementById('comparisonText');
+
+            if (billsData.length === 0) {
+                latestMonthBadge.textContent = 'ไม่มีข้อมูล';
+                latestTotalAmount.textContent = '0';
+                latestElecCost.textContent = '0';
+                latestElecUnits.textContent = '0';
+                latestWaterCost.textContent = '0';
+                latestWaterUnits.textContent = '0';
+                comparisonBox.className = 'mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-medium bg-gray-100 text-gray-600';
+                comparisonIcon.textContent = 'ℹ️';
+                comparisonText.textContent = 'กดปุ่มด้านล่างเพื่อเพิ่มบิลแรก';
+                warningBanner.classList.add('hidden');
+                return;
+            }
+
+            // ดึงบิลเดือนล่าสุด (ตัวสุดท้ายใน Array ที่เรียงแล้ว)
+            const latest = billsData[billsData.length - 1];
+            const latestTotal = Number(latest.elecCost) + Number(latest.waterCost);
+
+            latestMonthBadge.textContent = `${THAI_MONTHS_FULL[latest.month]} ${latest.year}`;
+            latestTotalAmount.textContent = formatNumber(latestTotal);
+            latestElecCost.textContent = formatNumber(latest.elecCost);
+            latestElecUnits.textContent = formatNumber(latest.elecUnits);
+            latestWaterCost.textContent = formatNumber(latest.waterCost);
+            latestWaterUnits.textContent = formatNumber(latest.waterUnits);
+
+            // เทียบกับเดือนก่อนหน้า
+            if (billsData.length >= 2) {
+                const prev = billsData[billsData.length - 2];
+                const prevTotal = Number(prev.elecCost) + Number(prev.waterCost);
+                const diff = latestTotal - prevTotal;
+
+                if (diff > 0) {
+                    comparisonBox.className = 'mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-semibold bg-red-50 text-red-700 border border-red-100';
+                    comparisonIcon.textContent = '▲';
+                    comparisonText.textContent = `เพิ่มขึ้น ${formatNumber(diff)} บาท จากเดือนก่อน (${THAI_MONTHS_SHORT[prev.month]})`;
+                } else if (diff < 0) {
+                    comparisonBox.className = 'mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-semibold bg-emerald-50 text-emerald-700 border border-emerald-100';
+                    comparisonIcon.textContent = '▼';
+                    comparisonText.textContent = `ลดลง ${formatNumber(Math.abs(diff))} บาท จากเดือนก่อน (${THAI_MONTHS_SHORT[prev.month]})`;
+                } else {
+                    comparisonBox.className = 'mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-semibold bg-gray-100 text-gray-700';
+                    comparisonIcon.textContent = '=';
+                    comparisonText.textContent = `เท่ากับเดือนก่อน (${THAI_MONTHS_SHORT[prev.month]})`;
+                }
+            } else {
+                comparisonBox.className = 'mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-medium bg-gray-100 text-gray-600';
+                comparisonIcon.textContent = '📌';
+                comparisonText.textContent = 'บิลเดือนแรกที่บันทึก';
+            }
+
+            // ตรวจสอบเงื่อนไขแจ้งเตือนสีส้ม: ค่าไฟเดือนล่าสุดสูงกว่าค่าเฉลี่ยเกิน 20%
+            // คำนวณค่าเฉลี่ยจากบิลที่มีอยู่ (ใช้สูงสุด 6 เดือนล่าสุด หรือเทียบกับเดือนก่อนหน้าทั้งหมด)
+            const recentBills = billsData.slice(-6);
+            // คำนวณค่าเฉลี่ยของเดือนก่อนหน้า (ถ้ามีหลายเดือน จะได้เห็นความผิดปกติของเดือนล่าสุดชัดเจน)
+            const baselineBills = recentBills.length > 1 ? recentBills.slice(0, -1) : recentBills;
+            const sumElec = baselineBills.reduce((acc, item) => acc + Number(item.elecCost), 0);
+            const avgElec = sumElec / baselineBills.length;
+
+            document.getElementById('avgElecInfo').textContent = `ค่าไฟเฉลี่ยก่อนหน้า: ${formatNumber(Math.round(avgElec))} บาท/เดือน`;
+
+            if (baselineBills.length > 0 && avgElec > 0) {
+                const percentIncrease = ((Number(latest.elecCost) - avgElec) / avgElec) * 100;
+                if (percentIncrease > 20) {
+                    warningBanner.classList.remove('hidden');
+                    warningText.innerHTML = `ค่าไฟเดือนนี้ (<strong>${formatNumber(latest.elecCost)} บ.</strong>) สูงกว่าค่าเฉลี่ย (<strong>${formatNumber(Math.round(avgElec))} บ.</strong>) ถึง <strong>${Math.round(percentIncrease)}%</strong>`;
+                } else {
+                    warningBanner.classList.add('hidden');
+                }
+            } else {
+                warningBanner.classList.add('hidden');
+            }
+        }
+
+        // 2. สร้างและอัปเดตกราฟแท่งเปรียบเทียบ 6 เดือน
+        function renderChart() {
+            const ctx = document.getElementById('utilityChart').getContext('2d');
+            
+            // ดึงข้อมูล 6 เดือนล่าสุดมาแสดงในกราฟ
+            const last6 = billsData.slice(-6);
+            const labels = last6.map(item => `${THAI_MONTHS_SHORT[item.month]} ${item.year.slice(-2)}`);
+            const elecData = last6.map(item => Number(item.elecCost));
+            const waterData = last6.map(item => Number(item.waterCost));
+
+            if (chartInstance) {
+                chartInstance.destroy();
+            }
+
+            chartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'ค่าไฟ (บาท)',
+                            data: elecData,
+                            backgroundColor: '#F59E0B', // สีเหลืองอำพัน (ค่าไฟ)
+                            borderRadius: 6,
+                            barPercentage: 0.75,
+                            categoryPercentage: 0.75
+                        },
+                        {
+                            label: 'ค่าน้ำ (บาท)',
+                            data: waterData,
+                            backgroundColor: '#0EA5E9', // สีฟ้าสดใส (ค่าน้ำ)
+                            borderRadius: 6,
+                            barPercentage: 0.75,
+                            categoryPercentage: 0.75
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    plugins: {
+                        legend: {
+                            display: false // ซ่อน Legend เดิมเพราะเราทำ Legend ภาษาไทยตัวใหญ่ไว้ด้านบนแล้ว
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(31, 41, 55, 0.95)',
+                            titleFont: { family: 'Prompt', size: 14 },
+                            bodyFont: { family: 'Prompt', size: 14 },
+                            padding: 12,
+                            cornerRadius: 12,
+                            callbacks: {
+                                label: function(context) {
+                                    return ` ${context.dataset.label}: ${formatNumber(context.raw)} บาท`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { display: false },
+                            ticks: {
+                                font: { family: 'Prompt', size: 13, weight: '500' },
+                                color: '#4B5563'
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            border: { display: false },
+                            grid: { color: '#F3F4F6' },
+                            ticks: {
+                                font: { family: 'Prompt', size: 12 },
+                                color: '#9CA3AF',
+                                callback: function(value) {
+                                    return value >= 1000 ? (value / 1000) + 'k' : value;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // 3. แสดงรายการประวัติบิลย้อนหลัง (เรียงจากใหม่ไปเก่าให้อ่านง่าย)
+        function renderHistoryList() {
+            const listContainer = document.getElementById('historyList');
+            const recordCount = document.getElementById('recordCount');
+            
+            recordCount.textContent = `${billsData.length} รายการ`;
+            listContainer.innerHTML = '';
+
+            if (billsData.length === 0) {
+                listContainer.innerHTML = `
+                    <div class="bg-white rounded-2xl p-8 text-center text-gray-400 border border-dashed border-gray-300">
+                        ยังไม่มีประวัติบิลค่าน้ำค่าไฟ
+                    </div>
+                `;
+                return;
+            }
+
+            // กลับด้าน Array เพื่อแสดงเดือนล่าสุดไว้บนสุด
+            const reversedBills = [...billsData].reverse();
+
+            reversedBills.forEach((bill) => {
+                const total = Number(bill.elecCost) + Number(bill.waterCost);
+                const card = document.createElement('div');
+                card.className = 'bg-white rounded-2xl p-4 shadow-xs border border-gray-100 flex flex-col gap-2.5';
+                
+                card.innerHTML = `
+                    <div class="flex justify-between items-center border-b border-gray-50 pb-2">
+                        <div class="flex items-center gap-2">
+                            <span class="font-bold text-lg text-gray-800">${THAI_MONTHS_FULL[bill.month]} ${bill.year}</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <span class="font-bold text-lg text-sage-700">${formatNumber(total)} บ.</span>
+                            <button onclick="confirmDeleteBill('${bill.id}')" aria-label="ลบรายการ" class="text-gray-400 hover:text-red-500 p-1.5 rounded-lg hover:bg-red-50 transition">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 text-sm">
+                        <div class="flex items-center justify-between bg-amber-50/50 px-3 py-2 rounded-xl">
+                            <span class="text-amber-800 font-medium">⚡ ไฟ (${formatNumber(bill.elecUnits)} หน่วย)</span>
+                            <span class="font-bold text-gray-800">${formatNumber(bill.elecCost)} บ.</span>
+                        </div>
+                        <div class="flex items-center justify-between bg-sky-50/50 px-3 py-2 rounded-xl">
+                            <span class="text-sky-800 font-medium">💧 น้ำ (${formatNumber(bill.waterUnits)} หน่วย)</span>
+                            <span class="font-bold text-gray-800">${formatNumber(bill.waterCost)} บ.</span>
+                        </div>
+                    </div>
+                `;
+                listContainer.appendChild(card);
+            });
+        }
+
+        // เปิดหน้าต่างเพิ่มบิล
+        function openAddModal() {
+            // ตั้งค่าเดือนเริ่มต้นเป็นเดือนถัดไปจากบิลล่าสุดให้อัตโนมัติ เพื่อความสะดวก
+            if (billsData.length > 0) {
+                const latest = billsData[billsData.length - 1];
+                let nextMonth = parseInt(latest.month, 10) + 1;
+                let nextYear = parseInt(latest.year, 10);
+                if (nextMonth > 12) {
+                    nextMonth = 1;
+                    nextYear += 1;
+                }
+                const monthStr = nextMonth.toString().padStart(2, '0');
+                document.getElementById('inputMonth').value = monthStr;
+                
+                const yearSelect = document.getElementById('inputYear');
+                if ([...yearSelect.options].some(opt => opt.value === nextYear.toString())) {
+                    yearSelect.value = nextYear.toString();
+                }
+            }
+
+            // เคลียร์ค่าช่องกรอกตัวเลข
+            document.getElementById('inputElecUnits').value = '';
+            document.getElementById('inputElecCost').value = '';
+            document.getElementById('inputWaterUnits').value = '';
+            document.getElementById('inputWaterCost').value = '';
+
+            document.getElementById('addModal').classList.remove('hidden');
+        }
+
+        function closeAddModal() {
+            document.getElementById('addModal').classList.add('hidden');
+        }
+
+        // บันทึกบิลใหม่จากฟอร์ม
+        function handleSaveBill(event) {
+            event.preventDefault();
+
+            const month = document.getElementById('inputMonth').value;
+            const year = document.getElementById('inputYear').value;
+            const elecUnits = parseFloat(document.getElementById('inputElecUnits').value) || 0;
+            const elecCost = parseFloat(document.getElementById('inputElecCost').value) || 0;
+            const waterUnits = parseFloat(document.getElementById('inputWaterUnits').value) || 0;
+            const waterCost = parseFloat(document.getElementById('inputWaterCost').value) || 0;
+
+            const id = `${year}-${month}`;
+            const newBill = { id, year, month, elecUnits, elecCost, waterUnits, waterCost };
+
+            // เช็กว่าเดือนนี้มีข้อมูลอยู่แล้วหรือไม่ ถ้ามีให้ทับข้อมูลเดิม
+            const existingIndex = billsData.findIndex(item => item.id === id);
+            if (existingIndex !== -1) {
+                billsData[existingIndex] = newBill;
+                showToast(`อัปเดตบิลเดือน ${THAI_MONTHS_FULL[month]} ${year} แล้ว`);
+            } else {
+                billsData.push(newBill);
+                showToast(`บันทึกบิลเดือน ${THAI_MONTHS_FULL[month]} ${year} แล้ว`);
+            }
+
+            sortBills();
+            saveToStorage();
+            renderAll();
+            closeAddModal();
+        }
+
+        // ระบบ Modal ยืนยันการลบ/รีเซ็ต (ไม่ใช้ window.confirm)
+        let pendingConfirmAction = null;
+
+        function confirmDeleteBill(id) {
+            const target = billsData.find(b => b.id === id);
+            if (!target) return;
+
+            document.getElementById('confirmTitle').textContent = 'ลบบิลรายการนี้?';
+            document.getElementById('confirmMessage').textContent = `ต้องการลบบิลเดือน ${THAI_MONTHS_FULL[target.month]} ${target.year} ใช่หรือไม่?`;
+            
+            pendingConfirmAction = () => {
+                billsData = billsData.filter(b => b.id !== id);
+                saveToStorage();
+                renderAll();
+                showToast('ลบรายการเรียบร้อยแล้ว');
+            };
+
+            document.getElementById('confirmModal').classList.remove('hidden');
+        }
+
+        function openResetModal() {
+            document.getElementById('confirmTitle').textContent = 'รีเซ็ตเป็นข้อมูลตัวอย่าง?';
+            document.getElementById('confirmMessage').textContent = 'ข้อมูลที่คุณเพิ่มไว้จะถูกล้าง และกลับไปใช้ข้อมูลตัวอย่าง 6 เดือนเริ่มต้น';
+            
+            pendingConfirmAction = () => {
+                billsData = [...SAMPLE_DATA];
+                sortBills();
+                saveToStorage();
+                renderAll();
+                showToast('รีเซ็ตข้อมูลตัวอย่างเรียบร้อย');
+            };
+
+            document.getElementById('confirmModal').classList.remove('hidden');
+        }
+
+        function closeConfirmModal() {
+            document.getElementById('confirmModal').classList.add('hidden');
+            pendingConfirmAction = null;
+        }
+
+        document.getElementById('confirmActionBtn').addEventListener('click', () => {
+            if (pendingConfirmAction) {
+                pendingConfirmAction();
+            }
+            closeConfirmModal();
+        });
+
+        // แสดงข้อความแจ้งเตือนสั้นๆ (Toast)
+        let toastTimeout;
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.remove('opacity-0');
+            
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                toast.classList.add('opacity-0');
+            }, 2500);
+        }
+
+        // เริ่มต้นทำงานเมื่อโหลดหน้าเว็บเสร็จ
+        window.addEventListener('DOMContentLoaded', initApp);
+    </script>
+
+</body></html>
