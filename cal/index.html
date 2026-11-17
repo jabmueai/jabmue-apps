@@ -1,0 +1,828 @@
+<!DOCTYPE html><html lang="th"><head>
+    <meta charset="UTF-8">
+    <!-- ตั้งค่า Viewport ให้พอดีกับหน้าจอ iPhone และรองรับพื้นที่ปลอดภัย (Safe Area) -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <!-- จับมือ AI: ไอคอน + ติดตั้งลงหน้าจอโฮม (เพิ่มทีหลัง โค้ดแอปเหมือนเดิม) -->
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="apple-touch-icon" href="icon-180.png">
+    <link rel="icon" type="image/png" href="icon-192.png">
+    <meta name="theme-color" content="#c2410c">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="แคลอรี่">
+    <script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');</script>
+<meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <title>นับแคลอรี่รายวัน</title>
+    
+    <!-- โหลด Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- โหลดฟอนต์ภาษาไทย Noto Sans Thai และ Prompt เพื่อความสวยงามและอ่านง่าย -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Noto Sans Thai"', 'sans-serif'],
+                    },
+                    colors: {
+                        sage: {
+                            50: '#F4F7F5',
+                            100: '#E3EBE6',
+                            200: '#C5D7CD',
+                            500: '#4A8B71',
+                            600: '#386E58',
+                            700: '#2A5443',
+                        },
+                        warm: {
+                            bg: '#F8F9F7',
+                            card: '#FFFFFF',
+                            text: '#1E2923',
+                            muted: '#64746C',
+                            amber: '#F59E0B',
+                            orange: '#EA580C',
+                            orangeBg: '#FFF7ED',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* ป้องกันการเด้งของหน้าจอเกินขอบเขตบน iOS และปรับแต่งการสัมผัส */
+        body {
+            background-color: #F8F9F7;
+            color: #1E2923;
+            -webkit-tap-highlight-color: transparent;
+            padding-top: env(safe-area-inset-top);
+            padding-bottom: calc(env(safe-area-inset-bottom) + 90px);
+        }
+
+        /* แอนิเมชันสำหรับวงกลมความคืบหน้า */
+        .progress-ring__circle {
+            transition: stroke-dashoffset 0.6s cubic-bezier(0.4, 0, 0.2, 1), stroke 0.4s ease;
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
+        }
+
+        /* ซ่อน Scrollbar แนวนอนแต่ยังเลื่อนได้ */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        /* แอนิเมชันเปิดหน้าต่าง Modal จากด้านล่างแบบแอป iPhone */
+        @keyframes slideUp {
+            from { transform: translateY(100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .modal-slide-up {
+            animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+    </style>
+</head>
+<body class="font-sans antialiased select-none">
+
+    <!-- ส่วนหัว (Header) -->
+    <header class="sticky top-0 z-20 bg-warm-bg/90 backdrop-blur-md border-b border-sage-100 px-5 py-4">
+        <div class="max-w-md mx-auto flex items-center justify-between">
+            <div>
+                <h1 class="text-2xl font-extrabold text-warm-text tracking-tight">นับแคลอรี่วันนี้</h1>
+                <p id="currentDateText" class="text-sm font-medium text-warm-muted mt-0.5">วันอังคารที่ 17 พฤศจิกายน 2569</p>
+            </div>
+            <!-- ปุ่มตั้งเป้าหมายแคลอรี่ -->
+            <button onclick="openGoalModal()" class="flex items-center gap-1.5 bg-white border border-sage-200 hover:bg-sage-50 active:scale-95 transition-all px-3.5 py-2.5 rounded-2xl shadow-sm">
+                <span class="text-lg">🎯</span>
+                <span class="text-base font-bold text-sage-700">ตั้งเป้า</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- เนื้อหาหลัก -->
+    <main class="max-w-md mx-auto px-5 pt-5 space-y-6">
+
+        <!-- การ์ดวงกลมแสดงผลความคืบหน้า -->
+        <section id="summaryCard" class="bg-white rounded-3xl p-6 shadow-sm border border-sage-100 transition-colors duration-300">
+            <div class="flex flex-col items-center">
+                
+                <!-- วงกลม SVG ขนาดใหญ่ -->
+                <div class="relative w-60 h-60 flex items-center justify-center">
+                    <svg class="w-full h-full" viewBox="0 0 220 220">
+                        <!-- วงกลมพื้นหลัง -->
+                        <circle class="text-sage-100" stroke-width="18" stroke="currentColor" fill="transparent" r="92" cx="110" cy="110"></circle>
+                        <!-- วงกลมแสดงความคืบหน้า -->
+                        <circle id="progressCircle" class="progress-ring__circle text-sage-500" stroke-width="18" stroke-dasharray="578.05" stroke-dashoffset="578.05" stroke-linecap="round" stroke="currentColor" fill="transparent" r="92" cx="110" cy="110" style="stroke-dashoffset: 578.05;"></circle>
+                    </svg>
+                    
+                    <!-- ข้อความตรงกลางวงกลม -->
+                    <div class="absolute inset-0 flex flex-col items-center justify-center text-center px-4">
+                        <span class="text-base font-semibold text-warm-muted">กินไปแล้ว</span>
+                        <span id="consumedCaloriesText" class="text-4xl font-extrabold text-warm-text my-0.5 tracking-tight">0</span>
+                        <span class="text-base font-medium text-warm-muted">จากเป้า <span id="targetCaloriesText" class="font-bold text-warm-text">1,800</span> kcal</span>
+                    </div>
+                </div>
+
+                <!-- แถบข้อความเตือนเมื่อกินเกินเป้า (ซ่อนไว้เป็นค่าเริ่มต้น) -->
+                <div id="overLimitAlert" class="hidden w-full mt-4 bg-orange-100 border border-orange-300 text-orange-800 px-4 py-3 rounded-2xl flex items-center gap-3">
+                    <span class="text-2xl">⚠️</span>
+                    <div class="text-left">
+                        <p class="font-bold text-base">กินเกินเป้าหมายแล้ว!</p>
+                        <p id="overLimitDetail" class="text-sm font-medium">เกินมา 0 แคลอรี่ มื้อต่อไปเบาลงนิดนึงนะครับ</p>
+                    </div>
+                </div>
+
+                <!-- สรุปตัวเลข ด้านล่างวงกลม -->
+                <div class="w-full grid grid-cols-2 gap-3 mt-5 pt-5 border-t border-sage-100">
+                    <div class="bg-sage-50 rounded-2xl p-3.5 text-center">
+                        <p class="text-sm font-semibold text-warm-muted">เป้าหมายวันนี้</p>
+                        <p class="text-xl font-extrabold text-sage-700 mt-0.5"><span id="targetBoxText">1,800</span> <span class="text-sm font-normal">kcal</span></p>
+                    </div>
+                    <div id="remainingBox" class="bg-sage-50 rounded-2xl p-3.5 text-center transition-colors">
+                        <p id="remainingLabel" class="text-sm font-semibold text-warm-muted">เหลืออีก</p>
+                        <p id="remainingCaloriesText" class="text-xl font-extrabold text-sage-600 mt-0.5">1,800 <span class="text-sm font-normal">kcal</span></p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ส่วนเลือกมื้ออาหารที่จะเพิ่ม (Meal Selector) -->
+        <section>
+            <div class="flex items-center justify-between mb-3">
+                <h2 class="text-lg font-bold text-warm-text">1. เลือกมื้ออาหาร</h2>
+                <span class="text-sm font-medium text-warm-muted">แตะเพื่อเปลี่ยนมื้อ</span>
+            </div>
+            <div class="grid grid-cols-4 gap-2" id="mealSelector">
+                <button type="button" onclick="selectMeal('เช้า')" data-meal="เช้า" class="meal-btn flex flex-col items-center justify-center py-3 px-1 rounded-2xl border-2 font-bold text-base transition-all active:scale-95 bg-white border-sage-200 text-warm-text hover:bg-sage-50">
+                    <span class="text-xl mb-1">🌅</span>
+                    <span>เช้า</span>
+                </button>
+                <button type="button" onclick="selectMeal('กลางวัน')" data-meal="กลางวัน" class="meal-btn flex flex-col items-center justify-center py-3 px-1 rounded-2xl border-2 font-bold text-base transition-all active:scale-95 bg-white border-sage-200 text-warm-text hover:bg-sage-50">
+                    <span class="text-xl mb-1">☀️</span>
+                    <span>กลางวัน</span>
+                </button>
+                <button type="button" onclick="selectMeal('เย็น')" data-meal="เย็น" class="meal-btn flex flex-col items-center justify-center py-3 px-1 rounded-2xl border-2 font-bold text-base transition-all active:scale-95 bg-sage-500 border-sage-500 text-white shadow-sm">
+                    <span class="text-xl mb-1">🌙</span>
+                    <span>เย็น</span>
+                </button>
+                <button type="button" onclick="selectMeal('ของว่าง')" data-meal="ของว่าง" class="meal-btn flex flex-col items-center justify-center py-3 px-1 rounded-2xl border-2 font-bold text-base transition-all active:scale-95 bg-white border-sage-200 text-warm-text hover:bg-sage-50">
+                    <span class="text-xl mb-1">🍎</span>
+                    <span>ของว่าง</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- รายการอาหารไทยตัวอย่าง 12 อย่าง -->
+        <section>
+            <div class="flex items-center justify-between mb-3">
+                <h2 class="text-lg font-bold text-warm-text">2. แตะอาหารเพื่อเพิ่มเข้ามื้อ<span id="selectedMealBadge" class="text-sage-600 underline decoration-2 underline-offset-4 ml-1">เย็น</span></h2>
+            </div>
+            
+            <div id="presetFoodGrid" class="grid grid-cols-2 gap-3"><button type="button" class="bg-white border border-sage-200 hover:border-sage-500 hover:bg-sage-50/60 active:scale-95 transition-all p-3.5 rounded-2xl text-left flex flex-col justify-between shadow-xs min-h-[96px]">
+                    <div class="flex items-start justify-between w-full gap-1">
+                        <span class="text-2xl">🍗</span>
+                        <span class="bg-sage-100 text-sage-700 text-xs font-extrabold px-2 py-1 rounded-lg">+ เพิ่ม</span>
+                    </div>
+                    <div class="mt-2">
+                        <p class="font-bold text-base text-warm-text leading-snug line-clamp-2">ข้าวมันไก่</p>
+                        <p class="text-sm font-bold text-sage-600 mt-0.5">600 kcal</p>
+                    </div>
+                </button><button type="button" class="bg-white border border-sage-200 hover:border-sage-500 hover:bg-sage-50/60 active:scale-95 transition-all p-3.5 rounded-2xl text-left flex flex-col justify-between shadow-xs min-h-[96px]">
+                    <div class="flex items-start justify-between w-full gap-1">
+                        <span class="text-2xl">🍳</span>
+                        <span class="bg-sage-100 text-sage-700 text-xs font-extrabold px-2 py-1 rounded-lg">+ เพิ่ม</span>
+                    </div>
+                    <div class="mt-2">
+                        <p class="font-bold text-base text-warm-text leading-snug line-clamp-2">ผัดกะเพราหมูสับไข่ดาว</p>
+                        <p class="text-sm font-bold text-sage-600 mt-0.5">630 kcal</p>
+                    </div>
+                </button><button type="button" class="bg-white border border-sage-200 hover:border-sage-500 hover:bg-sage-50/60 active:scale-95 transition-all p-3.5 rounded-2xl text-left flex flex-col justify-between shadow-xs min-h-[96px]">
+                    <div class="flex items-start justify-between w-full gap-1">
+                        <span class="text-2xl">🥗</span>
+                        <span class="bg-sage-100 text-sage-700 text-xs font-extrabold px-2 py-1 rounded-lg">+ เพิ่ม</span>
+                    </div>
+                    <div class="mt-2">
+                        <p class="font-bold text-base text-warm-text leading-snug line-clamp-2">ส้มตำไทย</p>
+                        <p class="text-sm font-bold text-sage-600 mt-0.5">120 kcal</p>
+                    </div>
+                </button><button type="button" class="bg-white border border-sage-200 hover:border-sage-500 hover:bg-sage-50/60 active:scale-95 transition-all p-3.5 rounded-2xl text-left flex flex-col justify-between shadow-xs min-h-[96px]">
+                    <div class="flex items-start justify-between w-full gap-1">
+                        <span class="text-2xl">🍲</span>
+                        <span class="bg-sage-100 text-sage-700 text-xs font-extrabold px-2 py-1 rounded-lg">+ เพิ่ม</span>
+                    </div>
+                    <div class="mt-2">
+                        <p class="font-bold text-base text-warm-text leading-snug line-clamp-2">ต้มยำกุ้ง (1 ถ้วย)</p>
+                        <p class="text-sm font-bold text-sage-600 mt-0.5">150 kcal</p>
+                    </div>
+                </button><button type="button" class="bg-white border border-sage-200 hover:border-sage-500 hover:bg-sage-50/60 active:scale-95 transition-all p-3.5 rounded-2xl text-left flex flex-col justify-between shadow-xs min-h-[96px]">
+                    <div class="flex items-start justify-between w-full gap-1">
+                        <span class="text-2xl">🍌</span>
+                        <span class="bg-sage-100 text-sage-700 text-xs font-extrabold px-2 py-1 rounded-lg">+ เพิ่ม</span>
+                    </div>
+                    <div class="mt-2">
+                        <p class="font-bold text-base text-warm-text leading-snug line-clamp-2">กล้วยหอม (1 ลูก)</p>
+                        <p class="text-sm font-bold text-sage-600 mt-0.5">105 kcal</p>
+                    </div>
+                </button><button type="button" class="bg-white border border-sage-200 hover:border-sage-500 hover:bg-sage-50/60 active:scale-95 transition-all p-3.5 rounded-2xl text-left flex flex-col justify-between shadow-xs min-h-[96px]">
+                    <div class="flex items-start justify-between w-full gap-1">
+                        <span class="text-2xl">🍚</span>
+                        <span class="bg-sage-100 text-sage-700 text-xs font-extrabold px-2 py-1 rounded-lg">+ เพิ่ม</span>
+                    </div>
+                    <div class="mt-2">
+                        <p class="font-bold text-base text-warm-text leading-snug line-clamp-2">ข้าวสวย (1 ทัพพี)</p>
+                        <p class="text-sm font-bold text-sage-600 mt-0.5">80 kcal</p>
+                    </div>
+                </button><button type="button" class="bg-white border border-sage-200 hover:border-sage-500 hover:bg-sage-50/60 active:scale-95 transition-all p-3.5 rounded-2xl text-left flex flex-col justify-between shadow-xs min-h-[96px]">
+                    <div class="flex items-start justify-between w-full gap-1">
+                        <span class="text-2xl">🍜</span>
+                        <span class="bg-sage-100 text-sage-700 text-xs font-extrabold px-2 py-1 rounded-lg">+ เพิ่ม</span>
+                    </div>
+                    <div class="mt-2">
+                        <p class="font-bold text-base text-warm-text leading-snug line-clamp-2">ผัดไทยกุ้งสด</p>
+                        <p class="text-sm font-bold text-sage-600 mt-0.5">550 kcal</p>
+                    </div>
+                </button><button type="button" class="bg-white border border-sage-200 hover:border-sage-500 hover:bg-sage-50/60 active:scale-95 transition-all p-3.5 rounded-2xl text-left flex flex-col justify-between shadow-xs min-h-[96px]">
+                    <div class="flex items-start justify-between w-full gap-1">
+                        <span class="text-2xl">🥣</span>
+                        <span class="bg-sage-100 text-sage-700 text-xs font-extrabold px-2 py-1 rounded-lg">+ เพิ่ม</span>
+                    </div>
+                    <div class="mt-2">
+                        <p class="font-bold text-base text-warm-text leading-snug line-clamp-2">ก๋วยเตี๋ยวน้ำใส</p>
+                        <p class="text-sm font-bold text-sage-600 mt-0.5">330 kcal</p>
+                    </div>
+                </button><button type="button" class="bg-white border border-sage-200 hover:border-sage-500 hover:bg-sage-50/60 active:scale-95 transition-all p-3.5 rounded-2xl text-left flex flex-col justify-between shadow-xs min-h-[96px]">
+                    <div class="flex items-start justify-between w-full gap-1">
+                        <span class="text-2xl">🍖</span>
+                        <span class="bg-sage-100 text-sage-700 text-xs font-extrabold px-2 py-1 rounded-lg">+ เพิ่ม</span>
+                    </div>
+                    <div class="mt-2">
+                        <p class="font-bold text-base text-warm-text leading-snug line-clamp-2">ไก่ย่าง (1 น่องติดสะโพก)</p>
+                        <p class="text-sm font-bold text-sage-600 mt-0.5">250 kcal</p>
+                    </div>
+                </button><button type="button" class="bg-white border border-sage-200 hover:border-sage-500 hover:bg-sage-50/60 active:scale-95 transition-all p-3.5 rounded-2xl text-left flex flex-col justify-between shadow-xs min-h-[96px]">
+                    <div class="flex items-start justify-between w-full gap-1">
+                        <span class="text-2xl">🍙</span>
+                        <span class="bg-sage-100 text-sage-700 text-xs font-extrabold px-2 py-1 rounded-lg">+ เพิ่ม</span>
+                    </div>
+                    <div class="mt-2">
+                        <p class="font-bold text-base text-warm-text leading-snug line-clamp-2">ข้าวเหนียว (1 ห่อ)</p>
+                        <p class="text-sm font-bold text-sage-600 mt-0.5">160 kcal</p>
+                    </div>
+                </button><button type="button" class="bg-white border border-sage-200 hover:border-sage-500 hover:bg-sage-50/60 active:scale-95 transition-all p-3.5 rounded-2xl text-left flex flex-col justify-between shadow-xs min-h-[96px]">
+                    <div class="flex items-start justify-between w-full gap-1">
+                        <span class="text-2xl">🥚</span>
+                        <span class="bg-sage-100 text-sage-700 text-xs font-extrabold px-2 py-1 rounded-lg">+ เพิ่ม</span>
+                    </div>
+                    <div class="mt-2">
+                        <p class="font-bold text-base text-warm-text leading-snug line-clamp-2">ไข่ต้ม (1 ฟอง)</p>
+                        <p class="text-sm font-bold text-sage-600 mt-0.5">75 kcal</p>
+                    </div>
+                </button><button type="button" class="bg-white border border-sage-200 hover:border-sage-500 hover:bg-sage-50/60 active:scale-95 transition-all p-3.5 rounded-2xl text-left flex flex-col justify-between shadow-xs min-h-[96px]">
+                    <div class="flex items-start justify-between w-full gap-1">
+                        <span class="text-2xl">🧋</span>
+                        <span class="bg-sage-100 text-sage-700 text-xs font-extrabold px-2 py-1 rounded-lg">+ เพิ่ม</span>
+                    </div>
+                    <div class="mt-2">
+                        <p class="font-bold text-base text-warm-text leading-snug line-clamp-2">ชาไทยเย็น (หวานปกติ)</p>
+                        <p class="text-sm font-bold text-sage-600 mt-0.5">320 kcal</p>
+                    </div>
+                </button></div>
+
+            <!-- ปุ่มเพิ่มอาหารเอง -->
+            <button onclick="openCustomFoodModal()" class="w-full mt-4 bg-white border-2 border-dashed border-sage-500 text-sage-700 hover:bg-sage-50 active:scale-[0.98] transition-all py-4 px-4 rounded-2xl font-bold text-lg flex items-center justify-center gap-2 shadow-sm">
+                <span class="text-2xl leading-none">+</span>
+                <span>เพิ่มรายการอาหารเอง</span>
+            </button>
+        </section>
+
+        <!-- บันทึกการกินวันนี้ (แยกตามมื้อ) -->
+        <section class="pt-2">
+            <div class="flex items-center justify-between mb-3">
+                <h2 class="text-lg font-bold text-warm-text">รายการที่กินวันนี้</h2>
+                <button id="clearAllBtn" onclick="openClearConfirmModal()" class="hidden text-sm font-semibold text-red-600 hover:text-red-700 px-2 py-1 rounded-lg">
+                    ล้างทั้งหมด
+                </button>
+            </div>
+
+            <!-- กล่องแสดงรายการที่บันทึกไว้ -->
+            <div id="loggedMealsContainer" class="space-y-4">
+                    <div class="bg-white rounded-3xl p-8 text-center border border-sage-100">
+                        <span class="text-4xl block mb-2">🍽️</span>
+                        <p class="text-lg font-bold text-warm-text">ยังไม่มีรายการอาหารวันนี้</p>
+                        <p class="text-base text-warm-muted mt-1">แตะเลือกอาหารด้านบนเพื่อเริ่มบันทึกได้เลย</p>
+                    </div>
+                </div>
+        </section>
+
+    </main>
+
+    <!-- แถบแจ้งเตือนสั้นๆ ด้านล่างเมื่อเพิ่ม/ลบรายการสำเร็จ (Toast) -->
+    <div id="toastNotification" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 pointer-events-none opacity-0 transition-opacity duration-300 w-[90%] max-w-sm">
+        <div class="bg-warm-text text-white px-5 py-3.5 rounded-2xl shadow-lg flex items-center justify-center gap-2.5 text-base font-semibold text-center">
+            <span id="toastIcon">✅</span>
+            <span id="toastMessage">เพิ่มรายการเรียบร้อย</span>
+        </div>
+    </div>
+
+    <!-- Modal 1: เพิ่มอาหารเอง -->
+    <div id="customFoodModal" class="fixed inset-0 z-50 hidden bg-black/50 backdrop-blur-xs flex items-end sm:items-center justify-center">
+        <div class="modal-slide-up bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl p-6 pb-8 shadow-2xl">
+            <div class="flex items-center justify-between mb-5">
+                <h3 class="text-xl font-extrabold text-warm-text">เพิ่มอาหารเอง</h3>
+                <button onclick="closeCustomFoodModal()" class="w-10 h-10 rounded-full bg-sage-50 text-warm-muted flex items-center justify-center text-xl font-bold">✕</button>
+            </div>
+
+            <form id="customFoodForm" onsubmit="handleAddCustomFood(event)" class="space-y-4">
+                <div>
+                    <label class="block text-base font-bold text-warm-text mb-1.5">ชื่ออาหาร</label>
+                    <input type="text" id="customFoodName" required="" placeholder="เช่น ข้าวไข่เจียว, กาแฟเย็น" class="w-full text-lg px-4 py-3.5 rounded-2xl border-2 border-sage-200 focus:border-sage-500 focus:outline-none bg-sage-50/50" style="">
+                </div>
+
+                <div>
+                    <label class="block text-base font-bold text-warm-text mb-1.5">จำนวนแคลอรี่ (kcal)</label>
+                    <input type="number" id="customFoodCalories" required="" min="1" max="5000" inputmode="numeric" placeholder="เช่น 450" class="w-full text-lg px-4 py-3.5 rounded-2xl border-2 border-sage-200 focus:border-sage-500 focus:outline-none bg-sage-50/50" style="">
+                </div>
+
+                <div>
+                    <label class="block text-base font-bold text-warm-text mb-1.5">เพิ่มเข้ามื้อไหน</label>
+                    <select id="customFoodMeal" class="w-full text-lg px-4 py-3.5 rounded-2xl border-2 border-sage-200 focus:border-sage-500 focus:outline-none bg-white font-semibold">
+                        <option value="เช้า">🌅 มื้อเช้า</option>
+                        <option value="กลางวัน">☀️ มื้อกลางวัน</option>
+                        <option value="เย็น">🌙 มื้อเย็น</option>
+                        <option value="ของว่าง">🍎 ของว่าง</option>
+                    </select>
+                </div>
+
+                <div class="pt-2 flex gap-3">
+                    <button type="button" onclick="closeCustomFoodModal()" class="flex-1 py-4 rounded-2xl font-bold text-lg bg-sage-100 text-warm-text active:scale-95 transition-transform">
+                        ยกเลิก
+                    </button>
+                    <button type="submit" class="flex-2 w-2/3 py-4 rounded-2xl font-bold text-lg bg-sage-500 text-white shadow-md active:scale-95 transition-transform">
+                        บันทึกอาหาร
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal 2: ตั้งเป้าหมายแคลอรี่ต่อวัน -->
+    <div id="goalModal" class="fixed inset-0 z-50 hidden bg-black/50 backdrop-blur-xs flex items-end sm:items-center justify-center">
+        <div class="modal-slide-up bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl p-6 pb-8 shadow-2xl">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-xl font-extrabold text-warm-text">ตั้งเป้าหมายแคลอรี่ต่อวัน</h3>
+                <button onclick="closeGoalModal()" class="w-10 h-10 rounded-full bg-sage-50 text-warm-muted flex items-center justify-center text-xl font-bold">✕</button>
+            </div>
+            
+            <p class="text-base text-warm-muted mb-4">เลือกเป้าหมายที่แนะนำ หรือพิมพ์ตัวเลขที่ต้องการ</p>
+
+            <!-- ปุ่มตัวเลือกด่วน -->
+            <div class="grid grid-cols-3 gap-2.5 mb-4">
+                <button type="button" onclick="setGoalInput(1500)" class="py-3 px-2 rounded-2xl border-2 border-sage-200 font-bold text-base text-sage-700 hover:bg-sage-50 active:scale-95">
+                    1,500<br><span class="text-xs font-normal text-warm-muted">ลดน้ำหนัก</span>
+                </button>
+                <button type="button" onclick="setGoalInput(1800)" class="py-3 px-2 rounded-2xl border-2 border-sage-200 font-bold text-base text-sage-700 hover:bg-sage-50 active:scale-95">
+                    1,800<br><span class="text-xs font-normal text-warm-muted">มาตรฐาน</span>
+                </button>
+                <button type="button" onclick="setGoalInput(2200)" class="py-3 px-2 rounded-2xl border-2 border-sage-200 font-bold text-base text-sage-700 hover:bg-sage-50 active:scale-95">
+                    2,200<br><span class="text-xs font-normal text-warm-muted">เพิ่มพลัง</span>
+                </button>
+            </div>
+
+            <form onsubmit="handleSaveGoal(event)" class="space-y-4">
+                <div>
+                    <label class="block text-base font-bold text-warm-text mb-1.5">เป้าหมายต่อวัน (kcal)</label>
+                    <input type="number" id="goalInput" required="" min="500" max="10000" step="10" inputmode="numeric" class="w-full text-2xl font-extrabold text-center px-4 py-4 rounded-2xl border-2 border-sage-500 focus:outline-none bg-sage-50/50" style="">
+                </div>
+
+                <div class="pt-2 flex gap-3">
+                    <button type="button" onclick="closeGoalModal()" class="flex-1 py-4 rounded-2xl font-bold text-lg bg-sage-100 text-warm-text active:scale-95 transition-transform">
+                        ยกเลิก
+                    </button>
+                    <button type="submit" class="flex-2 w-2/3 py-4 rounded-2xl font-bold text-lg bg-sage-500 text-white shadow-md active:scale-95 transition-transform">
+                        บันทึกเป้าหมาย
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal 3: ยืนยันการล้างข้อมูลทั้งหมด (แทนการใช้ confirm() ของเบราว์เซอร์) -->
+    <div id="clearConfirmModal" class="fixed inset-0 z-50 hidden bg-black/50 backdrop-blur-xs flex items-center justify-center p-5">
+        <div class="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl text-center">
+            <div class="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center text-3xl mx-auto mb-4">
+                🗑️
+            </div>
+            <h3 class="text-xl font-extrabold text-warm-text mb-2">ล้างรายการอาหารทั้งหมด?</h3>
+            <p class="text-base text-warm-muted mb-6">รายการอาหารที่บันทึกไว้ในวันนี้จะถูกลบออกทั้งหมด (เป้าหมายแคลอรี่ยังอยู่เหมือนเดิม)</p>
+            <div class="flex gap-3">
+                <button onclick="closeClearConfirmModal()" class="flex-1 py-3.5 rounded-2xl font-bold text-lg bg-sage-100 text-warm-text active:scale-95">
+                    ไม่ลบ
+                </button>
+                <button onclick="confirmClearAllLogs()" class="flex-1 py-3.5 rounded-2xl font-bold text-lg bg-red-600 text-white active:scale-95">
+                    ลบทั้งหมด
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // 1. ข้อมูลตั้งต้นและรายการอาหารไทยตัวอย่าง 12 อย่าง
+        // ==========================================
+        const PRESET_FOODS = [
+            { id: 'f1', name: 'ข้าวมันไก่', calories: 600, emoji: '🍗' },
+            { id: 'f2', name: 'ผัดกะเพราหมูสับไข่ดาว', calories: 630, emoji: '🍳' },
+            { id: 'f3', name: 'ส้มตำไทย', calories: 120, emoji: '🥗' },
+            { id: 'f4', name: 'ต้มยำกุ้ง (1 ถ้วย)', calories: 150, emoji: '🍲' },
+            { id: 'f5', name: 'กล้วยหอม (1 ลูก)', calories: 105, emoji: '🍌' },
+            { id: 'f6', name: 'ข้าวสวย (1 ทัพพี)', calories: 80, emoji: '🍚' },
+            { id: 'f7', name: 'ผัดไทยกุ้งสด', calories: 550, emoji: '🍜' },
+            { id: 'f8', name: 'ก๋วยเตี๋ยวน้ำใส', calories: 330, emoji: '🥣' },
+            { id: 'f9', name: 'ไก่ย่าง (1 น่องติดสะโพก)', calories: 250, emoji: '🍖' },
+            { id: 'f10', name: 'ข้าวเหนียว (1 ห่อ)', calories: 160, emoji: '🍙' },
+            { id: 'f11', name: 'ไข่ต้ม (1 ฟอง)', calories: 75, emoji: '🥚' },
+            { id: 'f12', name: 'ชาไทยเย็น (หวานปกติ)', calories: 320, emoji: '🧋' }
+        ];
+
+        const MEAL_CONFIG = [
+            { key: 'เช้า', label: 'มื้อเช้า', emoji: '🌅' },
+            { key: 'กลางวัน', label: 'มื้อกลางวัน', emoji: '☀️' },
+            { key: 'เย็น', label: 'มื้อเย็น', emoji: '🌙' },
+            { key: 'ของว่าง', label: 'ของว่าง', emoji: '🍎' }
+        ];
+
+        // คีย์สำหรับเก็บข้อมูลใน LocalStorage
+        const STORAGE_KEY_GOAL = 'thai_calorie_app_goal_v1';
+        const STORAGE_KEY_LOGS = 'thai_calorie_app_logs_v1';
+
+        // สถานะของแอป (State)
+        let dailyGoal = 1800;
+        let foodLogs = [];
+        let selectedMeal = 'เช้า';
+        let toastTimeout = null;
+
+        // ==========================================
+        // 2. การโหลดและบันทึกข้อมูลลงเครื่อง (LocalStorage)
+        // ==========================================
+        function loadDataFromStorage() {
+            try {
+                const savedGoal = localStorage.getItem(STORAGE_KEY_GOAL);
+                if (savedGoal && !isNaN(parseInt(savedGoal))) {
+                    dailyGoal = parseInt(savedGoal);
+                }
+
+                const savedLogs = localStorage.getItem(STORAGE_KEY_LOGS);
+                if (savedLogs) {
+                    foodLogs = JSON.parse(savedLogs);
+                }
+            } catch (error) {
+                console.error('ไม่สามารถโหลดข้อมูลจากเครื่องได้:', error);
+            }
+        }
+
+        function saveDataToStorage() {
+            try {
+                localStorage.setItem(STORAGE_KEY_GOAL, dailyGoal.toString());
+                localStorage.setItem(STORAGE_KEY_LOGS, JSON.stringify(foodLogs));
+            } catch (error) {
+                console.error('ไม่สามารถบันทึกข้อมูลลงเครื่องได้:', error);
+            }
+        }
+
+        // ==========================================
+        // 3. การจัดการวันที่และเลือกมื้ออาหารอัตโนมัติตามเวลา
+        // ==========================================
+        function initDateAndDefaultMeal() {
+            const now = new Date();
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            document.getElementById('currentDateText').textContent = now.toLocaleDateString('th-TH', options);
+
+            // เลือกมื้อเริ่มต้นให้ตรงกับช่วงเวลาปัจจุบันเพื่อความสะดวก
+            const hour = now.getHours();
+            if (hour >= 5 && hour < 11) {
+                selectMeal('เช้า');
+            } else if (hour >= 11 && hour < 15) {
+                selectMeal('กลางวัน');
+            } else if (hour >= 17 && hour < 21) {
+                selectMeal('เย็น');
+            } else {
+                selectMeal('ของว่าง');
+            }
+        }
+
+        function selectMeal(mealName) {
+            selectedMeal = mealName;
+            document.getElementById('selectedMealBadge').textContent = mealName;
+
+            // อัปเดตสีปุ่มเลือกมื้อ
+            const buttons = document.querySelectorAll('.meal-btn');
+            buttons.forEach(btn => {
+                if (btn.dataset.meal === mealName) {
+                    btn.className = 'meal-btn flex flex-col items-center justify-center py-3 px-1 rounded-2xl border-2 font-bold text-base transition-all active:scale-95 bg-sage-500 border-sage-500 text-white shadow-sm';
+                } else {
+                    btn.className = 'meal-btn flex flex-col items-center justify-center py-3 px-1 rounded-2xl border-2 font-bold text-base transition-all active:scale-95 bg-white border-sage-200 text-warm-text hover:bg-sage-50';
+                }
+            });
+        }
+
+        // ==========================================
+        // 4. การแสดงผลรายการอาหารตัวอย่าง 12 อย่าง
+        // ==========================================
+        function renderPresetFoods() {
+            const grid = document.getElementById('presetFoodGrid');
+            grid.innerHTML = '';
+
+            PRESET_FOODS.forEach(food => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.onclick = () => addFoodItem(food.name, food.calories, selectedMeal, food.emoji);
+                btn.className = 'bg-white border border-sage-200 hover:border-sage-500 hover:bg-sage-50/60 active:scale-95 transition-all p-3.5 rounded-2xl text-left flex flex-col justify-between shadow-xs min-h-[96px]';
+                
+                btn.innerHTML = `
+                    <div class="flex items-start justify-between w-full gap-1">
+                        <span class="text-2xl">${food.emoji}</span>
+                        <span class="bg-sage-100 text-sage-700 text-xs font-extrabold px-2 py-1 rounded-lg">+ เพิ่ม</span>
+                    </div>
+                    <div class="mt-2">
+                        <p class="font-bold text-base text-warm-text leading-snug line-clamp-2">${food.name}</p>
+                        <p class="text-sm font-bold text-sage-600 mt-0.5">${food.calories.toLocaleString()} kcal</p>
+                    </div>
+                `;
+                grid.appendChild(btn);
+            });
+        }
+
+        // ==========================================
+        // 5. การเพิ่ม ลบ และอัปเดตวงกลมความคืบหน้า
+        // ==========================================
+        function addFoodItem(name, calories, meal, emoji = '🍽️') {
+            const newItem = {
+                id: Date.now().toString() + Math.random().toString(36).substring(2, 6),
+                name: name.trim(),
+                calories: parseInt(calories),
+                meal: meal,
+                emoji: emoji,
+                time: new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })
+            };
+
+            foodLogs.unshift(newItem); // เพิ่มไว้บนสุดของรายการ
+            saveDataToStorage();
+            updateUI();
+            showToast(`เพิ่ม "${newItem.name}" เข้ามื้อ${meal}แล้ว`, '✅');
+        }
+
+        function deleteFoodItem(id) {
+            const targetItem = foodLogs.find(item => item.id === id);
+            foodLogs = foodLogs.filter(item => item.id !== id);
+            saveDataToStorage();
+            updateUI();
+            if (targetItem) {
+                showToast(`ลบ "${targetItem.name}" ออกแล้ว`, '🗑️');
+            }
+        }
+
+        function updateUI() {
+            // คำนวณแคลอรี่รวมทั้งหมด
+            const totalConsumed = foodLogs.reduce((sum, item) => sum + item.calories, 0);
+            const remaining = dailyGoal - totalConsumed;
+            const isOverLimit = totalConsumed > dailyGoal;
+
+            // อัปเดตตัวเลขบนหน้าจอ
+            document.getElementById('consumedCaloriesText').textContent = totalConsumed.toLocaleString();
+            document.getElementById('targetCaloriesText').textContent = dailyGoal.toLocaleString();
+            document.getElementById('targetBoxText').textContent = dailyGoal.toLocaleString();
+
+            // คำนวณเส้นรอบวงกลม (r = 92 -> 2 * pi * 92 = 578.05)
+            const circle = document.getElementById('progressCircle');
+            const circumference = 578.05;
+            const percentage = Math.min(totalConsumed / dailyGoal, 1);
+            const offset = circumference - (percentage * circumference);
+            circle.style.strokeDashoffset = offset;
+
+            // จัดการสถานะเมื่อกินเกินเป้า vs ปกติ
+            const summaryCard = document.getElementById('summaryCard');
+            const overLimitAlert = document.getElementById('overLimitAlert');
+            const overLimitDetail = document.getElementById('overLimitDetail');
+            const remainingBox = document.getElementById('remainingBox');
+            const remainingLabel = document.getElementById('remainingLabel');
+            const remainingText = document.getElementById('remainingCaloriesText');
+            const consumedText = document.getElementById('consumedCaloriesText');
+
+            if (isOverLimit) {
+                const overAmount = totalConsumed - dailyGoal;
+                // เปลี่ยนวงกลมและข้อความเป็นสีส้มเตือน
+                circle.classList.remove('text-sage-500');
+                circle.classList.add('text-orange-500');
+                consumedText.classList.remove('text-warm-text');
+                consumedText.classList.add('text-orange-600');
+                
+                summaryCard.classList.remove('border-sage-100');
+                summaryCard.classList.add('border-orange-300', 'bg-orange-50/30');
+
+                overLimitAlert.classList.remove('hidden');
+                overLimitDetail.textContent = `เกินเป้าหมายมา ${overAmount.toLocaleString()} kcal แล้วนะครับ`;
+
+                remainingBox.className = 'bg-orange-100 rounded-2xl p-3.5 text-center transition-colors';
+                remainingLabel.textContent = 'เกินเป้า';
+                remainingLabel.className = 'text-sm font-bold text-orange-800';
+                remainingText.className = 'text-xl font-extrabold text-orange-600 mt-0.5';
+                remainingText.innerHTML = `+${overAmount.toLocaleString()} <span class="text-sm font-normal">kcal</span>`;
+            } else {
+                // สีเขียวสบายตาปกติ
+                circle.classList.remove('text-orange-500');
+                circle.classList.add('text-sage-500');
+                consumedText.classList.remove('text-orange-600');
+                consumedText.classList.add('text-warm-text');
+
+                summaryCard.classList.remove('border-orange-300', 'bg-orange-50/30');
+                summaryCard.classList.add('border-sage-100');
+
+                overLimitAlert.classList.add('hidden');
+
+                remainingBox.className = 'bg-sage-50 rounded-2xl p-3.5 text-center transition-colors';
+                remainingLabel.textContent = 'เหลืออีก';
+                remainingLabel.className = 'text-sm font-semibold text-warm-muted';
+                remainingText.className = 'text-xl font-extrabold text-sage-600 mt-0.5';
+                remainingText.innerHTML = `${remaining.toLocaleString()} <span class="text-sm font-normal">kcal</span>`;
+            }
+
+            // อัปเดตรายการอาหารที่บันทึกไว้แยกตามมื้อ
+            renderLoggedMeals();
+        }
+
+        function renderLoggedMeals() {
+            const container = document.getElementById('loggedMealsContainer');
+            const clearAllBtn = document.getElementById('clearAllBtn');
+
+            if (foodLogs.length === 0) {
+                clearAllBtn.classList.add('hidden');
+                container.innerHTML = `
+                    <div class="bg-white rounded-3xl p-8 text-center border border-sage-100">
+                        <span class="text-4xl block mb-2">🍽️</span>
+                        <p class="text-lg font-bold text-warm-text">ยังไม่มีรายการอาหารวันนี้</p>
+                        <p class="text-base text-warm-muted mt-1">แตะเลือกอาหารด้านบนเพื่อเริ่มบันทึกได้เลย</p>
+                    </div>
+                `;
+                return;
+            }
+
+            clearAllBtn.classList.remove('hidden');
+            container.innerHTML = '';
+
+            // วนลูปแสดงผลแยกตาม 4 มื้อ
+            MEAL_CONFIG.forEach(mealGroup => {
+                const itemsInMeal = foodLogs.filter(item => item.meal === mealGroup.key);
+                if (itemsInMeal.length === 0) return;
+
+                const mealTotalCal = itemsInMeal.reduce((sum, item) => sum + item.calories, 0);
+
+                const mealCard = document.createElement('div');
+                mealCard.className = 'bg-white rounded-3xl p-4 shadow-xs border border-sage-100';
+
+                let itemsHtml = itemsInMeal.map(item => `
+                    <div class="flex items-center justify-between py-3 border-t border-sage-100 first:border-t-0 gap-3">
+                        <div class="flex items-center gap-3 min-w-0">
+                            <span class="text-2xl shrink-0">${item.emoji || '🍽️'}</span>
+                            <div class="min-w-0">
+                                <p class="text-base font-bold text-warm-text truncate">${escapeHtml(item.name)}</p>
+                                <p class="text-sm font-semibold text-sage-600">${item.calories.toLocaleString()} kcal <span class="text-xs font-normal text-warm-muted ml-1">• ${item.time} น.</span></p>
+                            </div>
+                        </div>
+                        <button onclick="deleteFoodItem('${item.id}')" aria-label="ลบรายการ" class="shrink-0 w-11 h-11 rounded-2xl bg-red-50 hover:bg-red-100 text-red-600 flex items-center justify-center active:scale-90 transition-transform">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                        </button>
+                    </div>
+                `).join('');
+
+                mealCard.innerHTML = `
+                    <div class="flex items-center justify-between pb-2 mb-1">
+                        <div class="flex items-center gap-2">
+                            <span class="text-xl">${mealGroup.emoji}</span>
+                            <h3 class="text-lg font-extrabold text-warm-text">${mealGroup.label}</h3>
+                        </div>
+                        <span class="text-base font-bold text-sage-700 bg-sage-50 px-3 py-1 rounded-xl">
+                            ${mealTotalCal.toLocaleString()} kcal
+                        </span>
+                    </div>
+                    <div class="divide-y divide-sage-100">
+                        ${itemsHtml}
+                    </div>
+                `;
+
+                container.appendChild(mealCard);
+            });
+        }
+
+        // ==========================================
+        // 6. การจัดการหน้าต่าง Modal (เพิ่มอาหารเอง / ตั้งเป้า / ล้างข้อมูล)
+        // ==========================================
+        function openCustomFoodModal() {
+            document.getElementById('customFoodName').value = '';
+            document.getElementById('customFoodCalories').value = '';
+            document.getElementById('customFoodMeal').value = selectedMeal;
+            document.getElementById('customFoodModal').classList.remove('hidden');
+            setTimeout(() => document.getElementById('customFoodName').focus(), 100);
+        }
+
+        function closeCustomFoodModal() {
+            document.getElementById('customFoodModal').classList.add('hidden');
+        }
+
+        function handleAddCustomFood(event) {
+            event.preventDefault();
+            const nameInput = document.getElementById('customFoodName').value;
+            const calInput = parseInt(document.getElementById('customFoodCalories').value);
+            const mealInput = document.getElementById('customFoodMeal').value;
+
+            if (!nameInput.trim() || isNaN(calInput) || calInput <= 0) return;
+
+            selectMeal(mealInput);
+            addFoodItem(nameInput, calInput, mealInput, '🍲');
+            closeCustomFoodModal();
+        }
+
+        function openGoalModal() {
+            document.getElementById('goalInput').value = dailyGoal;
+            document.getElementById('goalModal').classList.remove('hidden');
+        }
+
+        function closeGoalModal() {
+            document.getElementById('goalModal').classList.add('hidden');
+        }
+
+        function setGoalInput(val) {
+            document.getElementById('goalInput').value = val;
+        }
+
+        function handleSaveGoal(event) {
+            event.preventDefault();
+            const newGoal = parseInt(document.getElementById('goalInput').value);
+            if (!isNaN(newGoal) && newGoal >= 500) {
+                dailyGoal = newGoal;
+                saveDataToStorage();
+                updateUI();
+                closeGoalModal();
+                showToast(`ตั้งเป้าหมายใหม่เป็น ${dailyGoal.toLocaleString()} kcal แล้ว`, '🎯');
+            }
+        }
+
+        function openClearConfirmModal() {
+            document.getElementById('clearConfirmModal').classList.remove('hidden');
+        }
+
+        function closeClearConfirmModal() {
+            document.getElementById('clearConfirmModal').classList.add('hidden');
+        }
+
+        function confirmClearAllLogs() {
+            foodLogs = [];
+            saveDataToStorage();
+            updateUI();
+            closeClearConfirmModal();
+            showToast('ล้างรายการอาหารวันนี้เรียบร้อยแล้ว', '✨');
+        }
+
+        // ==========================================
+        // 7. ฟังก์ชันเสริม (Toast แจ้งเตือน และป้องกัน XSS)
+        // ==========================================
+        function showToast(message, icon = '✅') {
+            const toast = document.getElementById('toastNotification');
+            document.getElementById('toastMessage').textContent = message;
+            document.getElementById('toastIcon').textContent = icon;
+
+            toast.classList.remove('opacity-0');
+            toast.classList.add('opacity-100');
+
+            if (toastTimeout) clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                toast.classList.remove('opacity-100');
+                toast.classList.add('opacity-0');
+            }, 2200);
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // เริ่มต้นทำงานเมื่อโหลดหน้าเว็บเสร็จ
+        window.addEventListener('DOMContentLoaded', () => {
+            loadDataFromStorage();
+            initDateAndDefaultMeal();
+            renderPresetFoods();
+            updateUI();
+        });
+    </script>
+
+</body></html>
