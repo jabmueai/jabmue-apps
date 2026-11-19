@@ -21,6 +21,7 @@
 | จับมือทำแอป ตอน 9: แอปตารางเรียนลูก 🎒 (Gemini Canvas · ถ่ายรูปตารางเรียนให้ AI อ่าน · ตารางในคลิปเป็นตัวอย่าง) | [เล่นเลย](https://jabmueai.github.io/jabmue-apps/timetable/) | [timetable/index.html](timetable/index.html) | [timetable/prompt.txt](timetable/prompt.txt) · [รูปตัวอย่าง](timetable/sample-photos) |
 | จับมือทำแอป ตอน 10: แอปบิลค่าน้ำค่าไฟ ⚡💧 (Gemini Canvas · ข้อมูลและตัวเลขในแอปเป็นตัวอย่าง) | [เล่นเลย](https://jabmueai.github.io/jabmue-apps/bills/) | [bills/index.html](bills/index.html) | [bills/prompt.txt](bills/prompt.txt) |
 | จับมือทำแอป ตอน 11: แอปนับแคลอรี่ (Gemini Canvas · ข้อมูลและตัวเลขในแอปเป็นตัวอย่าง) | [เล่นเลย](https://jabmueai.github.io/jabmue-apps/cal/) | [cal/index.html](cal/index.html) | [cal/prompt.txt](cal/prompt.txt) |
+| จับมือทำแอป ตอนพิเศษ: แอปนับแคลอรี่ + ปุ่มสำรอง/กู้คืนข้อมูล 💾 (Gemini Canvas · ตัวเลขในแอปเป็นตัวอย่าง) | [เล่นเลย](https://jabmueai.github.io/jabmue-apps/calbackup/) | [calbackup/index.html](calbackup/index.html) | [calbackup/prompt.txt](calbackup/prompt.txt) |
 | จับมือทำ ตอน 3: เกมทายศัพท์ภาษาอังกฤษให้ลูก 🎮 | [เล่นเลย](https://jabmueai.github.io/jabmue-apps/word-game/) | [word-game/index.html](word-game/index.html) | [word-game/prompt.txt](word-game/prompt.txt) |
 | จับมือทำ ตอน 4: แอปจดค่าไฟบ้าน ⚡ | [เล่นเลย](https://jabmueai.github.io/jabmue-apps/electric/) | [electric/index.html](electric/index.html) | [electric/prompt.txt](electric/prompt.txt) |
 
