@@ -1,0 +1,1189 @@
+<!DOCTYPE html><html lang="th"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <!-- จับมือ AI: ไอคอน + ติดตั้งลงหน้าจอโฮม (เพิ่มทีหลัง โค้ดแอปเหมือนเดิม) -->
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="apple-touch-icon" href="icon-180.png">
+    <link rel="icon" type="image/png" href="icon-192.png">
+    <meta name="theme-color" content="#15803d">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="คะแนน">
+    <script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');</script>
+<title>สมุดบันทึกคะแนนนักเรียน</title>
+    <!-- โหลด Tailwind CSS สำหรับจัดรูปแบบ -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- โหลดฟอนต์ภาษาไทยที่อ่านง่าย (Prompt และ Sarabun) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Prompt', 'sans-serif'],
+                    },
+                    colors: {
+                        sage: {
+                            50: '#f4f7f5',
+                            100: '#e3ebe6',
+                            500: '#4a7c59',
+                            600: '#3b6347',
+                            700: '#2f4f39',
+                        },
+                        cream: '#faf9f6',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* ป้องกันการซูมเมื่อแตะรัวๆ บน iOS และทำให้การเลื่อนหน้าจอลื่นไหล */
+        * {
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+        body {
+            background-color: #f4f6f8;
+            color: #1e293b;
+            font-family: 'Prompt', sans-serif;
+            padding-bottom: env(safe-area-inset-bottom, 24px);
+        }
+        /* สไตล์สำหรับ Bottom Sheet (หน้าต่างเลื่อนขึ้นจากด้านล่าง) */
+        .modal-backdrop {
+            transition: opacity 0.25s ease;
+        }
+        .bottom-sheet {
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            padding-bottom: max(1.5rem, env(safe-area-inset-bottom));
+        }
+        .sheet-hidden {
+            transform: translateY(100%);
+        }
+        .sheet-visible {
+            transform: translateY(0);
+        }
+        /* ปุ่มกดตัวเลขแบบ Tactile */
+        .numpad-btn:active {
+            transform: scale(0.95);
+            background-color: #e2e8f0;
+        }
+    </style>
+</head>
+<body class="antialiased selection:bg-emerald-200">
+
+    <!-- ส่วนหัวแอปพลิเคชันและสรุปผลภาพรวม (Sticky Header) -->
+    <header class="bg-white shadow-sm sticky top-0 z-20 border-b border-slate-200">
+        <div class="max-w-xl mx-auto px-4 pt-4 pb-3">
+            <div class="flex items-center justify-between mb-3">
+                <div>
+                    <h1 class="text-xl sm:text-2xl font-bold text-slate-800 flex items-center gap-2">
+                        <span class="bg-emerald-600 text-white p-1.5 rounded-xl shadow-sm">
+                            <!-- ไอคอนสมุดบันทึก SVG -->
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
+                            </svg>
+                        </span>
+                        สมุดบันทึกคะแนน
+                    </h1>
+                    <p class="text-xs sm:text-sm text-slate-500 mt-0.5">แตะที่ชื่อนักเรียนเพื่อกรอกหรือแก้ไขคะแนน</p>
+                </div>
+                
+                <!-- ปุ่มเพิ่มนักเรียน -->
+                <button onclick="openAddStudentModal()" class="bg-emerald-600 hover:bg-emerald-700 active:scale-95 transition text-white font-medium px-3.5 py-2.5 rounded-2xl shadow-sm flex items-center gap-1.5 text-sm sm:text-base">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd"></path>
+                    </svg>
+                    <span>เพิ่มนักเรียน</span>
+                </button>
+            </div>
+
+            <!-- การ์ดสรุปผล 3 ช่อง (เฉลี่ย, สูงสุด, สอบซ่อม) -->
+            <div class="grid grid-cols-3 gap-2.5">
+                <div class="bg-sky-50 border border-sky-100 rounded-2xl p-2.5 text-center">
+                    <div class="text-xs sm:text-sm text-sky-700 font-medium">เฉลี่ยของห้อง</div>
+                    <div id="stat-avg" class="text-xl sm:text-2xl font-bold text-sky-900 mt-0.5">65.2</div>
+                </div>
+                <div class="bg-emerald-50 border border-emerald-100 rounded-2xl p-2.5 text-center">
+                    <div class="text-xs sm:text-sm text-emerald-700 font-medium">คะแนนสูงสุด</div>
+                    <div id="stat-max" class="text-xl sm:text-2xl font-bold text-emerald-900 mt-0.5">87</div>
+                </div>
+                <div class="bg-rose-50 border border-rose-100 rounded-2xl p-2.5 text-center">
+                    <div class="text-xs sm:text-sm text-rose-700 font-medium">ต้องสอบซ่อม</div>
+                    <div class="text-xl sm:text-2xl font-bold text-rose-700 mt-0.5">
+                        <span id="stat-fail">1</span> <span class="text-xs font-normal">คน</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- ส่วนเนื้อหาหลัก -->
+    <main class="max-w-xl mx-auto px-4 pt-4 pb-20">
+        
+        <!-- แถบเครื่องมือเรียงลำดับและรีเซ็ต -->
+        <div class="flex items-center justify-between mb-3 gap-2">
+            <div class="flex bg-slate-200/80 p-1 rounded-xl w-full sm:w-auto">
+                <button id="sort-no-btn" onclick="setSort('no')" class="flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg text-sm font-medium transition bg-white text-slate-800 shadow-sm">
+                    เรียงตามเลขที่
+                </button>
+                <button id="sort-score-btn" onclick="setSort('score')" class="flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg text-sm font-medium transition text-slate-600 hover:text-slate-800">
+                    เรียงตามคะแนน
+                </button>
+            </div>
+
+            <button onclick="openResetConfirmModal()" class="text-xs sm:text-sm text-slate-500 hover:text-rose-600 px-2.5 py-2 rounded-xl hover:bg-rose-50 transition whitespace-nowrap">
+                ล้างค่าเริ่มต้น
+            </button>
+        </div>
+
+        <!-- รายการการ์ดนักเรียน -->
+        <div id="student-list" class="space-y-3">
+                <div onclick="openScoreModal(1)" class="bg-white border-slate-200/90 border rounded-3xl p-4 shadow-2xs active:scale-[0.99] transition cursor-pointer select-none">
+                    
+                    <!-- แถวบน: เลขที่, ชื่อ, คะแนนรวม และป้ายเกรด -->
+                    <div class="flex items-center justify-between gap-3">
+                        <div class="flex items-center gap-3 min-w-0">
+                            <div class="bg-slate-100 text-slate-700 w-10 h-10 rounded-2xl flex items-center justify-center font-bold text-base shrink-0">
+                                1
+                            </div>
+                            <div class="min-w-0">
+                                <div class="font-bold text-base sm:text-lg text-slate-800 truncate">
+                                    ด.ช.ตัวอย่าง หนึ่ง
+                                </div>
+                                <div class="text-xs text-slate-400 mt-0.5">แตะเพื่อแก้ไขคะแนน</div>
+                            </div>
+                        </div>
+
+                        <!-- คะแนนรวมและเกรด -->
+                        <div class="flex items-center gap-2.5 shrink-0">
+                            <div class="text-right">
+                                <div class="text-xs text-slate-400">รวม</div>
+                                <div class="text-xl sm:text-2xl font-bold text-slate-800 leading-none">
+                                    87
+                                </div>
+                            </div>
+                            <div class="bg-emerald-600 text-white w-12 h-12 rounded-2xl flex flex-col items-center justify-center shadow-2xs">
+                                <span class="text-[10px] opacity-90 leading-none">เกรด</span>
+                                <span class="text-lg font-bold leading-tight">4</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- แถวล่าง: คะแนนย่อยทั้ง 4 ช่อง -->
+                    <div class="grid grid-cols-4 gap-1.5 mt-3 pt-2.5 border-t border-slate-100 text-center">
+                        <div class="bg-slate-50/80 rounded-xl py-1 px-1">
+                            <div class="text-[11px] text-slate-500">งาน 1 (10)</div>
+                            <div class="text-sm font-semibold text-slate-700">9</div>
+                        </div>
+                        <div class="bg-slate-50/80 rounded-xl py-1 px-1">
+                            <div class="text-[11px] text-slate-500">งาน 2 (10)</div>
+                            <div class="text-sm font-semibold text-slate-700">10</div>
+                        </div>
+                        <div class="bg-slate-50/80 rounded-xl py-1 px-1">
+                            <div class="text-[11px] text-slate-500">กลางภาค (30)</div>
+                            <div class="text-sm font-semibold text-slate-700">26</div>
+                        </div>
+                        <div class="bg-slate-50/80 rounded-xl py-1 px-1">
+                            <div class="text-[11px] text-slate-500">ปลายภาค (50)</div>
+                            <div class="text-sm font-semibold text-slate-700">42</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div onclick="openScoreModal(2)" class="bg-white border-slate-200/90 border rounded-3xl p-4 shadow-2xs active:scale-[0.99] transition cursor-pointer select-none">
+                    
+                    <!-- แถวบน: เลขที่, ชื่อ, คะแนนรวม และป้ายเกรด -->
+                    <div class="flex items-center justify-between gap-3">
+                        <div class="flex items-center gap-3 min-w-0">
+                            <div class="bg-slate-100 text-slate-700 w-10 h-10 rounded-2xl flex items-center justify-center font-bold text-base shrink-0">
+                                2
+                            </div>
+                            <div class="min-w-0">
+                                <div class="font-bold text-base sm:text-lg text-slate-800 truncate">
+                                    ด.ญ.ตัวอย่าง สอง
+                                </div>
+                                <div class="text-xs text-slate-400 mt-0.5">แตะเพื่อแก้ไขคะแนน</div>
+                            </div>
+                        </div>
+
+                        <!-- คะแนนรวมและเกรด -->
+                        <div class="flex items-center gap-2.5 shrink-0">
+                            <div class="text-right">
+                                <div class="text-xs text-slate-400">รวม</div>
+                                <div class="text-xl sm:text-2xl font-bold text-slate-800 leading-none">
+                                    77
+                                </div>
+                            </div>
+                            <div class="bg-emerald-500 text-white w-12 h-12 rounded-2xl flex flex-col items-center justify-center shadow-2xs">
+                                <span class="text-[10px] opacity-90 leading-none">เกรด</span>
+                                <span class="text-lg font-bold leading-tight">3.5</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- แถวล่าง: คะแนนย่อยทั้ง 4 ช่อง -->
+                    <div class="grid grid-cols-4 gap-1.5 mt-3 pt-2.5 border-t border-slate-100 text-center">
+                        <div class="bg-slate-50/80 rounded-xl py-1 px-1">
+                            <div class="text-[11px] text-slate-500">งาน 1 (10)</div>
+                            <div class="text-sm font-semibold text-slate-700">8</div>
+                        </div>
+                        <div class="bg-slate-50/80 rounded-xl py-1 px-1">
+                            <div class="text-[11px] text-slate-500">งาน 2 (10)</div>
+                            <div class="text-sm font-semibold text-slate-700">9</div>
+                        </div>
+                        <div class="bg-slate-50/80 rounded-xl py-1 px-1">
+                            <div class="text-[11px] text-slate-500">กลางภาค (30)</div>
+                            <div class="text-sm font-semibold text-slate-700">23</div>
+                        </div>
+                        <div class="bg-slate-50/80 rounded-xl py-1 px-1">
+                            <div class="text-[11px] text-slate-500">ปลายภาค (50)</div>
+                            <div class="text-sm font-semibold text-slate-700">37</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div onclick="openScoreModal(3)" class="bg-white border-slate-200/90 border rounded-3xl p-4 shadow-2xs active:scale-[0.99] transition cursor-pointer select-none">
+                    
+                    <!-- แถวบน: เลขที่, ชื่อ, คะแนนรวม และป้ายเกรด -->
+                    <div class="flex items-center justify-between gap-3">
+                        <div class="flex items-center gap-3 min-w-0">
+                            <div class="bg-slate-100 text-slate-700 w-10 h-10 rounded-2xl flex items-center justify-center font-bold text-base shrink-0">
+                                3
+                            </div>
+                            <div class="min-w-0">
+                                <div class="font-bold text-base sm:text-lg text-slate-800 truncate">
+                                    ด.ช.ตัวอย่าง สาม
+                                </div>
+                                <div class="text-xs text-slate-400 mt-0.5">แตะเพื่อแก้ไขคะแนน</div>
+                            </div>
+                        </div>
+
+                        <!-- คะแนนรวมและเกรด -->
+                        <div class="flex items-center gap-2.5 shrink-0">
+                            <div class="text-right">
+                                <div class="text-xs text-slate-400">รวม</div>
+                                <div class="text-xl sm:text-2xl font-bold text-slate-800 leading-none">
+                                    71
+                                </div>
+                            </div>
+                            <div class="bg-sky-600 text-white w-12 h-12 rounded-2xl flex flex-col items-center justify-center shadow-2xs">
+                                <span class="text-[10px] opacity-90 leading-none">เกรด</span>
+                                <span class="text-lg font-bold leading-tight">3</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- แถวล่าง: คะแนนย่อยทั้ง 4 ช่อง -->
+                    <div class="grid grid-cols-4 gap-1.5 mt-3 pt-2.5 border-t border-slate-100 text-center">
+                        <div class="bg-slate-50/80 rounded-xl py-1 px-1">
+                            <div class="text-[11px] text-slate-500">งาน 1 (10)</div>
+                            <div class="text-sm font-semibold text-slate-700">8</div>
+                        </div>
+                        <div class="bg-slate-50/80 rounded-xl py-1 px-1">
+                            <div class="text-[11px] text-slate-500">งาน 2 (10)</div>
+                            <div class="text-sm font-semibold text-slate-700">7</div>
+                        </div>
+                        <div class="bg-slate-50/80 rounded-xl py-1 px-1">
+                            <div class="text-[11px] text-slate-500">กลางภาค (30)</div>
+                            <div class="text-sm font-semibold text-slate-700">21</div>
+                        </div>
+                        <div class="bg-slate-50/80 rounded-xl py-1 px-1">
+                            <div class="text-[11px] text-slate-500">ปลายภาค (50)</div>
+                            <div class="text-sm font-semibold text-slate-700">35</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div onclick="openScoreModal(4)" class="bg-white border-slate-200/90 border rounded-3xl p-4 shadow-2xs active:scale-[0.99] transition cursor-pointer select-none">
+                    
+                    <!-- แถวบน: เลขที่, ชื่อ, คะแนนรวม และป้ายเกรด -->
+                    <div class="flex items-center justify-between gap-3">
+                        <div class="flex items-center gap-3 min-w-0">
+                            <div class="bg-slate-100 text-slate-700 w-10 h-10 rounded-2xl flex items-center justify-center font-bold text-base shrink-0">
+                                4
+                            </div>
+                            <div class="min-w-0">
+                                <div class="font-bold text-base sm:text-lg text-slate-800 truncate">
+                                    ด.ญ.ตัวอย่าง สี่
+                                </div>
+                                <div class="text-xs text-slate-400 mt-0.5">แตะเพื่อแก้ไขคะแนน</div>
+                            </div>
+                        </div>
+
+                        <!-- คะแนนรวมและเกรด -->
+                        <div class="flex items-center gap-2.5 shrink-0">
+                            <div class="text-right">
+                                <div class="text-xs text-slate-400">รวม</div>
+                                <div class="text-xl sm:text-2xl font-bold text-slate-800 leading-none">
+                                    62
+                                </div>
+                            </div>
+                            <div class="bg-amber-500 text-white w-12 h-12 rounded-2xl flex flex-col items-center justify-center shadow-2xs">
+                                <span class="text-[10px] opacity-90 leading-none">เกรด</span>
+                                <span class="text-lg font-bold leading-tight">2</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- แถวล่าง: คะแนนย่อยทั้ง 4 ช่อง -->
+                    <div class="grid grid-cols-4 gap-1.5 mt-3 pt-2.5 border-t border-slate-100 text-center">
+                        <div class="bg-slate-50/80 rounded-xl py-1 px-1">
+                            <div class="text-[11px] text-slate-500">งาน 1 (10)</div>
+                            <div class="text-sm font-semibold text-slate-700">7</div>
+                        </div>
+                        <div class="bg-slate-50/80 rounded-xl py-1 px-1">
+                            <div class="text-[11px] text-slate-500">งาน 2 (10)</div>
+                            <div class="text-sm font-semibold text-slate-700">7</div>
+                        </div>
+                        <div class="bg-slate-50/80 rounded-xl py-1 px-1">
+                            <div class="text-[11px] text-slate-500">กลางภาค (30)</div>
+                            <div class="text-sm font-semibold text-slate-700">18</div>
+                        </div>
+                        <div class="bg-slate-50/80 rounded-xl py-1 px-1">
+                            <div class="text-[11px] text-slate-500">ปลายภาค (50)</div>
+                            <div class="text-sm font-semibold text-slate-700">30</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div onclick="openScoreModal(5)" class="bg-white border-slate-200/90 border rounded-3xl p-4 shadow-2xs active:scale-[0.99] transition cursor-pointer select-none">
+                    
+                    <!-- แถวบน: เลขที่, ชื่อ, คะแนนรวม และป้ายเกรด -->
+                    <div class="flex items-center justify-between gap-3">
+                        <div class="flex items-center gap-3 min-w-0">
+                            <div class="bg-slate-100 text-slate-700 w-10 h-10 rounded-2xl flex items-center justify-center font-bold text-base shrink-0">
+                                5
+                            </div>
+                            <div class="min-w-0">
+                                <div class="font-bold text-base sm:text-lg text-slate-800 truncate">
+                                    ด.ช.ตัวอย่าง ห้า
+                                </div>
+                                <div class="text-xs text-slate-400 mt-0.5">แตะเพื่อแก้ไขคะแนน</div>
+                            </div>
+                        </div>
+
+                        <!-- คะแนนรวมและเกรด -->
+                        <div class="flex items-center gap-2.5 shrink-0">
+                            <div class="text-right">
+                                <div class="text-xs text-slate-400">รวม</div>
+                                <div class="text-xl sm:text-2xl font-bold text-slate-800 leading-none">
+                                    52
+                                </div>
+                            </div>
+                            <div class="bg-orange-500 text-white w-12 h-12 rounded-2xl flex flex-col items-center justify-center shadow-2xs">
+                                <span class="text-[10px] opacity-90 leading-none">เกรด</span>
+                                <span class="text-lg font-bold leading-tight">1</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- แถวล่าง: คะแนนย่อยทั้ง 4 ช่อง -->
+                    <div class="grid grid-cols-4 gap-1.5 mt-3 pt-2.5 border-t border-slate-100 text-center">
+                        <div class="bg-slate-50/80 rounded-xl py-1 px-1">
+                            <div class="text-[11px] text-slate-500">งาน 1 (10)</div>
+                            <div class="text-sm font-semibold text-slate-700">6</div>
+                        </div>
+                        <div class="bg-slate-50/80 rounded-xl py-1 px-1">
+                            <div class="text-[11px] text-slate-500">งาน 2 (10)</div>
+                            <div class="text-sm font-semibold text-slate-700">6</div>
+                        </div>
+                        <div class="bg-slate-50/80 rounded-xl py-1 px-1">
+                            <div class="text-[11px] text-slate-500">กลางภาค (30)</div>
+                            <div class="text-sm font-semibold text-slate-700">15</div>
+                        </div>
+                        <div class="bg-slate-50/80 rounded-xl py-1 px-1">
+                            <div class="text-[11px] text-slate-500">ปลายภาค (50)</div>
+                            <div class="text-sm font-semibold text-slate-700">25</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div onclick="openScoreModal(6)" class="bg-rose-50/90 border-rose-300 border rounded-3xl p-4 shadow-2xs active:scale-[0.99] transition cursor-pointer select-none">
+                    
+                    <!-- แถวบน: เลขที่, ชื่อ, คะแนนรวม และป้ายเกรด -->
+                    <div class="flex items-center justify-between gap-3">
+                        <div class="flex items-center gap-3 min-w-0">
+                            <div class="bg-rose-200/80 text-rose-900 w-10 h-10 rounded-2xl flex items-center justify-center font-bold text-base shrink-0">
+                                6
+                            </div>
+                            <div class="min-w-0">
+                                <div class="font-bold text-base sm:text-lg text-rose-900 truncate">
+                                    ด.ญ.ตัวอย่าง หก
+                                </div>
+                                <div class="text-xs font-semibold text-rose-600 flex items-center gap-1 mt-0.5">
+                                        <span>⚠️ คะแนนไม่ถึง 50 (ต้องช่วยเหลือ/สอบซ่อม)</span>
+                                       </div>
+                            </div>
+                        </div>
+
+                        <!-- คะแนนรวมและเกรด -->
+                        <div class="flex items-center gap-2.5 shrink-0">
+                            <div class="text-right">
+                                <div class="text-xs text-slate-400">รวม</div>
+                                <div class="text-xl sm:text-2xl font-bold text-rose-700 leading-none">
+                                    42
+                                </div>
+                            </div>
+                            <div class="bg-rose-600 text-white w-12 h-12 rounded-2xl flex flex-col items-center justify-center shadow-2xs">
+                                <span class="text-[10px] opacity-90 leading-none">เกรด</span>
+                                <span class="text-lg font-bold leading-tight">0</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- แถวล่าง: คะแนนย่อยทั้ง 4 ช่อง -->
+                    <div class="grid grid-cols-4 gap-1.5 mt-3 pt-2.5 border-t border-rose-200/70 text-center">
+                        <div class="bg-slate-50/80 rounded-xl py-1 px-1">
+                            <div class="text-[11px] text-slate-500">งาน 1 (10)</div>
+                            <div class="text-sm font-semibold text-slate-700">5</div>
+                        </div>
+                        <div class="bg-slate-50/80 rounded-xl py-1 px-1">
+                            <div class="text-[11px] text-slate-500">งาน 2 (10)</div>
+                            <div class="text-sm font-semibold text-slate-700">4</div>
+                        </div>
+                        <div class="bg-slate-50/80 rounded-xl py-1 px-1">
+                            <div class="text-[11px] text-slate-500">กลางภาค (30)</div>
+                            <div class="text-sm font-semibold text-slate-700">12</div>
+                        </div>
+                        <div class="bg-slate-50/80 rounded-xl py-1 px-1">
+                            <div class="text-[11px] text-slate-500">ปลายภาค (50)</div>
+                            <div class="text-sm font-semibold text-slate-700">21</div>
+                        </div>
+                    </div>
+                </div>
+                </div>
+
+        <!-- คำอธิบายเกณฑ์การตัดเกรดด้านล่าง -->
+        <div class="mt-8 bg-white rounded-2xl p-4 border border-slate-200 text-xs sm:text-sm text-slate-600">
+            <div class="font-semibold text-slate-800 mb-2">เกณฑ์การตัดเกรด (คะแนนเต็ม 100):</div>
+            <div class="grid grid-cols-4 gap-1.5 text-center">
+                <div class="bg-emerald-100 text-emerald-800 py-1 rounded-lg font-medium">80+ : 4</div>
+                <div class="bg-emerald-50 text-emerald-700 py-1 rounded-lg font-medium">75-79 : 3.5</div>
+                <div class="bg-sky-100 text-sky-800 py-1 rounded-lg font-medium">70-74 : 3</div>
+                <div class="bg-sky-50 text-sky-700 py-1 rounded-lg font-medium">65-69 : 2.5</div>
+                <div class="bg-amber-100 text-amber-800 py-1 rounded-lg font-medium">60-64 : 2</div>
+                <div class="bg-amber-50 text-amber-700 py-1 rounded-lg font-medium">55-59 : 1.5</div>
+                <div class="bg-orange-100 text-orange-800 py-1 rounded-lg font-medium">50-54 : 1</div>
+                <div class="bg-rose-100 text-rose-800 py-1 rounded-lg font-bold">&lt; 50 : 0</div>
+            </div>
+        </div>
+    </main>
+
+    <!-- =====================================================================
+         MODAL 1: หน้าต่างกรอก/แก้ไขคะแนนด้วยแป้นพิมพ์ตัวเลขขนาดใหญ่ (Bottom Sheet)
+         ===================================================================== -->
+    <div id="score-modal" class="fixed inset-0 z-50 hidden">
+        <!-- พื้นหลังสีเข้มโปร่งแสง -->
+        <div onclick="closeScoreModal()" class="modal-backdrop fixed inset-0 bg-slate-900/50 backdrop-blur-xs"></div>
+        
+        <!-- ตัวกล่องเลื่อนขึ้นจากด้านล่าง -->
+        <div id="score-sheet" class="bottom-sheet sheet-hidden fixed bottom-0 inset-x-0 bg-white rounded-t-3xl shadow-2xl max-w-xl mx-auto z-10 border-t border-slate-200">
+            <!-- แถบขีดด้านบนสำหรับสื่อถึงการเลื่อน -->
+            <div class="w-12 h-1.5 bg-slate-300 rounded-full mx-auto mt-3 mb-2"></div>
+            
+            <div class="px-5 pt-1 pb-2">
+                <!-- หัวข้อชื่อนักเรียนและปุ่มลบนักเรียน -->
+                <div class="flex items-start justify-between border-b border-slate-100 pb-3">
+                    <div>
+                        <span id="modal-student-no" class="inline-block bg-slate-100 text-slate-700 text-xs font-semibold px-2.5 py-0.5 rounded-lg mb-1">เลขที่ 1</span>
+                        <h2 id="modal-student-name" class="text-xl sm:text-2xl font-bold text-slate-800">ด.ช.ตัวอย่าง หนึ่ง</h2>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <!-- ปุ่มลบนักเรียนคนนี้ -->
+                        <button onclick="requestDeleteCurrentStudent()" class="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition" title="ลบรายชื่อนักเรียน">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                            </svg>
+                        </button>
+                        <!-- ปุ่มปิด -->
+                        <button onclick="closeScoreModal()" class="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- แถบเลือกช่องคะแนน 4 ช่อง -->
+                <div class="grid grid-cols-4 gap-2 my-3">
+                    <button id="tab-w1" onclick="selectField('w1')" class="score-tab flex flex-col items-center p-2 rounded-2xl border-2 transition">
+                        <span class="text-xs text-slate-500">งาน 1</span>
+                        <span id="val-w1" class="text-lg sm:text-xl font-bold text-slate-800 mt-0.5">0</span>
+                        <span class="text-[11px] text-slate-400">เต็ม 10</span>
+                    </button>
+                    <button id="tab-w2" onclick="selectField('w2')" class="score-tab flex flex-col items-center p-2 rounded-2xl border-2 transition">
+                        <span class="text-xs text-slate-500">งาน 2</span>
+                        <span id="val-w2" class="text-lg sm:text-xl font-bold text-slate-800 mt-0.5">0</span>
+                        <span class="text-[11px] text-slate-400">เต็ม 10</span>
+                    </button>
+                    <button id="tab-mid" onclick="selectField('mid')" class="score-tab flex flex-col items-center p-2 rounded-2xl border-2 transition">
+                        <span class="text-xs text-slate-500">กลางภาค</span>
+                        <span id="val-mid" class="text-lg sm:text-xl font-bold text-slate-800 mt-0.5">0</span>
+                        <span class="text-[11px] text-slate-400">เต็ม 30</span>
+                    </button>
+                    <button id="tab-fin" onclick="selectField('fin')" class="score-tab flex flex-col items-center p-2 rounded-2xl border-2 transition">
+                        <span class="text-xs text-slate-500">ปลายภาค</span>
+                        <span id="val-fin" class="text-lg sm:text-xl font-bold text-slate-800 mt-0.5">0</span>
+                        <span class="text-[11px] text-slate-400">เต็ม 50</span>
+                    </button>
+                </div>
+
+                <!-- แถบแสดงสถานะการกรอกปัจจุบัน และคะแนนรวมเรียลไทม์ -->
+                <div class="flex items-center justify-between bg-slate-50 px-4 py-2.5 rounded-2xl mb-3 border border-slate-200/80">
+                    <div>
+                        <div id="active-field-label" class="text-xs text-slate-500">กำลังแก้ไข: งาน 1 (เต็ม 10)</div>
+                        <div id="input-warning" class="text-xs text-rose-600 font-medium h-4"></div>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-xs text-slate-500">รวม</span>
+                        <span id="modal-total-score" class="text-xl font-bold text-slate-800 mx-1">0</span>
+                        <span id="modal-grade-badge" class="inline-block px-2.5 py-0.5 rounded-lg text-sm font-bold bg-emerald-100 text-emerald-800">เกรด 4</span>
+                    </div>
+                </div>
+
+                <!-- แป้นพิมพ์ตัวเลขขนาดใหญ่ (Numpad) -->
+                <div class="grid grid-cols-3 gap-2 select-none">
+                    <button onclick="pressKey('1')" class="numpad-btn h-14 sm:h-16 bg-slate-100 rounded-2xl text-2xl font-bold text-slate-800 shadow-2xs transition">1</button>
+                    <button onclick="pressKey('2')" class="numpad-btn h-14 sm:h-16 bg-slate-100 rounded-2xl text-2xl font-bold text-slate-800 shadow-2xs transition">2</button>
+                    <button onclick="pressKey('3')" class="numpad-btn h-14 sm:h-16 bg-slate-100 rounded-2xl text-2xl font-bold text-slate-800 shadow-2xs transition">3</button>
+                    
+                    <button onclick="pressKey('4')" class="numpad-btn h-14 sm:h-16 bg-slate-100 rounded-2xl text-2xl font-bold text-slate-800 shadow-2xs transition">4</button>
+                    <button onclick="pressKey('5')" class="numpad-btn h-14 sm:h-16 bg-slate-100 rounded-2xl text-2xl font-bold text-slate-800 shadow-2xs transition">5</button>
+                    <button onclick="pressKey('6')" class="numpad-btn h-14 sm:h-16 bg-slate-100 rounded-2xl text-2xl font-bold text-slate-800 shadow-2xs transition">6</button>
+                    
+                    <button onclick="pressKey('7')" class="numpad-btn h-14 sm:h-16 bg-slate-100 rounded-2xl text-2xl font-bold text-slate-800 shadow-2xs transition">7</button>
+                    <button onclick="pressKey('8')" class="numpad-btn h-14 sm:h-16 bg-slate-100 rounded-2xl text-2xl font-bold text-slate-800 shadow-2xs transition">8</button>
+                    <button onclick="pressKey('9')" class="numpad-btn h-14 sm:h-16 bg-slate-100 rounded-2xl text-2xl font-bold text-slate-800 shadow-2xs transition">9</button>
+                    
+                    <!-- ปุ่มล้างค่าช่องนี้ (C) -->
+                    <button onclick="clearCurrentField()" class="numpad-btn h-14 sm:h-16 bg-rose-50 text-rose-700 rounded-2xl text-lg font-bold shadow-2xs transition">ล้าง</button>
+                    <button onclick="pressKey('0')" class="numpad-btn h-14 sm:h-16 bg-slate-100 rounded-2xl text-2xl font-bold text-slate-800 shadow-2xs transition">0</button>
+                    <!-- ปุ่มลบทีละตัว (Backspace) -->
+                    <button onclick="backspaceField()" class="numpad-btn h-14 sm:h-16 bg-amber-50 text-amber-800 rounded-2xl flex items-center justify-center shadow-2xs transition" aria-label="ลบตัวเลข">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2M3 12l6.414 6.414a2 2 0 001.414.586H19a2 2 0 002-2V7a2 2 0 00-2-2h-8.172a2 2 0 00-1.414.586L3 12z"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- ปุ่มทางลัด: คะแนนเต็ม และ ปุ่มบันทึก/ช่องถัดไป -->
+                <div class="grid grid-cols-2 gap-2.5 mt-3">
+                    <button onclick="setMaxForCurrentField()" class="h-13 py-3 bg-sky-100 hover:bg-sky-200 active:scale-95 text-sky-900 font-semibold rounded-2xl text-base transition">
+                        ใส่คะแนนเต็ม (<span id="btn-max-val">10</span>)
+                    </button>
+                    <button onclick="nextFieldOrSave()" id="btn-next-save" class="h-13 py-3 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-semibold rounded-2xl text-base shadow-md transition">
+                        ช่องถัดไป →
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- =====================================================================
+         MODAL 2: หน้าต่างเพิ่มนักเรียนใหม่
+         ===================================================================== -->
+    <div id="add-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+        <div onclick="closeAddStudentModal()" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs"></div>
+        <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6 relative z-10 border border-slate-100">
+            <h3 class="text-xl font-bold text-slate-800 mb-1">เพิ่มรายชื่อนักเรียน</h3>
+            <p class="text-sm text-slate-500 mb-4">กรอกเลขที่และชื่อ-นามสกุลของนักเรียน</p>
+            
+            <form onsubmit="handleAddStudent(event)" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">เลขที่</label>
+                    <input type="number" id="new-student-no" required="" min="1" max="999" inputmode="numeric" class="w-full px-4 py-3 text-lg rounded-2xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" style="">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">คำนำหน้าและชื่อ-สกุล</label>
+                    <input type="text" id="new-student-name" required="" placeholder="เช่น ด.ช.รักเรียน ขยันยิ่ง" class="w-full px-4 py-3 text-lg rounded-2xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" style="">
+                </div>
+                <div class="flex gap-2.5 pt-2">
+                    <button type="button" onclick="closeAddStudentModal()" class="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-2xl transition">
+                        ยกเลิก
+                    </button>
+                    <button type="submit" class="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-2xl shadow-sm transition">
+                        เพิ่มรายชื่อ
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- =====================================================================
+         MODAL 3: กล่องยืนยันการทำงาน (แทน alert/confirm มาตรฐาน)
+         ===================================================================== -->
+    <div id="confirm-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+        <div onclick="closeConfirmModal()" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs"></div>
+        <div class="bg-white rounded-3xl shadow-2xl max-w-sm w-full p-6 relative z-10 text-center">
+            <div class="w-12 h-12 bg-rose-100 text-rose-600 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                </svg>
+            </div>
+            <h3 id="confirm-title" class="text-lg font-bold text-slate-800 mb-1">ยืนยันการลบข้อมูล</h3>
+            <p id="confirm-desc" class="text-sm text-slate-500 mb-5">คุณต้องการดำเนินการนี้ใช่หรือไม่?</p>
+            <div class="flex gap-2.5">
+                <button onclick="closeConfirmModal()" class="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-2xl transition">
+                    ยกเลิก
+                </button>
+                <button id="confirm-action-btn" class="flex-1 py-3 bg-rose-600 hover:bg-rose-700 text-white font-semibold rounded-2xl shadow-sm transition">
+                    ยืนยัน
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- =====================================================================
+         TOAST NOTIFICATION: แจ้งเตือนสั้นๆ ด้านบน
+         ===================================================================== -->
+    <div id="toast" class="fixed top-4 left-1/2 -translate-x-1/2 z-50 pointer-events-none opacity-0 transition-opacity duration-300">
+        <div id="toast-msg" class="bg-slate-800 text-white text-sm font-medium px-4 py-2.5 rounded-2xl shadow-lg">
+            บันทึกข้อมูลเรียบร้อย
+        </div>
+    </div>
+
+    <!-- =====================================================================
+         JAVASCRIPT LOGIC
+         ===================================================================== -->
+    <script>
+        // คีย์สำหรับเก็บข้อมูลลงใน LocalStorage ของเครื่อง
+        const STORAGE_KEY = 'thai_teacher_gradebook_v1';
+
+        // ข้อมูลตั้งต้นของนักเรียนตัวอย่าง 6 คน (คะแนนแตกต่างกันครบทุกช่วงเกรด)
+        const DEFAULT_STUDENTS = [
+            { id: 1, no: 1, name: 'ด.ช.ตัวอย่าง หนึ่ง', w1: 9, w2: 10, mid: 26, fin: 42 },  // รวม 87 -> เกรด 4
+            { id: 2, no: 2, name: 'ด.ญ.ตัวอย่าง สอง', w1: 8, w2: 9, mid: 23, fin: 37 },    // รวม 77 -> เกรด 3.5
+            { id: 3, no: 3, name: 'ด.ช.ตัวอย่าง สาม', w1: 8, w2: 7, mid: 21, fin: 35 },    // รวม 71 -> เกรด 3
+            { id: 4, no: 4, name: 'ด.ญ.ตัวอย่าง สี่', w1: 7, w2: 7, mid: 18, fin: 30 },    // รวม 62 -> เกรด 2
+            { id: 5, no: 5, name: 'ด.ช.ตัวอย่าง ห้า', w1: 6, w2: 6, mid: 15, fin: 25 },    // รวม 52 -> เกรด 1
+            { id: 6, no: 6, name: 'ด.ญ.ตัวอย่าง หก', w1: 5, w2: 4, mid: 12, fin: 21 }     // รวม 42 -> เกรด 0 (ต้องซ่อม/สีแดง)
+        ];
+
+        // รายละเอียดช่องคะแนนทั้ง 4 ช่อง
+        const FIELDS = {
+            w1:  { key: 'w1',  label: 'งาน 1',       max: 10, next: 'w2' },
+            w2:  { key: 'w2',  label: 'งาน 2',       max: 10, next: 'mid' },
+            mid: { key: 'mid', label: 'สอบกลางภาค', max: 30, next: 'fin' },
+            fin: { key: 'fin', label: 'สอบปลายภาค', max: 50, next: null }
+        };
+
+        // ตัวแปรสถานะ (State) ของแอปพลิเคชัน
+        let students = [];
+        let sortBy = 'no'; // 'no' (เลขที่) หรือ 'score' (คะแนนรวมมากไปน้อย)
+        
+        // ตัวแปรสำหรับการแก้ไขคะแนนใน Modal
+        let editingStudentId = null;
+        let activeField = 'w1';
+        let tempScores = { w1: 0, w2: 0, mid: 0, fin: 0 };
+        let isFirstKeystroke = true; // ใช้เพื่อให้กดตัวเลขแรกแล้วแทนที่เลขเดิมทันที (ไม่ต้องกดลบก่อน)
+
+        /**
+         * เริ่มต้นทำงานเมื่อโหลดหน้าเว็บเสร็จสมบูรณ์
+         */
+        window.onload = function() {
+            loadData();
+            renderApp();
+        };
+
+        /**
+         * โหลดข้อมูลจาก LocalStorage (หากไม่มีให้ใช้ข้อมูลตัวอย่าง 6 คน)
+         */
+        function loadData() {
+            try {
+                const saved = localStorage.getItem(STORAGE_KEY);
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    if (Array.isArray(parsed) && parsed.length > 0) {
+                        students = parsed;
+                        return;
+                    }
+                }
+            } catch (e) {
+                console.error('ไม่สามารถอ่านข้อมูลจากเครื่องได้:', e);
+            }
+            // กรณีเปิดครั้งแรกหรือข้อมูลว่างเปล่า ให้คัดลอกข้อมูลตัวอย่าง
+            students = JSON.parse(JSON.stringify(DEFAULT_STUDENTS));
+            saveData();
+        }
+
+        /**
+         * บันทึกข้อมูลลง LocalStorage
+         */
+        function saveData() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(students));
+            } catch (e) {
+                showToast('ไม่สามารถบันทึกข้อมูลลงเครื่องได้');
+            }
+        }
+
+        /**
+         * คำนวณคะแนนรวมและเกรดตามเกณฑ์ที่กำหนด
+         * (80+: 4, 75+: 3.5, 70+: 3, 65+: 2.5, 60+: 2, 55+: 1.5, 50+: 1, <50: 0)
+         */
+        function calculateGradeInfo(total) {
+            if (total >= 80) {
+                return { grade: '4',   badgeClass: 'bg-emerald-600 text-white',   cardBorder: 'border-slate-200', isFail: false };
+            } else if (total >= 75) {
+                return { grade: '3.5', badgeClass: 'bg-emerald-500 text-white',   cardBorder: 'border-slate-200', isFail: false };
+            } else if (total >= 70) {
+                return { grade: '3',   badgeClass: 'bg-sky-600 text-white',       cardBorder: 'border-slate-200', isFail: false };
+            } else if (total >= 65) {
+                return { grade: '2.5', badgeClass: 'bg-sky-500 text-white',       cardBorder: 'border-slate-200', isFail: false };
+            } else if (total >= 60) {
+                return { grade: '2',   badgeClass: 'bg-amber-500 text-white',     cardBorder: 'border-slate-200', isFail: false };
+            } else if (total >= 55) {
+                return { grade: '1.5', badgeClass: 'bg-amber-400 text-slate-900', cardBorder: 'border-slate-200', isFail: false };
+            } else if (total >= 50) {
+                return { grade: '1',   badgeClass: 'bg-orange-500 text-white',    cardBorder: 'border-slate-200', isFail: false };
+            } else {
+                // ต่ำกว่า 50 คะแนน -> เกรด 0 สีแดงโดดเด่น
+                return { grade: '0',   badgeClass: 'bg-rose-600 text-white',      cardBorder: 'border-rose-300 bg-rose-50/70', isFail: true };
+            }
+        }
+
+        /**
+         * คำนวณคะแนนรวมของนักเรียน 1 คน
+         */
+        function getStudentTotal(s) {
+            return (Number(s.w1) || 0) + (Number(s.w2) || 0) + (Number(s.mid) || 0) + (Number(s.fin) || 0);
+        }
+
+        /**
+         * เปลี่ยนรูปแบบการเรียงลำดับ ('no' หรือ 'score')
+         */
+        function setSort(type) {
+            sortBy = type;
+            const btnNo = document.getElementById('sort-no-btn');
+            const btnScore = document.getElementById('sort-score-btn');
+
+            if (sortBy === 'no') {
+                btnNo.className = 'flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg text-sm font-medium transition bg-white text-slate-800 shadow-sm';
+                btnScore.className = 'flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg text-sm font-medium transition text-slate-600 hover:text-slate-800';
+            } else {
+                btnScore.className = 'flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg text-sm font-medium transition bg-white text-slate-800 shadow-sm';
+                btnNo.className = 'flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg text-sm font-medium transition text-slate-600 hover:text-slate-800';
+            }
+            renderApp();
+        }
+
+        /**
+         * วาดหน้าจอหลักทั้งหมด (การ์ดสรุป + รายชื่อนักเรียน)
+         */
+        function renderApp() {
+            const listEl = document.getElementById('student-list');
+            
+            // คำนวณสถิติรวมของห้อง
+            let sumTotal = 0;
+            let maxTotal = 0;
+            let failCount = 0;
+
+            students.forEach(s => {
+                const total = getStudentTotal(s);
+                sumTotal += total;
+                if (total > maxTotal) maxTotal = total;
+                if (total < 50) failCount++;
+            });
+
+            const avg = students.length > 0 ? (sumTotal / students.length).toFixed(1) : '0.0';
+            document.getElementById('stat-avg').textContent = avg;
+            document.getElementById('stat-max').textContent = students.length > 0 ? maxTotal : '0';
+            document.getElementById('stat-fail').textContent = failCount;
+
+            // เรียงลำดับข้อมูลตามที่เลือก
+            const sortedStudents = [...students].sort((a, b) => {
+                if (sortBy === 'score') {
+                    const diff = getStudentTotal(b) - getStudentTotal(a);
+                    return diff !== 0 ? diff : a.no - b.no;
+                }
+                return a.no - b.no;
+            });
+
+            // กรณีไม่มีนักเรียนเลย
+            if (sortedStudents.length === 0) {
+                listEl.innerHTML = `
+                    <div class="bg-white rounded-3xl p-8 text-center border border-slate-200">
+                        <p class="text-slate-500 text-base mb-3">ยังไม่มีรายชื่อนักเรียนในระบบ</p>
+                        <button onclick="openAddStudentModal()" class="bg-emerald-600 text-white px-5 py-2.5 rounded-2xl font-medium">
+                            + เพิ่มนักเรียนคนแรก
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            // สร้าง HTML การ์ดนักเรียนแต่ละคน
+            listEl.innerHTML = sortedStudents.map(student => {
+                const total = getStudentTotal(student);
+                const info = calculateGradeInfo(total);
+                
+                // หากคะแนนต่ำกว่า 50 ให้เน้นพื้นหลังการ์ดเป็นโทนแดงอ่อนและมีป้ายเตือน
+                const cardBg = info.isFail ? 'bg-rose-50/90 border-rose-300' : 'bg-white border-slate-200/90';
+                const nameColor = info.isFail ? 'text-rose-900' : 'text-slate-800';
+                const noBadgeColor = info.isFail ? 'bg-rose-200/80 text-rose-900' : 'bg-slate-100 text-slate-700';
+
+                return `
+                <div onclick="openScoreModal(${student.id})" 
+                     class="${cardBg} border rounded-3xl p-4 shadow-2xs active:scale-[0.99] transition cursor-pointer select-none">
+                    
+                    <!-- แถวบน: เลขที่, ชื่อ, คะแนนรวม และป้ายเกรด -->
+                    <div class="flex items-center justify-between gap-3">
+                        <div class="flex items-center gap-3 min-w-0">
+                            <div class="${noBadgeColor} w-10 h-10 rounded-2xl flex items-center justify-center font-bold text-base shrink-0">
+                                ${student.no}
+                            </div>
+                            <div class="min-w-0">
+                                <div class="font-bold text-base sm:text-lg ${nameColor} truncate">
+                                    ${escapeHtml(student.name)}
+                                </div>
+                                ${info.isFail 
+                                    ? `<div class="text-xs font-semibold text-rose-600 flex items-center gap-1 mt-0.5">
+                                        <span>⚠️ คะแนนไม่ถึง 50 (ต้องช่วยเหลือ/สอบซ่อม)</span>
+                                       </div>`
+                                    : `<div class="text-xs text-slate-400 mt-0.5">แตะเพื่อแก้ไขคะแนน</div>`
+                                }
+                            </div>
+                        </div>
+
+                        <!-- คะแนนรวมและเกรด -->
+                        <div class="flex items-center gap-2.5 shrink-0">
+                            <div class="text-right">
+                                <div class="text-xs text-slate-400">รวม</div>
+                                <div class="text-xl sm:text-2xl font-bold ${info.isFail ? 'text-rose-700' : 'text-slate-800'} leading-none">
+                                    ${total}
+                                </div>
+                            </div>
+                            <div class="${info.badgeClass} w-12 h-12 rounded-2xl flex flex-col items-center justify-center shadow-2xs">
+                                <span class="text-[10px] opacity-90 leading-none">เกรด</span>
+                                <span class="text-lg font-bold leading-tight">${info.grade}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- แถวล่าง: คะแนนย่อยทั้ง 4 ช่อง -->
+                    <div class="grid grid-cols-4 gap-1.5 mt-3 pt-2.5 border-t ${info.isFail ? 'border-rose-200/70' : 'border-slate-100'} text-center">
+                        <div class="bg-slate-50/80 rounded-xl py-1 px-1">
+                            <div class="text-[11px] text-slate-500">งาน 1 (10)</div>
+                            <div class="text-sm font-semibold text-slate-700">${student.w1}</div>
+                        </div>
+                        <div class="bg-slate-50/80 rounded-xl py-1 px-1">
+                            <div class="text-[11px] text-slate-500">งาน 2 (10)</div>
+                            <div class="text-sm font-semibold text-slate-700">${student.w2}</div>
+                        </div>
+                        <div class="bg-slate-50/80 rounded-xl py-1 px-1">
+                            <div class="text-[11px] text-slate-500">กลางภาค (30)</div>
+                            <div class="text-sm font-semibold text-slate-700">${student.mid}</div>
+                        </div>
+                        <div class="bg-slate-50/80 rounded-xl py-1 px-1">
+                            <div class="text-[11px] text-slate-500">ปลายภาค (50)</div>
+                            <div class="text-sm font-semibold text-slate-700">${student.fin}</div>
+                        </div>
+                    </div>
+                </div>
+                `;
+            }).join('');
+        }
+
+        /* =====================================================================
+           ฟังก์ชันควบคุม Modal กรอกคะแนนด้วยปุ่มตัวเลขใหญ่ (Numpad)
+           ===================================================================== */
+
+        function openScoreModal(studentId) {
+            const student = students.find(s => s.id === studentId);
+            if (!student) return;
+
+            editingStudentId = studentId;
+            tempScores = {
+                w1: student.w1,
+                w2: student.w2,
+                mid: student.mid,
+                fin: student.fin
+            };
+
+            document.getElementById('modal-student-no').textContent = `เลขที่ ${student.no}`;
+            document.getElementById('modal-student-name').textContent = student.name;
+            
+            // เลือกช่องแรก (งาน 1) เป็นค่าเริ่มต้น
+            selectField('w1');
+
+            const modal = document.getElementById('score-modal');
+            const sheet = document.getElementById('score-sheet');
+            modal.classList.remove('hidden');
+            
+            // หน่วงเล็กน้อยเพื่อให้ Animation เลื่อนขึ้นทำงานลื่นไหล
+            requestAnimationFrame(() => {
+                sheet.classList.remove('sheet-hidden');
+                sheet.classList.add('sheet-visible');
+            });
+        }
+
+        function closeScoreModal() {
+            const modal = document.getElementById('score-modal');
+            const sheet = document.getElementById('score-sheet');
+            
+            sheet.classList.remove('sheet-visible');
+            sheet.classList.add('sheet-hidden');
+            
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                editingStudentId = null;
+            }, 280);
+        }
+
+        function selectField(fieldKey) {
+            activeField = fieldKey;
+            isFirstKeystroke = true;
+            document.getElementById('input-warning').textContent = '';
+
+            // อัปเดตสไตล์ปุ่มเลือกช่องทั้ง 4 ช่อง
+            Object.keys(FIELDS).forEach(key => {
+                const tab = document.getElementById(`tab-${key}`);
+                if (key === activeField) {
+                    tab.className = 'score-tab flex flex-col items-center p-2 rounded-2xl border-2 border-emerald-600 bg-emerald-50/70 transition shadow-2xs';
+                } else {
+                    tab.className = 'score-tab flex flex-col items-center p-2 rounded-2xl border-2 border-slate-200 bg-white transition';
+                }
+            });
+
+            // อัปเดตข้อความบอกช่องที่กำลังแก้ไขและปุ่มคะแนนเต็ม
+            const fieldInfo = FIELDS[activeField];
+            document.getElementById('active-field-label').textContent = `กำลังแก้ไข: ${fieldInfo.label} (เต็ม ${fieldInfo.max})`;
+            document.getElementById('btn-max-val').textContent = fieldInfo.max;
+
+            // เปลี่ยนข้อความปุ่มขวาล่างตามลำดับช่อง
+            const nextBtn = document.getElementById('btn-next-save');
+            if (fieldInfo.next) {
+                nextBtn.innerHTML = 'ช่องถัดไป &rarr;';
+                nextBtn.className = 'h-13 py-3 bg-slate-800 hover:bg-slate-900 active:scale-95 text-white font-semibold rounded-2xl text-base shadow-md transition';
+            } else {
+                nextBtn.innerHTML = '✓ บันทึกเสร็จสิ้น';
+                nextBtn.className = 'h-13 py-3 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-semibold rounded-2xl text-base shadow-md transition';
+            }
+
+            updateModalDisplay();
+        }
+
+        function updateModalDisplay() {
+            // แสดงค่าคะแนนในแต่ละช่อง
+            document.getElementById('val-w1').textContent = tempScores.w1;
+            document.getElementById('val-w2').textContent = tempScores.w2;
+            document.getElementById('val-mid').textContent = tempScores.mid;
+            document.getElementById('val-fin').textContent = tempScores.fin;
+
+            // คำนวณยอดรวมและเกรดปัจจุบันใน Modal
+            const total = tempScores.w1 + tempScores.w2 + tempScores.mid + tempScores.fin;
+            const info = calculateGradeInfo(total);
+
+            document.getElementById('modal-total-score').textContent = total;
+            const badge = document.getElementById('modal-grade-badge');
+            badge.textContent = `เกรด ${info.grade}`;
+            badge.className = `inline-block px-2.5 py-0.5 rounded-lg text-sm font-bold ${info.badgeClass}`;
+        }
+
+        function pressKey(digit) {
+            const maxVal = FIELDS[activeField].max;
+            const warningEl = document.getElementById('input-warning');
+            warningEl.textContent = '';
+
+            let newValue;
+            if (isFirstKeystroke) {
+                newValue = parseInt(digit, 10);
+                isFirstKeystroke = false;
+            } else {
+                const currentStr = String(tempScores[activeField]);
+                newValue = parseInt(currentStr + digit, 10);
+            }
+
+            // ตรวจสอบไม่ให้กรอกเกินคะแนนเต็มของช่องนั้น
+            if (newValue > maxVal) {
+                warningEl.textContent = `คะแนนเต็มช่องนี้คือ ${maxVal} คะแนน`;
+                // สั่นเบาๆ หรือคงค่าเดิมไว้ไม่ให้เกิน
+                return;
+            }
+
+            tempScores[activeField] = newValue;
+            commitTempScores();
+            updateModalDisplay();
+        }
+
+        function clearCurrentField() {
+            tempScores[activeField] = 0;
+            isFirstKeystroke = true;
+            document.getElementById('input-warning').textContent = '';
+            commitTempScores();
+            updateModalDisplay();
+        }
+
+        function backspaceField() {
+            document.getElementById('input-warning').textContent = '';
+            const currentStr = String(tempScores[activeField]);
+            if (currentStr.length <= 1) {
+                tempScores[activeField] = 0;
+                isFirstKeystroke = true;
+            } else {
+                tempScores[activeField] = parseInt(currentStr.slice(0, -1), 10);
+                isFirstKeystroke = false;
+            }
+            commitTempScores();
+            updateModalDisplay();
+        }
+
+        function setMaxForCurrentField() {
+            tempScores[activeField] = FIELDS[activeField].max;
+            isFirstKeystroke = true;
+            document.getElementById('input-warning').textContent = '';
+            commitTempScores();
+            updateModalDisplay();
+        }
+
+        function nextFieldOrSave() {
+            const nextKey = FIELDS[activeField].next;
+            if (nextKey) {
+                selectField(nextKey);
+            } else {
+                commitTempScores();
+                closeScoreModal();
+                showToast('บันทึกคะแนนเรียบร้อยแล้ว');
+            }
+        }
+
+        /**
+         * บันทึกคะแนนชั่วคราวลงข้อมูลหลักและอัปเดตหน้าจอทันที
+         */
+        function commitTempScores() {
+            if (editingStudentId === null) return;
+            const idx = students.findIndex(s => s.id === editingStudentId);
+            if (idx !== -1) {
+                students[idx] = {
+                    ...students[idx],
+                    w1: tempScores.w1,
+                    w2: tempScores.w2,
+                    mid: tempScores.mid,
+                    fin: tempScores.fin
+                };
+                saveData();
+                renderApp();
+            }
+        }
+
+        /* =====================================================================
+           ฟังก์ชันเพิ่มนักเรียนใหม่
+           ===================================================================== */
+
+        function openAddStudentModal() {
+            // คำนวณเลขที่ถัดไปให้อัตโนมัติเพื่อความสะดวกของครู
+            const maxNo = students.reduce((max, s) => Math.max(max, Number(s.no) || 0), 0);
+            document.getElementById('new-student-no').value = maxNo + 1;
+            document.getElementById('new-student-name').value = '';
+            
+            document.getElementById('add-modal').classList.remove('hidden');
+            setTimeout(() => {
+                document.getElementById('new-student-name').focus();
+            }, 100);
+        }
+
+        function closeAddStudentModal() {
+            document.getElementById('add-modal').classList.add('hidden');
+        }
+
+        function handleAddStudent(event) {
+            event.preventDefault();
+            const noInput = parseInt(document.getElementById('new-student-no').value, 10);
+            const nameInput = document.getElementById('new-student-name').value.trim();
+
+            if (!nameInput || isNaN(noInput)) return;
+
+            const newStudent = {
+                id: Date.now(),
+                no: noInput,
+                name: nameInput,
+                w1: 0,
+                w2: 0,
+                mid: 0,
+                fin: 0
+            };
+
+            students.push(newStudent);
+            saveData();
+            renderApp();
+            closeAddStudentModal();
+            showToast(`เพิ่ม "${nameInput}" เรียบร้อย`);
+        }
+
+        /* =====================================================================
+           ฟังก์ชันลบนักเรียน และ รีเซ็ตข้อมูลเริ่มต้น (ผ่านกล่องยืนยันที่สวยงาม)
+           ===================================================================== */
+
+        function requestDeleteCurrentStudent() {
+            const student = students.find(s => s.id === editingStudentId);
+            if (!student) return;
+
+            openConfirmModal(
+                'ลบรายชื่อนักเรียน?',
+                `ต้องการลบ "${student.name}" (เลขที่ ${student.no}) ออกจากระบบใช่หรือไม่?`,
+                () => {
+                    students = students.filter(s => s.id !== editingStudentId);
+                    saveData();
+                    renderApp();
+                    closeConfirmModal();
+                    closeScoreModal();
+                    showToast('ลบรายชื่อนักเรียนแล้ว');
+                }
+            );
+        }
+
+        function openResetConfirmModal() {
+            openConfirmModal(
+                'คืนค่าข้อมูลตัวอย่าง?',
+                'ข้อมูลที่แก้ไขไว้ทั้งหมดจะถูกลบ และกลับไปเป็นรายชื่อนักเรียนตัวอย่าง 6 คน',
+                () => {
+                    students = JSON.parse(JSON.stringify(DEFAULT_STUDENTS));
+                    saveData();
+                    renderApp();
+                    closeConfirmModal();
+                    showToast('คืนค่าข้อมูลตัวอย่างเรียบร้อย');
+                }
+            );
+        }
+
+        function openConfirmModal(title, desc, onConfirmCallback) {
+            document.getElementById('confirm-title').textContent = title;
+            document.getElementById('confirm-desc').textContent = desc;
+            
+            const confirmBtn = document.getElementById('confirm-action-btn');
+            confirmBtn.onclick = onConfirmCallback;
+
+            document.getElementById('confirm-modal').classList.remove('hidden');
+        }
+
+        function closeConfirmModal() {
+            document.getElementById('confirm-modal').classList.add('hidden');
+        }
+
+        /* =====================================================================
+           ฟังก์ชันเสริม (Toast แจ้งเตือน และ ป้องกัน XSS)
+           ===================================================================== */
+
+        let toastTimeout;
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-msg').textContent = message;
+            toast.classList.remove('opacity-0');
+            
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                toast.classList.add('opacity-0');
+            }, 2200);
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>
+
+</body></html>
