@@ -1,0 +1,855 @@
+<!DOCTYPE html><html lang="th"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <!-- จับมือ AI: ไอคอน + ติดตั้งลงหน้าจอโฮม (เพิ่มทีหลัง โค้ดแอปเหมือนเดิม) -->
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="apple-touch-icon" href="icon-180.png">
+    <link rel="icon" type="image/png" href="icon-192.png">
+    <meta name="theme-color" content="#1e2a5a">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="ลอยกระทง">
+    <script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');</script>
+<title>ลอยกระทงออนไลน์ - สืบสานประเพณีไทย</title>
+    <!-- โหลด Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- โหลดฟอนต์ Prompt จาก Google Fonts เพื่อให้อ่านง่ายและสวยงาม -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;600;700&amp;display=swap" rel="stylesheet">
+    
+    <style>
+        /* ตั้งค่าฟอนต์หลักและป้องกันการเลื่อนหน้าจอเกินขอบ */
+        body {
+            font-family: 'Prompt', sans-serif;
+            overflow: hidden;
+            touch-action: manipulation;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* แอนิเมชันแสงจันทร์สะท้อนผิวน้ำ */
+        @keyframes shimmer {
+            0%, 100% { transform: scaleX(1) translateY(0); opacity: 0.6; }
+            50% { transform: scaleX(1.15) translateY(2px); opacity: 0.9; }
+        }
+        .moon-reflection {
+            animation: shimmer 4s infinite ease-in-out;
+        }
+
+        /* แอนิเมชันเปลวเทียนกระพริบ */
+        @keyframes flicker {
+            0%, 100% { transform: scale(1) rotate(-2deg); opacity: 0.95; }
+            25% { transform: scale(1.1, 0.9) rotate(2deg); opacity: 1; }
+            50% { transform: scale(0.95, 1.05) rotate(-1deg); opacity: 0.85; }
+            75% { transform: scale(1.05, 0.95) rotate(3deg); opacity: 1; }
+        }
+        .candle-flame {
+            transform-origin: bottom center;
+            animation: flicker 0.8s infinite alternate;
+        }
+
+        /* แอนิเมชันควันธูปลอยขึ้น */
+        @keyframes smoke {
+            0% { transform: translateY(0) scale(1); opacity: 0.6; }
+            100% { transform: translateY(-25px) scale(1.8); opacity: 0; }
+        }
+        .incense-smoke {
+            animation: smoke 2.5s infinite ease-out;
+        }
+
+        /* แอนิเมชันกระทงโคลงเคลงเบาๆ ตามคลื่นน้ำ */
+        @keyframes bobbing {
+            0%, 100% { transform: translateY(0px) rotate(-1.5deg); }
+            50% { transform: translateY(-6px) rotate(1.5deg); }
+        }
+        .krathong-bob {
+            animation: bobbing 3s infinite ease-in-out;
+        }
+
+        /* แอนิเมชันคำอธิษฐานลอยขึ้นฟ้า */
+        @keyframes floatWishUp {
+            0% { transform: translate(-50%, 0) scale(0.8); opacity: 0; }
+            15% { transform: translate(-50%, -20px) scale(1); opacity: 1; }
+            80% { transform: translate(-50%, -180px) scale(1.05); opacity: 0.9; }
+            100% { transform: translate(-50%, -240px) scale(1.1); opacity: 0; }
+        }
+        .wish-floating {
+            animation: floatWishUp 6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+        }
+
+        /* ปรับแต่ง Scrollbar สำหรับหน้าจอมือถือเล็ก */
+        ::-webkit-scrollbar {
+            display: none;
+        }
+    </style>
+<style>*, ::before, ::after{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }::backdrop{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }/* ! tailwindcss v3.4.17 | MIT License | https://tailwindcss.com */*,::after,::before{box-sizing:border-box;border-width:0;border-style:solid;border-color:#e5e7eb}::after,::before{--tw-content:''}:host,html{line-height:1.5;-webkit-text-size-adjust:100%;-moz-tab-size:4;tab-size:4;font-family:ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";font-feature-settings:normal;font-variation-settings:normal;-webkit-tap-highlight-color:transparent}body{margin:0;line-height:inherit}hr{height:0;color:inherit;border-top-width:1px}abbr:where([title]){-webkit-text-decoration:underline dotted;text-decoration:underline dotted}h1,h2,h3,h4,h5,h6{font-size:inherit;font-weight:inherit}a{color:inherit;text-decoration:inherit}b,strong{font-weight:bolder}code,kbd,pre,samp{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;font-feature-settings:normal;font-variation-settings:normal;font-size:1em}small{font-size:80%}sub,sup{font-size:75%;line-height:0;position:relative;vertical-align:baseline}sub{bottom:-.25em}sup{top:-.5em}table{text-indent:0;border-color:inherit;border-collapse:collapse}button,input,optgroup,select,textarea{font-family:inherit;font-feature-settings:inherit;font-variation-settings:inherit;font-size:100%;font-weight:inherit;line-height:inherit;letter-spacing:inherit;color:inherit;margin:0;padding:0}button,select{text-transform:none}button,input:where([type=button]),input:where([type=reset]),input:where([type=submit]){-webkit-appearance:button;background-color:transparent;background-image:none}:-moz-focusring{outline:auto}:-moz-ui-invalid{box-shadow:none}progress{vertical-align:baseline}::-webkit-inner-spin-button,::-webkit-outer-spin-button{height:auto}[type=search]{-webkit-appearance:textfield;outline-offset:-2px}::-webkit-search-decoration{-webkit-appearance:none}::-webkit-file-upload-button{-webkit-appearance:button;font:inherit}summary{display:list-item}blockquote,dd,dl,figure,h1,h2,h3,h4,h5,h6,hr,p,pre{margin:0}fieldset{margin:0;padding:0}legend{padding:0}menu,ol,ul{list-style:none;margin:0;padding:0}dialog{padding:0}textarea{resize:vertical}input::placeholder,textarea::placeholder{opacity:1;color:#9ca3af}[role=button],button{cursor:pointer}:disabled{cursor:default}audio,canvas,embed,iframe,img,object,svg,video{display:block;vertical-align:middle}img,video{max-width:100%;height:auto}[hidden]:where(:not([hidden=until-found])){display:none}.pointer-events-none{pointer-events:none}.fixed{position:fixed}.absolute{position:absolute}.relative{position:relative}.inset-0{inset:0px}.bottom-0{bottom:0px}.bottom-4{bottom:1rem}.bottom-6{bottom:1.5rem}.left-0{left:0px}.left-1\/2{left:50%}.left-4{left:1rem}.left-5{left:1.25rem}.left-7{left:1.75rem}.right-0{right:0px}.right-10{right:2.5rem}.right-4{right:1rem}.right-5{right:1.25rem}.right-8{right:2rem}.top-1\/4{top:25%}.top-12{top:3rem}.top-2{top:0.5rem}.top-4{top:1rem}.top-\[42\%\]{top:42%}.top-\[45\%\]{top:45%}.z-0{z-index:0}.z-10{z-index:10}.z-20{z-index:20}.z-30{z-index:30}.z-40{z-index:40}.mb-0\.5{margin-bottom:0.125rem}.mb-1\.5{margin-bottom:0.375rem}.mb-3{margin-bottom:0.75rem}.mb-4{margin-bottom:1rem}.block{display:block}.flex{display:flex}.grid{display:grid}.hidden{display:none}.h-1{height:0.25rem}.h-1\.5{height:0.375rem}.h-1\/2{height:50%}.h-11{height:2.75rem}.h-12{height:3rem}.h-16{height:4rem}.h-2{height:0.5rem}.h-24{height:6rem}.h-4{height:1rem}.h-44{height:11rem}.h-6{height:1.5rem}.h-8{height:2rem}.h-full{height:100%}.h-screen{height:100vh}.w-10{width:2.5rem}.w-14{width:3.5rem}.w-16{width:4rem}.w-20{width:5rem}.w-24{width:6rem}.w-4{width:1rem}.w-44{width:11rem}.w-6{width:1.5rem}.w-8{width:2rem}.w-full{width:100%}.w-screen{width:100vw}.flex-1{flex:1 1 0%}.-translate-x-1\/2{--tw-translate-x:-50%;transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}.translate-y-6{--tw-translate-y:1.5rem;transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}.scale-105{--tw-scale-x:1.05;--tw-scale-y:1.05;transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}.transform{transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}.grid-cols-3{grid-template-columns:repeat(3, minmax(0, 1fr))}.flex-col{flex-direction:column}.items-end{align-items:flex-end}.items-center{align-items:center}.justify-center{justify-content:center}.justify-between{justify-content:space-between}.gap-2{gap:0.5rem}.gap-2\.5{gap:0.625rem}.space-x-2 > :not([hidden]) ~ :not([hidden]){--tw-space-x-reverse:0;margin-right:calc(0.5rem * var(--tw-space-x-reverse));margin-left:calc(0.5rem * calc(1 - var(--tw-space-x-reverse)))}.space-x-2\.5 > :not([hidden]) ~ :not([hidden]){--tw-space-x-reverse:0;margin-right:calc(0.625rem * var(--tw-space-x-reverse));margin-left:calc(0.625rem * calc(1 - var(--tw-space-x-reverse)))}.space-y-2 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(0.5rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(0.5rem * var(--tw-space-y-reverse))}.overflow-hidden{overflow:hidden}.overflow-visible{overflow:visible}.rounded-2xl{border-radius:1rem}.rounded-full{border-radius:9999px}.rounded-lg{border-radius:0.5rem}.rounded-xl{border-radius:0.75rem}.rounded-t-3xl{border-top-left-radius:1.5rem;border-top-right-radius:1.5rem}.border{border-width:1px}.border-2{border-width:2px}.border-t{border-top-width:1px}.border-amber-200{--tw-border-opacity:1;border-color:rgb(253 230 138 / var(--tw-border-opacity, 1))}.border-amber-200\/10{border-color:rgb(253 230 138 / 0.1)}.border-amber-400{--tw-border-opacity:1;border-color:rgb(251 191 36 / var(--tw-border-opacity, 1))}.border-amber-400\/20{border-color:rgb(251 191 36 / 0.2)}.border-amber-400\/30{border-color:rgb(251 191 36 / 0.3)}.border-slate-700{--tw-border-opacity:1;border-color:rgb(51 65 85 / var(--tw-border-opacity, 1))}.border-slate-700\/80{border-color:rgb(51 65 85 / 0.8)}.bg-amber-100{--tw-bg-opacity:1;background-color:rgb(254 243 199 / var(--tw-bg-opacity, 1))}.bg-amber-200\/20{background-color:rgb(253 230 138 / 0.2)}.bg-amber-200\/30{background-color:rgb(253 230 138 / 0.3)}.bg-amber-200\/40{background-color:rgb(253 230 138 / 0.4)}.bg-amber-200\/50{background-color:rgb(253 230 138 / 0.5)}.bg-amber-200\/60{background-color:rgb(253 230 138 / 0.6)}.bg-amber-400{--tw-bg-opacity:1;background-color:rgb(251 191 36 / var(--tw-bg-opacity, 1))}.bg-amber-500\/20{background-color:rgb(245 158 11 / 0.2)}.bg-pink-500{--tw-bg-opacity:1;background-color:rgb(236 72 153 / var(--tw-bg-opacity, 1))}.bg-purple-500{--tw-bg-opacity:1;background-color:rgb(168 85 247 / var(--tw-bg-opacity, 1))}.bg-slate-100{--tw-bg-opacity:1;background-color:rgb(241 245 249 / var(--tw-bg-opacity, 1))}.bg-slate-800{--tw-bg-opacity:1;background-color:rgb(30 41 59 / var(--tw-bg-opacity, 1))}.bg-slate-800\/60{background-color:rgb(30 41 59 / 0.6)}.bg-slate-800\/80{background-color:rgb(30 41 59 / 0.8)}.bg-slate-900\/80{background-color:rgb(15 23 42 / 0.8)}.bg-slate-900\/90{background-color:rgb(15 23 42 / 0.9)}.bg-slate-900\/95{background-color:rgb(15 23 42 / 0.95)}.bg-slate-950{--tw-bg-opacity:1;background-color:rgb(2 6 23 / var(--tw-bg-opacity, 1))}.bg-gradient-to-b{background-image:linear-gradient(to bottom, var(--tw-gradient-stops))}.bg-gradient-to-r{background-image:linear-gradient(to right, var(--tw-gradient-stops))}.from-\[\#070B19\]{--tw-gradient-from:#070B19 var(--tw-gradient-from-position);--tw-gradient-to:rgb(7 11 25 / 0) var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from), var(--tw-gradient-to)}.from-\[\#0B192C\]{--tw-gradient-from:#0B192C var(--tw-gradient-from-position);--tw-gradient-to:rgb(11 25 44 / 0) var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from), var(--tw-gradient-to)}.from-amber-500{--tw-gradient-from:#f59e0b var(--tw-gradient-from-position);--tw-gradient-to:rgb(245 158 11 / 0) var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from), var(--tw-gradient-to)}.via-\[\#091220\]{--tw-gradient-to:rgb(9 18 32 / 0)  var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from), #091220 var(--tw-gradient-via-position), var(--tw-gradient-to)}.via-\[\#0F172A\]{--tw-gradient-to:rgb(15 23 42 / 0)  var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from), #0F172A var(--tw-gradient-via-position), var(--tw-gradient-to)}.via-orange-500{--tw-gradient-to:rgb(249 115 22 / 0)  var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from), #f97316 var(--tw-gradient-via-position), var(--tw-gradient-to)}.to-\[\#040811\]{--tw-gradient-to:#040811 var(--tw-gradient-to-position)}.to-\[\#1E293B\]{--tw-gradient-to:#1E293B var(--tw-gradient-to-position)}.to-amber-500{--tw-gradient-to:#f59e0b var(--tw-gradient-to-position)}.fill-current{fill:currentColor}.p-2{padding:0.5rem}.px-2{padding-left:0.5rem;padding-right:0.5rem}.px-2\.5{padding-left:0.625rem;padding-right:0.625rem}.px-4{padding-left:1rem;padding-right:1rem}.px-6{padding-left:1.5rem;padding-right:1.5rem}.py-1{padding-top:0.25rem;padding-bottom:0.25rem}.py-2{padding-top:0.5rem;padding-bottom:0.5rem}.py-2\.5{padding-top:0.625rem;padding-bottom:0.625rem}.pb-2{padding-bottom:0.5rem}.pb-6{padding-bottom:1.5rem}.pt-4{padding-top:1rem}.text-center{text-align:center}.text-2xl{font-size:1.5rem;line-height:2rem}.text-base{font-size:1rem;line-height:1.5rem}.text-lg{font-size:1.125rem;line-height:1.75rem}.text-sm{font-size:0.875rem;line-height:1.25rem}.text-xl{font-size:1.25rem;line-height:1.75rem}.text-xs{font-size:0.75rem;line-height:1rem}.font-bold{font-weight:700}.font-semibold{font-weight:600}.leading-none{line-height:1}.leading-tight{line-height:1.25}.text-amber-100{--tw-text-opacity:1;color:rgb(254 243 199 / var(--tw-text-opacity, 1))}.text-amber-200{--tw-text-opacity:1;color:rgb(253 230 138 / var(--tw-text-opacity, 1))}.text-amber-200\/80{color:rgb(253 230 138 / 0.8)}.text-amber-300{--tw-text-opacity:1;color:rgb(252 211 77 / var(--tw-text-opacity, 1))}.text-slate-300{--tw-text-opacity:1;color:rgb(203 213 225 / var(--tw-text-opacity, 1))}.text-slate-900{--tw-text-opacity:1;color:rgb(15 23 42 / var(--tw-text-opacity, 1))}.text-slate-950{--tw-text-opacity:1;color:rgb(2 6 23 / var(--tw-text-opacity, 1))}.text-white{--tw-text-opacity:1;color:rgb(255 255 255 / var(--tw-text-opacity, 1))}.placeholder-slate-400::placeholder{--tw-placeholder-opacity:1;color:rgb(148 163 184 / var(--tw-placeholder-opacity, 1))}.opacity-60{opacity:0.6}.opacity-75{opacity:0.75}.shadow-\[0_-10px_40px_rgba\(0\2c 0\2c 0\2c 0\.6\)\]{--tw-shadow:0 -10px 40px rgba(0,0,0,0.6);--tw-shadow-colored:0 -10px 40px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-\[0_0_30px_rgba\(0\2c 0\2c 0\2c 0\.8\)\]{--tw-shadow:0 0 30px rgba(0,0,0,0.8);--tw-shadow-colored:0 0 30px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-\[0_0_50px_15px_rgba\(253\2c 230\2c 138\2c 0\.4\)\]{--tw-shadow:0 0 50px 15px rgba(253,230,138,0.4);--tw-shadow-colored:0 0 50px 15px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-\[0_6px_25px_rgba\(245\2c 158\2c 11\2c 0\.5\)\]{--tw-shadow:0 6px 25px rgba(245,158,11,0.5);--tw-shadow-colored:0 6px 25px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-lg{--tw-shadow:0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);--tw-shadow-colored:0 10px 15px -3px var(--tw-shadow-color), 0 4px 6px -4px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-md{--tw-shadow:0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);--tw-shadow-colored:0 4px 6px -1px var(--tw-shadow-color), 0 2px 4px -2px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.ring-4{--tw-ring-offset-shadow:var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);--tw-ring-shadow:var(--tw-ring-inset) 0 0 0 calc(4px + var(--tw-ring-offset-width)) var(--tw-ring-color);box-shadow:var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000)}.ring-white{--tw-ring-opacity:1;--tw-ring-color:rgb(255 255 255 / var(--tw-ring-opacity, 1))}.blur-\[1px\]{--tw-blur:blur(1px);filter:var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale) var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow)}.blur-\[2px\]{--tw-blur:blur(2px);filter:var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale) var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow)}.drop-shadow-\[0_15px_15px_rgba\(0\2c 0\2c 0\2c 0\.8\)\]{--tw-drop-shadow:drop-shadow(0 15px 15px rgba(0,0,0,0.8));filter:var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale) var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow)}.backdrop-blur-md{--tw-backdrop-blur:blur(12px);-webkit-backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia);backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia)}.backdrop-blur-xl{--tw-backdrop-blur:blur(24px);-webkit-backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia);backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia)}.transition-all{transition-property:all;transition-timing-function:cubic-bezier(0.4, 0, 0.2, 1);transition-duration:150ms}.transition-colors{transition-property:color, background-color, border-color, fill, stroke, -webkit-text-decoration-color;transition-property:color, background-color, border-color, text-decoration-color, fill, stroke;transition-property:color, background-color, border-color, text-decoration-color, fill, stroke, -webkit-text-decoration-color;transition-timing-function:cubic-bezier(0.4, 0, 0.2, 1);transition-duration:150ms}.transition-transform{transition-property:transform;transition-timing-function:cubic-bezier(0.4, 0, 0.2, 1);transition-duration:150ms}.duration-500{transition-duration:500ms}.duration-700{transition-duration:700ms}.ease-out{transition-timing-function:cubic-bezier(0, 0, 0.2, 1)}.hover\:bg-slate-700:hover{--tw-bg-opacity:1;background-color:rgb(51 65 85 / var(--tw-bg-opacity, 1))}.focus\:border-amber-400:focus{--tw-border-opacity:1;border-color:rgb(251 191 36 / var(--tw-border-opacity, 1))}.focus\:outline-none:focus{outline:2px solid transparent;outline-offset:2px}.active\:scale-95:active{--tw-scale-x:.95;--tw-scale-y:.95;transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}@media (min-width: 640px){.sm\:right-16{right:4rem}.sm\:right-20{right:5rem}}</style></head>
+<body class="bg-slate-950 text-white h-screen w-screen relative flex flex-col justify-between">
+
+    <!-- ==================== 1. ฉากหลังท้องฟ้าและแม่น้ำ ==================== -->
+    <div id="scene-container" class="absolute inset-0 z-0 overflow-hidden bg-gradient-to-b from-[#070B19] via-[#0F172A] to-[#1E293B]">
+        
+        <!-- ดวงดาวระยิบระยับ (สร้างด้วย JS) -->
+        <div id="stars-container" class="absolute inset-0 h-1/2 pointer-events-none"><div style="position: absolute; left: 67.299%; top: 79.5537%; width: 3.13556px; height: 3.13556px; background-color: rgb(254, 249, 195); border-radius: 50%; opacity: 0.874316;"></div><div style="position: absolute; left: 23.5835%; top: 13.9822%; width: 1.59061px; height: 1.59061px; background-color: rgb(254, 249, 195); border-radius: 50%; opacity: 0.758064;"></div><div style="position: absolute; left: 71.741%; top: 40.1738%; width: 2.74151px; height: 2.74151px; background-color: rgb(254, 249, 195); border-radius: 50%; opacity: 0.827141;"></div><div style="position: absolute; left: 88.3554%; top: 13.0419%; width: 1.32854px; height: 1.32854px; background-color: rgb(254, 249, 195); border-radius: 50%; opacity: 0.500283;"></div><div style="position: absolute; left: 62.898%; top: 73.3385%; width: 2.19274px; height: 2.19274px; background-color: rgb(254, 249, 195); border-radius: 50%; opacity: 0.739399;"></div><div style="position: absolute; left: 20.0073%; top: 42.6345%; width: 2.12989px; height: 2.12989px; background-color: rgb(254, 249, 195); border-radius: 50%; opacity: 0.32582;"></div><div style="position: absolute; left: 48.6071%; top: 38.7137%; width: 1.50886px; height: 1.50886px; background-color: rgb(254, 249, 195); border-radius: 50%; opacity: 0.53698;"></div><div style="position: absolute; left: 98.361%; top: 32.159%; width: 2.27328px; height: 2.27328px; background-color: rgb(254, 249, 195); border-radius: 50%; opacity: 0.326969;"></div><div style="position: absolute; left: 35.3577%; top: 80.1623%; width: 1.21233px; height: 1.21233px; background-color: rgb(254, 249, 195); border-radius: 50%; opacity: 0.732723;"></div><div style="position: absolute; left: 34.9628%; top: 11.4534%; width: 2.90934px; height: 2.90934px; background-color: rgb(254, 249, 195); border-radius: 50%; opacity: 0.907923;"></div><div style="position: absolute; left: 60.432%; top: 10.6296%; width: 2.39247px; height: 2.39247px; background-color: rgb(254, 249, 195); border-radius: 50%; opacity: 0.700281;"></div><div style="position: absolute; left: 29.7728%; top: 10.6314%; width: 1.11285px; height: 1.11285px; background-color: rgb(254, 249, 195); border-radius: 50%; opacity: 0.330618;"></div><div style="position: absolute; left: 68.4%; top: 9.62978%; width: 2.60934px; height: 2.60934px; background-color: rgb(254, 249, 195); border-radius: 50%; opacity: 0.490978;"></div><div style="position: absolute; left: 98.4828%; top: 80.955%; width: 1.13353px; height: 1.13353px; background-color: rgb(254, 249, 195); border-radius: 50%; opacity: 0.778529;"></div><div style="position: absolute; left: 59.3462%; top: 84.886%; width: 2.37317px; height: 2.37317px; background-color: rgb(254, 249, 195); border-radius: 50%; opacity: 0.236686;"></div><div style="position: absolute; left: 57.0226%; top: 17.0667%; width: 1.82735px; height: 1.82735px; background-color: rgb(254, 249, 195); border-radius: 50%; opacity: 0.540621;"></div><div style="position: absolute; left: 38.2775%; top: 67.359%; width: 1.03795px; height: 1.03795px; background-color: rgb(254, 249, 195); border-radius: 50%; opacity: 0.544836;"></div><div style="position: absolute; left: 92.5091%; top: 86.3426%; width: 3.31213px; height: 3.31213px; background-color: rgb(254, 249, 195); border-radius: 50%; opacity: 0.542754;"></div><div style="position: absolute; left: 29.1797%; top: 23.4958%; width: 2.22421px; height: 2.22421px; background-color: rgb(254, 249, 195); border-radius: 50%; opacity: 0.493417;"></div><div style="position: absolute; left: 95.5253%; top: 19.0107%; width: 2.72326px; height: 2.72326px; background-color: rgb(254, 249, 195); border-radius: 50%; opacity: 0.801553;"></div><div style="position: absolute; left: 84.1118%; top: 80.6712%; width: 1.92606px; height: 1.92606px; background-color: rgb(254, 249, 195); border-radius: 50%; opacity: 0.395811;"></div><div style="position: absolute; left: 66.5084%; top: 80.6723%; width: 1.60825px; height: 1.60825px; background-color: rgb(254, 249, 195); border-radius: 50%; opacity: 0.389117;"></div><div style="position: absolute; left: 51.9925%; top: 84.392%; width: 1.34385px; height: 1.34385px; background-color: rgb(254, 249, 195); border-radius: 50%; opacity: 0.310078;"></div><div style="position: absolute; left: 25.2171%; top: 33.1088%; width: 1.54802px; height: 1.54802px; background-color: rgb(254, 249, 195); border-radius: 50%; opacity: 0.918802;"></div><div style="position: absolute; left: 40.5947%; top: 72.2094%; width: 1.21165px; height: 1.21165px; background-color: rgb(254, 249, 195); border-radius: 50%; opacity: 0.865168;"></div><div style="position: absolute; left: 41.2232%; top: 42.1462%; width: 1.03659px; height: 1.03659px; background-color: rgb(254, 249, 195); border-radius: 50%; opacity: 0.852347;"></div><div style="position: absolute; left: 97.5561%; top: 37.9236%; width: 2.59695px; height: 2.59695px; background-color: rgb(254, 249, 195); border-radius: 50%; opacity: 0.584908;"></div><div style="position: absolute; left: 38.9758%; top: 33.392%; width: 1.31538px; height: 1.31538px; background-color: rgb(254, 249, 195); border-radius: 50%; opacity: 0.288809;"></div><div style="position: absolute; left: 19.6401%; top: 33.9072%; width: 2.11707px; height: 2.11707px; background-color: rgb(254, 249, 195); border-radius: 50%; opacity: 0.905933;"></div><div style="position: absolute; left: 29.4985%; top: 65.1139%; width: 2.38431px; height: 2.38431px; background-color: rgb(254, 249, 195); border-radius: 50%; opacity: 0.958022;"></div><div style="position: absolute; left: 74.1781%; top: 29.2424%; width: 1.26249px; height: 1.26249px; background-color: rgb(254, 249, 195); border-radius: 50%; opacity: 0.590416;"></div><div style="position: absolute; left: 66.0081%; top: 42.8413%; width: 1.63619px; height: 1.63619px; background-color: rgb(254, 249, 195); border-radius: 50%; opacity: 0.463505;"></div><div style="position: absolute; left: 35.5042%; top: 73.4406%; width: 3.07865px; height: 3.07865px; background-color: rgb(254, 249, 195); border-radius: 50%; opacity: 0.736888;"></div><div style="position: absolute; left: 18.1276%; top: 80.4199%; width: 2.65424px; height: 2.65424px; background-color: rgb(254, 249, 195); border-radius: 50%; opacity: 0.485884;"></div><div style="position: absolute; left: 61.1932%; top: 47.1232%; width: 1.77115px; height: 1.77115px; background-color: rgb(254, 249, 195); border-radius: 50%; opacity: 0.458606;"></div></div>
+
+        <!-- พระจันทร์เต็มดวง -->
+        <div class="absolute top-12 right-8 sm:right-16 w-24 h-24 rounded-full bg-amber-100 shadow-[0_0_50px_15px_rgba(253,230,138,0.4)] flex items-center justify-center">
+            <!-- ลวดลายพื้นผิวดวงจันทร์เบาๆ -->
+            <div class="w-6 h-6 rounded-full bg-amber-200/40 absolute top-4 left-5"></div>
+            <div class="w-4 h-4 rounded-full bg-amber-200/30 absolute bottom-6 right-5"></div>
+            <div class="w-8 h-8 rounded-full bg-amber-200/20 absolute bottom-4 left-7"></div>
+        </div>
+
+        <!-- เส้นขอบฟ้าและเงาต้นไม้/วัดฝั่งตรงข้าม -->
+        <div class="absolute top-[42%] left-0 right-0 h-12 flex items-end justify-between px-2 opacity-60 pointer-events-none">
+            <!-- เงาเจดีย์และต้นไม้ฝั่งตรงข้าม -->
+            <svg class="w-full h-16 text-slate-950 fill-current" viewBox="0 0 400 60" preserveAspectRatio="none">
+                <path d="M0,60 L0,45 Q20,35 40,45 Q60,30 80,45 L95,45 L100,15 L105,45 L120,45 Q150,25 180,48 Q220,35 260,48 Q290,20 320,45 L335,45 L340,22 L345,45 Q370,30 400,45 L400,60 Z"></path>
+            </svg>
+        </div>
+
+        <!-- ผืนน้ำแม่น้ำเจ้าพระยา -->
+        <div id="river-area" class="absolute top-[45%] bottom-0 left-0 right-0 bg-gradient-to-b from-[#0B192C] via-[#091220] to-[#040811] border-t border-amber-200/10">
+            
+            <!-- แสงสะท้อนพระจันทร์บนผิวน้ำ -->
+            <div class="absolute top-2 right-10 sm:right-20 w-20 flex flex-col items-center space-y-2 pointer-events-none opacity-60">
+                <div class="w-20 h-1.5 bg-amber-200/60 rounded-full blur-[1px] moon-reflection"></div>
+                <div class="w-16 h-1.5 bg-amber-200/50 rounded-full blur-[1px] moon-reflection" style="animation-delay: 0.5s"></div>
+                <div class="w-24 h-2 bg-amber-200/40 rounded-full blur-[2px] moon-reflection" style="animation-delay: 1s"></div>
+                <div class="w-14 h-1.5 bg-amber-200/30 rounded-full blur-[1px] moon-reflection" style="animation-delay: 1.5s"></div>
+                <div class="w-10 h-1 bg-amber-200/20 rounded-full blur-[1px] moon-reflection" style="animation-delay: 2s"></div>
+            </div>
+
+            <!-- Canvas สำหรับวาดคลื่นน้ำไหวเบาๆ และพลุบนท้องฟ้า -->
+            <canvas id="effects-canvas" class="fixed inset-0 w-full h-full pointer-events-none z-20" width="948" height="828"></canvas>
+
+            <!-- พื้นที่สำหรับกระทงที่ถูกปล่อยลงน้ำแล้ว -->
+            <div id="floating-krathongs-layer" class="absolute inset-0 overflow-hidden pointer-events-none z-10"></div>
+        </div>
+    </div>
+
+    <!-- ==================== 2. ส่วนหัว (Header & ตัวนับสถิติ) ==================== -->
+    <header class="relative z-30 flex items-center justify-between px-4 pt-4 pb-2">
+        <!-- ป้ายนับจำนวนกระทงที่ลอยแล้ว -->
+        <div class="bg-slate-900/80 backdrop-blur-md border border-amber-400/30 rounded-2xl px-4 py-2 flex items-center space-x-2.5 shadow-lg">
+            <span class="text-2xl">🪷</span>
+            <div>
+                <p class="text-xs text-amber-200/80 leading-none">ลอยไปแล้ว</p>
+                <p class="text-lg font-bold text-amber-300 leading-tight"><span id="krathong-count">0</span> กระทง</p>
+            </div>
+        </div>
+
+        <!-- ปุ่มเปิด/ปิดเสียง (ใหญ่ กดง่ายด้วยนิ้วโป้ง) -->
+        <button id="sound-toggle-btn" onclick="toggleAudio()" aria-label="เปิดหรือปิดเสียง" class="bg-slate-900/80 backdrop-blur-md border border-amber-400/30 active:scale-95 transition-transform rounded-2xl px-4 py-2.5 flex items-center space-x-2 shadow-lg">
+            <span id="sound-icon" class="text-2xl">🔇</span>
+            <span id="sound-text" class="text-sm font-semibold text-amber-100">เปิดเสียง</span>
+        </button>
+    </header>
+
+    <!-- ==================== 3. พื้นที่แสดงตัวอย่างกระทง & คำอธิษฐานลอยขึ้นฟ้า ==================== -->
+    <main class="relative z-20 flex-1 flex flex-col items-center justify-center pointer-events-none">
+        
+        <!-- กล่องข้อความคำอธิษฐานที่จะลอยขึ้นฟ้าเมื่อกดลอยกระทง -->
+        <div id="floating-wish-container" class="absolute top-1/4 left-1/2 -translate-x-1/2 w-full px-6 text-center pointer-events-none z-40"></div>
+
+        <!-- ตัวอย่างกระทงตรงกลางหน้าจอก่อนปล่อย -->
+        <div id="preview-krathong-wrapper" class="transition-all duration-700 ease-out transform translate-y-6">
+            <div id="preview-krathong" class="w-44 h-44 krathong-bob drop-shadow-[0_15px_15px_rgba(0,0,0,0.8)]">
+                <svg viewBox="0 0 200 180" class="w-full h-full overflow-visible">
+                    <!-- เงากระทงบนผิวน้ำ -->
+                    <ellipse cx="100" cy="154" rx="76" ry="16" fill="rgba(0,0,0,0.45)"></ellipse>
+
+                    <!-- ควันธูปลอยขึ้น -->
+                    <circle cx="92" cy="42" r="2.5" fill="rgba(255,255,255,0.5)" class="incense-smoke"></circle>
+                    <circle cx="100" cy="36" r="3" fill="rgba(255,255,255,0.4)" class="incense-smoke" style="animation-delay: 0.8s"></circle>
+                    <circle cx="108" cy="40" r="2.5" fill="rgba(255,255,255,0.5)" class="incense-smoke" style="animation-delay: 1.5s"></circle>
+
+                    <!-- ธูป 3 ดอก -->
+                    <line x1="94" y1="125" x2="88" y2="52" stroke="#D97706" stroke-width="2.5" stroke-linecap="round"></line>
+                    <line x1="100" y1="125" x2="100" y2="48" stroke="#D97706" stroke-width="2.5" stroke-linecap="round"></line>
+                    <line x1="106" y1="125" x2="112" y2="52" stroke="#D97706" stroke-width="2.5" stroke-linecap="round"></line>
+                    <!-- ปลายธูปติดไฟสีแดงส้ม -->
+                    <circle cx="88" cy="52" r="2" fill="#EF4444" class="candle-flame"></circle>
+                    <circle cx="100" cy="48" r="2.2" fill="#F97316" class="candle-flame"></circle>
+                    <circle cx="112" cy="52" r="2" fill="#EF4444" class="candle-flame"></circle>
+
+                    <!-- เทียนเล่มตรงกลาง -->
+                    <rect x="96" y="78" width="8" height="48" rx="2" fill="#FDE047" stroke="#CA8A04" stroke-width="1"></rect>
+                    <!-- ไส้เทียน -->
+                    <line x1="100" y1="78" x2="100" y2="73" stroke="#1E293B" stroke-width="1.5"></line>
+                    <!-- เปลวเทียนกระพริบพร้อมแสงเรืองรอง -->
+                    <g class="candle-flame">
+                        <circle cx="100" cy="64" r="14" fill="rgba(253, 224, 71, 0.35)"></circle>
+                        <path d="M100,52 Q107,64 100,73 Q93,64 100,52 Z" fill="#FB923C"></path>
+                        <path d="M100,57 Q104,65 100,71 Q96,65 100,57 Z" fill="#FEF08A"></path>
+                    </g>
+
+                    <!-- ตัวกระทงที่เลือก -->
+                    
+                    <!-- ฐานหยวกกล้วย -->
+                    <ellipse cx="100" cy="148" rx="68" ry="18" fill="#14532D"></ellipse>
+                    <path d="M32,135 L32,148 A68,18 0 0,0 168,148 L168,135 Z" fill="#166534"></path>
+                    <!-- กลีบใบตองพับชั้นล่าง -->
+                    <polygon points="25,135 40,105 55,135" fill="#15803D" stroke="#052E16" stroke-width="1.5"></polygon>
+                    <polygon points="50,138 68,102 86,138" fill="#16A34A" stroke="#052E16" stroke-width="1.5"></polygon>
+                    <polygon points="82,140 100,100 118,140" fill="#22C55E" stroke="#052E16" stroke-width="1.5"></polygon>
+                    <polygon points="114,138 132,102 150,138" fill="#16A34A" stroke="#052E16" stroke-width="1.5"></polygon>
+                    <polygon points="145,135 160,105 175,135" fill="#15803D" stroke="#052E16" stroke-width="1.5"></polygon>
+                    <!-- กลีบใบตองพับชั้นใน -->
+                    <polygon points="42,132 56,108 70,132" fill="#4ADE80" stroke="#14532D" stroke-width="1"></polygon>
+                    <polygon points="72,134 88,106 104,134" fill="#4ADE80" stroke="#14532D" stroke-width="1"></polygon>
+                    <polygon points="96,134 112,106 128,134" fill="#4ADE80" stroke="#14532D" stroke-width="1"></polygon>
+                    <polygon points="130,132 144,108 158,132" fill="#4ADE80" stroke="#14532D" stroke-width="1"></polygon>
+                
+
+                    <!-- ดอกไม้ตกแต่ง 3 ดอกด้านหน้า -->
+                    <!-- ดอกซ้าย -->
+                    <g transform="translate(65, 134)">
+                        <circle cx="0" cy="0" r="10" fill="#F472B6" stroke="#DB2777" stroke-width="1.5"></circle>
+                        <circle cx="0" cy="0" r="4" fill="#FDE047"></circle>
+                    </g>
+                    <!-- ดอกขวา -->
+                    <g transform="translate(135, 134)">
+                        <circle cx="0" cy="0" r="10" fill="#F472B6" stroke="#DB2777" stroke-width="1.5"></circle>
+                        <circle cx="0" cy="0" r="4" fill="#FDE047"></circle>
+                    </g>
+                    <!-- ดอกกลาง -->
+                    <g transform="translate(100, 138)">
+                        <circle cx="0" cy="0" r="12" fill="#F472B6" stroke="#DB2777" stroke-width="1.5"></circle>
+                        <circle cx="0" cy="0" r="5" fill="#FDE047"></circle>
+                    </g>
+                </svg>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- ==================== 4. แผงควบคุมด้านล่าง (ออกแบบสำหรับนิ้วโป้งมือเดียว) ==================== -->
+    <section id="control-panel" class="relative z-30 bg-slate-900/90 backdrop-blur-xl border-t border-amber-400/20 rounded-t-3xl px-4 pt-4 pb-6 shadow-[0_-10px_40px_rgba(0,0,0,0.6)] transition-transform duration-500">
+        
+        <!-- แถวที่ 1: เลือกแบบกระทง 3 แบบ -->
+        <div class="mb-3">
+            <label class="block text-sm font-semibold text-amber-200 mb-1.5">1. เลือกตัวกระทง</label>
+            <div class="grid grid-cols-3 gap-2.5">
+                <button type="button" onclick="selectType('banana')" id="btn-type-banana" class="type-btn py-2.5 px-2 rounded-2xl border-2 border-amber-400 bg-amber-500/20 text-white font-semibold text-base flex flex-col items-center justify-center active:scale-95 transition-all">
+                    <span class="text-xl mb-0.5">🌿</span>
+                    <span>ใบตอง</span>
+                </button>
+                <button type="button" onclick="selectType('lotus')" id="btn-type-lotus" class="type-btn py-2.5 px-2 rounded-2xl border-2 border-slate-700 bg-slate-800/80 text-slate-300 font-semibold text-base flex flex-col items-center justify-center active:scale-95 transition-all">
+                    <span class="text-xl mb-0.5">🪷</span>
+                    <span>ดอกบัว</span>
+                </button>
+                <button type="button" onclick="selectType('bread')" id="btn-type-bread" class="type-btn py-2.5 px-2 rounded-2xl border-2 border-slate-700 bg-slate-800/80 text-slate-300 font-semibold text-base flex flex-col items-center justify-center active:scale-95 transition-all">
+                    <span class="text-xl mb-0.5">🍞</span>
+                    <span>ขนมปัง</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- แถวที่ 2: เลือกสีดอกไม้ตกแต่ง -->
+        <div class="mb-3">
+            <label class="block text-sm font-semibold text-amber-200 mb-1.5">2. เลือกสีดอกไม้</label>
+            <div class="flex items-center justify-between gap-2 bg-slate-800/60 p-2 rounded-2xl border border-slate-700/80">
+                <button type="button" onclick="selectColor('yellow')" id="color-yellow" aria-label="ดอกไม้สีเหลืองดาวเรือง" class="color-btn flex-1 h-11 rounded-xl bg-amber-400 transition-all flex items-center justify-center text-slate-900 font-bold text-sm shadow-md opacity-75">
+                    เหลือง
+                </button>
+                <button type="button" onclick="selectColor('pink')" id="color-pink" aria-label="ดอกไม้สีชมพูบานเย็น" class="color-btn flex-1 h-11 rounded-xl bg-pink-500 transition-all flex items-center justify-center text-white font-bold text-sm shadow-md ring-4 ring-white scale-105">
+                    ชมพู
+                </button>
+                <button type="button" onclick="selectColor('purple')" id="color-purple" aria-label="ดอกไม้สีม่วงบานไม่รู้โรย" class="color-btn flex-1 h-11 rounded-xl bg-purple-500 opacity-75 transition-all flex items-center justify-center text-white font-bold text-sm shadow-md">
+                    ม่วง
+                </button>
+                <button type="button" onclick="selectColor('white')" id="color-white" aria-label="ดอกไม้สีขาวมะลิ" class="color-btn flex-1 h-11 rounded-xl bg-slate-100 opacity-75 transition-all flex items-center justify-center text-slate-900 font-bold text-sm shadow-md">
+                    ขาว
+                </button>
+            </div>
+        </div>
+
+        <!-- แถวที่ 3: พิมพ์คำอธิษฐานสั้นๆ -->
+        <div class="mb-4">
+            <div class="flex justify-between items-center mb-1.5">
+                <label for="wish-input" class="text-sm font-semibold text-amber-200">3. คำอธิษฐานขอพร</label>
+                <button type="button" onclick="randomWish()" class="text-xs bg-slate-800 hover:bg-slate-700 text-amber-300 px-2.5 py-1 rounded-lg border border-amber-400/30 active:scale-95">
+                    ✨ สุ่มคำอวยพร
+                </button>
+            </div>
+            <input type="text" id="wish-input" maxlength="60" placeholder="พิมพ์คำอธิษฐานสั้นๆ ที่นี่..." class="w-full h-12 px-4 rounded-2xl bg-slate-800 border-2 border-slate-700 focus:border-amber-400 focus:outline-none text-white text-lg placeholder-slate-400 transition-colors" style="">
+        </div>
+
+        <!-- แถวที่ 4: ปุ่มกดลอยกระทงขนาดใหญ่สำหรับนิ้วโป้ง -->
+        <button type="button" id="launch-btn" onclick="launchKrathong()" class="w-full h-16 rounded-2xl bg-gradient-to-r from-amber-500 via-orange-500 to-amber-500 text-slate-950 font-bold text-2xl shadow-[0_6px_25px_rgba(245,158,11,0.5)] active:scale-95 transition-all flex items-center justify-center space-x-2 border-2 border-amber-200">
+            <span>🙏</span>
+            <span>ลอยกระทง</span>
+            <span>✨</span>
+        </button>
+    </section>
+
+    <!-- ปุ่มลอยกระทงอีกครั้ง (จะโผล่มาหลังปล่อยกระทงเสร็จ เพื่อให้กดลอยต่อได้สะดวก) -->
+    <div id="relaunch-bar" class="fixed bottom-6 left-4 right-4 z-30 hidden">
+        <button type="button" onclick="resetForNewKrathong()" class="w-full h-16 rounded-2xl bg-slate-900/95 backdrop-blur-md border-2 border-amber-400 text-amber-300 font-bold text-xl shadow-[0_0_30px_rgba(0,0,0,0.8)] active:scale-95 transition-all flex items-center justify-center space-x-2">
+            <span>🪷</span>
+            <span>ประดิษฐ์กระทงใบใหม่</span>
+        </button>
+    </div>
+
+    <!-- ==================== JavaScript ควบคุมการทำงานทั้งหมด ==================== -->
+    <script>
+        // --- 1. สถานะของแอปพลิเคชัน (State) ---
+        let state = {
+            type: 'banana',      // 'banana' | 'lotus' | 'bread'
+            flowerColor: 'yellow', // 'yellow' | 'pink' | 'purple' | 'white'
+            count: 0,
+            isLaunching: false
+        };
+
+        // ชุดสีของดอกไม้แต่ละแบบ
+        const flowerPalettes = {
+            yellow: { main: '#FACC15', dark: '#CA8A04', center: '#EA580C' },
+            pink:   { main: '#F472B6', dark: '#DB2777', center: '#FDE047' },
+            purple: { main: '#C084FC', dark: '#9333EA', center: '#FDE047' },
+            white:  { main: '#F8FAFC', dark: '#CBD5E1', center: '#F59E0B' }
+        };
+
+        // คำอธิษฐานตัวอย่างสำหรับปุ่มสุ่ม
+        const sampleWishes = [
+            "ขอให้ครอบครัวมีความสุข สุขภาพแข็งแรงตลอดปี",
+            "ขอให้การงานราบรื่น การเงินคล่องตัว ร่ำรวยเงินทอง",
+            "ขอให้สิ่งไม่ดีลอยไปกับสายน้ำ พบเจอแต่สิ่งดีๆ",
+            "ขอให้สมหวังในความรัก และมีรอยยิ้มในทุกๆ วัน",
+            "ขอขมาพระแม่คงคา และขอให้ชีวิตสงบร่มเย็น"
+        ];
+
+        // --- 2. ระบบเสียงสังเคราะห์ด้วย Web Audio API (ไม่ใช้ไฟล์เสียงภายนอก) ---
+        let audioCtx = null;
+        let isSoundOn = false;
+        let waterNoiseNode = null;
+        let waterGainNode = null;
+
+        // ฟังก์ชันเริ่มต้น AudioContext และสร้างเสียงน้ำไหลเบาๆ
+        function initAudio() {
+            if (!audioCtx) {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                audioCtx = new AudioContext();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            if (!waterNoiseNode) {
+                startAmbientWaterSound();
+            }
+        }
+
+        // สร้างเสียงคลื่นน้ำเบาๆ (Filtered Pink/Brown Noise)
+        function startAmbientWaterSound() {
+            const bufferSize = audioCtx.sampleRate * 3;
+            const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+            const output = noiseBuffer.getChannelData(0);
+            let lastOut = 0.0;
+            for (let i = 0; i < bufferSize; i++) {
+                const white = Math.random() * 2 - 1;
+                // Brown noise filter เพื่อให้เสียงทุ้มนุ่มเหมือนน้ำไหล
+                output[i] = (lastOut + (0.02 * white)) / 1.02;
+                lastOut = output[i];
+                output[i] *= 2.5;
+            }
+
+            waterNoiseNode = audioCtx.createBufferSource();
+            waterNoiseNode.buffer = noiseBuffer;
+            waterNoiseNode.loop = true;
+
+            // Lowpass filter ให้เสียงนุ่มนวล
+            const filter = audioCtx.createBiquadFilter();
+            filter.type = 'lowpass';
+            filter.frequency.value = 320;
+
+            waterGainNode = audioCtx.createGain();
+            waterGainNode.gain.value = isSoundOn ? 0.08 : 0.0;
+
+            waterNoiseNode.connect(filter);
+            filter.connect(waterGainNode);
+            waterGainNode.connect(audioCtx.destination);
+            waterNoiseNode.start(0);
+        }
+
+        // ปุ่มเปิด/ปิดเสียง
+        function toggleAudio() {
+            isSoundOn = !isSoundOn;
+            const icon = document.getElementById('sound-icon');
+            const text = document.getElementById('sound-text');
+
+            if (isSoundOn) {
+                initAudio();
+                if (waterGainNode) waterGainNode.gain.setTargetAtTime(0.08, audioCtx.currentTime, 0.2);
+                icon.textContent = '🔊';
+                text.textContent = 'เปิดเสียงอยู่';
+                playBellSound(); // เล่นเสียงกระดิ่งเบาๆ ยืนยันว่าเปิดเสียงแล้ว
+            } else {
+                if (waterGainNode && audioCtx) waterGainNode.gain.setTargetAtTime(0.0, audioCtx.currentTime, 0.2);
+                icon.textContent = '🔇';
+                text.textContent = 'เปิดเสียง';
+            }
+        }
+
+        // เสียงกระดิ่งกังวานตอนปล่อยกระทง
+        function playBellSound() {
+            if (!isSoundOn) return;
+            initAudio();
+            const now = audioCtx.currentTime;
+            // ความถี่โน้ต Pentatonic แบบไทยๆ
+            const freqs = [523.25, 659.25, 783.99, 1046.50]; 
+            
+            freqs.forEach((freq, index) => {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(freq, now + index * 0.12);
+
+                gain.gain.setValueAtTime(0.001, now + index * 0.12);
+                gain.gain.exponentialRampToValueAtTime(0.15 / (index + 1), now + index * 0.12 + 0.03);
+                gain.gain.exponentialRampToValueAtTime(0.0001, now + index * 0.12 + 1.8);
+
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now + index * 0.12);
+                osc.stop(now + index * 0.12 + 1.9);
+            });
+        }
+
+        // เสียงพลุแตกบนท้องฟ้า (Noise burst + Low boom)
+        function playFireworkSound() {
+            if (!isSoundOn || !audioCtx) return;
+            const now = audioCtx.currentTime;
+
+            // 1. เสียงทุ้มตอนพลุระเบิด
+            const osc = audioCtx.createOscillator();
+            const oscGain = audioCtx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(110, now);
+            osc.frequency.exponentialRampToValueAtTime(30, now + 0.4);
+
+            oscGain.gain.setValueAtTime(0.25, now);
+            oscGain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
+
+            osc.connect(oscGain);
+            oscGain.connect(audioCtx.destination);
+            osc.start(now);
+            osc.stop(now + 0.5);
+
+            // 2. เสียงซ่าของประกายไฟ
+            const bufferSize = audioCtx.sampleRate * 0.8;
+            const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+            const data = buffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) {
+                data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (audioCtx.sampleRate * 0.25));
+            }
+
+            const noise = audioCtx.createBufferSource();
+            noise.buffer = buffer;
+
+            const filter = audioCtx.createBiquadFilter();
+            filter.type = 'bandpass';
+            filter.frequency.value = 1200;
+
+            const noiseGain = audioCtx.createGain();
+            noiseGain.gain.setValueAtTime(0.22, now);
+            noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.8);
+
+            noise.connect(filter);
+            filter.connect(noiseGain);
+            noiseGain.connect(audioCtx.destination);
+            noise.start(now);
+        }
+
+        // --- 3. ระบบวาดกราฟิกกระทง SVG (ใบตอง, ดอกบัว, ขนมปัง) ---
+        function generateKrathongSVG(type, colorKey) {
+            const c = flowerPalettes[colorKey];
+            let baseSVG = '';
+
+            if (type === 'banana') {
+                // กระทงใบตองแบบดั้งเดิม (มีกลีบใบตองพับรอบฐาน)
+                baseSVG = `
+                    <!-- ฐานหยวกกล้วย -->
+                    <ellipse cx="100" cy="148" rx="68" ry="18" fill="#14532D" />
+                    <path d="M32,135 L32,148 A68,18 0 0,0 168,148 L168,135 Z" fill="#166534" />
+                    <!-- กลีบใบตองพับชั้นล่าง -->
+                    <polygon points="25,135 40,105 55,135" fill="#15803D" stroke="#052E16" stroke-width="1.5"/>
+                    <polygon points="50,138 68,102 86,138" fill="#16A34A" stroke="#052E16" stroke-width="1.5"/>
+                    <polygon points="82,140 100,100 118,140" fill="#22C55E" stroke="#052E16" stroke-width="1.5"/>
+                    <polygon points="114,138 132,102 150,138" fill="#16A34A" stroke="#052E16" stroke-width="1.5"/>
+                    <polygon points="145,135 160,105 175,135" fill="#15803D" stroke="#052E16" stroke-width="1.5"/>
+                    <!-- กลีบใบตองพับชั้นใน -->
+                    <polygon points="42,132 56,108 70,132" fill="#4ADE80" stroke="#14532D" stroke-width="1"/>
+                    <polygon points="72,134 88,106 104,134" fill="#4ADE80" stroke="#14532D" stroke-width="1"/>
+                    <polygon points="96,134 112,106 128,134" fill="#4ADE80" stroke="#14532D" stroke-width="1"/>
+                    <polygon points="130,132 144,108 158,132" fill="#4ADE80" stroke="#14532D" stroke-width="1"/>
+                `;
+            } else if (type === 'lotus') {
+                // กระทงดอกบัวกลีบซ้อนสวยงาม
+                baseSVG = `
+                    <!-- ใบบัวรองฐาน -->
+                    <ellipse cx="100" cy="150" rx="74" ry="16" fill="#15803D" />
+                    <!-- กลีบดอกบัวชั้นนอก -->
+                    <path d="M25,142 Q20,110 52,115 Q55,135 45,145 Z" fill="#F472B6" stroke="#BE185D" stroke-width="1.5"/>
+                    <path d="M175,142 Q180,110 148,115 Q145,135 155,145 Z" fill="#F472B6" stroke="#BE185D" stroke-width="1.5"/>
+                    <path d="M45,145 Q45,102 78,108 Q75,135 65,147 Z" fill="#F9A8D4" stroke="#DB2777" stroke-width="1.5"/>
+                    <path d="M155,145 Q155,102 122,108 Q125,135 135,147 Z" fill="#F9A8D4" stroke="#DB2777" stroke-width="1.5"/>
+                    <!-- กลีบดอกบัวตรงกลาง -->
+                    <path d="M72,147 Q100,92 128,147 Z" fill="#FBCFE8" stroke="#DB2777" stroke-width="1.5"/>
+                    <path d="M84,147 Q100,102 116,147 Z" fill="#FDF2F8" stroke="#F472B6" stroke-width="1"/>
+                `;
+            } else if (type === 'bread') {
+                // กระทงขนมปังรักษ์โลก (รูปเต่า/ดอกไม้ขนมปังอบกรอบ)
+                baseSVG = `
+                    <!-- ฐานขนมปังอบ -->
+                    <ellipse cx="100" cy="146" rx="66" ry="18" fill="#92400E" />
+                    <!-- กลีบขนมปังปอนด์โค้งมน -->
+                    <circle cx="42" cy="132" r="18" fill="#D97706" stroke="#78350F" stroke-width="2"/>
+                    <circle cx="70" cy="126" r="20" fill="#F59E0B" stroke="#78350F" stroke-width="2"/>
+                    <circle cx="100" cy="124" r="22" fill="#FBBF24" stroke="#78350F" stroke-width="2"/>
+                    <circle cx="130" cy="126" r="20" fill="#F59E0B" stroke="#78350F" stroke-width="2"/>
+                    <circle cx="158" cy="132" r="18" fill="#D97706" stroke="#78350F" stroke-width="2"/>
+                    <!-- ขอบเกรียมขนมปังด้านล่าง -->
+                    <path d="M35,142 Q100,158 165,142" fill="none" stroke="#78350F" stroke-width="4" stroke-linecap="round"/>
+                `;
+            }
+
+            // ดอกไม้ตกแต่งตามสีที่เลือก + ธูป 3 ดอก + เทียน 1 เล่ม + ไฟกระพริบ
+            return `
+                <svg viewBox="0 0 200 180" class="w-full h-full overflow-visible">
+                    <!-- เงากระทงบนผิวน้ำ -->
+                    <ellipse cx="100" cy="154" rx="76" ry="16" fill="rgba(0,0,0,0.45)" />
+
+                    <!-- ควันธูปลอยขึ้น -->
+                    <circle cx="92" cy="42" r="2.5" fill="rgba(255,255,255,0.5)" class="incense-smoke" />
+                    <circle cx="100" cy="36" r="3" fill="rgba(255,255,255,0.4)" class="incense-smoke" style="animation-delay: 0.8s" />
+                    <circle cx="108" cy="40" r="2.5" fill="rgba(255,255,255,0.5)" class="incense-smoke" style="animation-delay: 1.5s" />
+
+                    <!-- ธูป 3 ดอก -->
+                    <line x1="94" y1="125" x2="88" y2="52" stroke="#D97706" stroke-width="2.5" stroke-linecap="round"/>
+                    <line x1="100" y1="125" x2="100" y2="48" stroke="#D97706" stroke-width="2.5" stroke-linecap="round"/>
+                    <line x1="106" y1="125" x2="112" y2="52" stroke="#D97706" stroke-width="2.5" stroke-linecap="round"/>
+                    <!-- ปลายธูปติดไฟสีแดงส้ม -->
+                    <circle cx="88" cy="52" r="2" fill="#EF4444" class="candle-flame"/>
+                    <circle cx="100" cy="48" r="2.2" fill="#F97316" class="candle-flame"/>
+                    <circle cx="112" cy="52" r="2" fill="#EF4444" class="candle-flame"/>
+
+                    <!-- เทียนเล่มตรงกลาง -->
+                    <rect x="96" y="78" width="8" height="48" rx="2" fill="#FDE047" stroke="#CA8A04" stroke-width="1"/>
+                    <!-- ไส้เทียน -->
+                    <line x1="100" y1="78" x2="100" y2="73" stroke="#1E293B" stroke-width="1.5"/>
+                    <!-- เปลวเทียนกระพริบพร้อมแสงเรืองรอง -->
+                    <g class="candle-flame">
+                        <circle cx="100" cy="64" r="14" fill="rgba(253, 224, 71, 0.35)" />
+                        <path d="M100,52 Q107,64 100,73 Q93,64 100,52 Z" fill="#FB923C" />
+                        <path d="M100,57 Q104,65 100,71 Q96,65 100,57 Z" fill="#FEF08A" />
+                    </g>
+
+                    <!-- ตัวกระทงที่เลือก -->
+                    ${baseSVG}
+
+                    <!-- ดอกไม้ตกแต่ง 3 ดอกด้านหน้า -->
+                    <!-- ดอกซ้าย -->
+                    <g transform="translate(65, 134)">
+                        <circle cx="0" cy="0" r="10" fill="${c.main}" stroke="${c.dark}" stroke-width="1.5"/>
+                        <circle cx="0" cy="0" r="4" fill="${c.center}"/>
+                    </g>
+                    <!-- ดอกขวา -->
+                    <g transform="translate(135, 134)">
+                        <circle cx="0" cy="0" r="10" fill="${c.main}" stroke="${c.dark}" stroke-width="1.5"/>
+                        <circle cx="0" cy="0" r="4" fill="${c.center}"/>
+                    </g>
+                    <!-- ดอกกลาง -->
+                    <g transform="translate(100, 138)">
+                        <circle cx="0" cy="0" r="12" fill="${c.main}" stroke="${c.dark}" stroke-width="1.5"/>
+                        <circle cx="0" cy="0" r="5" fill="${c.center}"/>
+                    </g>
+                </svg>
+            `;
+        }
+
+        // อัปเดตตัวอย่างกระทงบนหน้าจอ
+        function renderPreview() {
+            const container = document.getElementById('preview-krathong');
+            container.innerHTML = generateKrathongSVG(state.type, state.flowerColor);
+        }
+
+        // --- 4. การโต้ตอบเลือกแบบกระทงและสีดอกไม้ ---
+        function selectType(type) {
+            state.type = type;
+            // อัปเดตสไตล์ปุ่มที่เลือก
+            document.querySelectorAll('.type-btn').forEach(btn => {
+                btn.classList.remove('border-amber-400', 'bg-amber-500/20', 'text-white');
+                btn.classList.add('border-slate-700', 'bg-slate-800/80', 'text-slate-300');
+            });
+            const activeBtn = document.getElementById(`btn-type-${type}`);
+            activeBtn.classList.remove('border-slate-700', 'bg-slate-800/80', 'text-slate-300');
+            activeBtn.classList.add('border-amber-400', 'bg-amber-500/20', 'text-white');
+
+            renderPreview();
+        }
+
+        function selectColor(color) {
+            state.flowerColor = color;
+            document.querySelectorAll('.color-btn').forEach(btn => {
+                btn.classList.remove('ring-4', 'ring-white', 'scale-105');
+                btn.classList.add('opacity-75');
+            });
+            const activeBtn = document.getElementById(`color-${color}`);
+            activeBtn.classList.remove('opacity-75');
+            activeBtn.classList.add('ring-4', 'ring-white', 'scale-105');
+
+            renderPreview();
+        }
+
+        function randomWish() {
+            const input = document.getElementById('wish-input');
+            const randomIndex = Math.floor(Math.random() * sampleWishes.length);
+            input.value = sampleWishes[randomIndex];
+        }
+
+        // --- 5. ระบบปล่อยกระทงลงน้ำ & เอฟเฟกต์พลุ ---
+        function launchKrathong() {
+            if (state.isLaunching) return;
+            state.isLaunching = true;
+
+            // เล่นเสียงกระดิ่ง (ถ้าเปิดเสียงอยู่)
+            playBellSound();
+
+            // ดึงข้อความอธิษฐาน (ถ้าไม่พิมพ์ให้ใส่คำอวยพรเริ่มต้น)
+            const wishInput = document.getElementById('wish-input');
+            const wishText = wishInput.value.trim() || "ขอให้มีความสุข ความเจริญ ตลอดไป 🙏";
+
+            // ซ่อนแผงควบคุมด้านล่างเพื่อให้เห็นฉากแม่น้ำและพลุเต็มตา
+            const controlPanel = document.getElementById('control-panel');
+            controlPanel.classList.add('translate-y-full');
+
+            // ซ่อนกระทงตัวอย่างตรงกลาง
+            const previewWrapper = document.getElementById('preview-krathong-wrapper');
+            previewWrapper.style.opacity = '0';
+
+            // สร้างกระทงจริงลงในชั้นผิวน้ำและให้ค่อยๆ ลอยห่างออกไป
+            spawnFloatingKrathong(state.type, state.flowerColor, wishText);
+
+            // แสดงข้อความคำอธิษฐานลอยขึ้นไปบนท้องฟ้า
+            showFloatingWish(wishText);
+
+            // จุดพลุเฉลิมฉลองบนท้องฟ้า 3 ลูกต่อเนื่อง
+            setTimeout(() => launchFirework(), 400);
+            setTimeout(() => launchFirework(), 1100);
+            setTimeout(() => launchFirework(), 1800);
+
+            // บันทึกสถิติลง LocalStorage
+            state.count += 1;
+            localStorage.setItem('loy_krathong_count', state.count);
+            document.getElementById('krathong-count').textContent = state.count;
+
+            // แสดงปุ่มให้กดประดิษฐ์กระทงใบใหม่ได้หลังจากผ่านไป 3.5 วินาที
+            setTimeout(() => {
+                document.getElementById('relaunch-bar').classList.remove('hidden');
+            }, 3500);
+        }
+
+        // สร้างกระทงที่ลอยออกไปบนแม่น้ำ (ค่อยๆ เล็กลงและลอยไปตามกระแสน้ำ)
+        function spawnFloatingKrathong(type, color, wish) {
+            const layer = document.getElementById('floating-krathongs-layer');
+            const krathongEl = document.createElement('div');
+            
+            // ตำแหน่งเริ่มต้นบริเวณกลางแม่น้ำด้านล่าง
+            const startX = 50 + (Math.random() * 16 - 8); // 42% - 58%
+            krathongEl.style.position = 'absolute';
+            krathongEl.style.left = `${startX}%`;
+            krathongEl.style.top = '55%';
+            krathongEl.style.width = '140px';
+            krathongEl.style.height = '140px';
+            krathongEl.style.transform = 'translate(-50%, -50%) scale(1)';
+            krathongEl.style.transition = 'all 22s cubic-bezier(0.2, 0.6, 0.4, 1)';
+            krathongEl.className = 'krathong-bob';
+
+            krathongEl.innerHTML = generateKrathongSVG(type, color);
+            layer.appendChild(krathongEl);
+
+            // สั่งให้เคลื่อนที่หลังจากถูกเพิ่มลง DOM
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    // ลอยเฉียงไปทางซ้ายหรือขวาและไกลออกไปทางเส้นขอบฟ้า (top: 4%)
+                    const driftX = startX + (Math.random() * 50 - 25);
+                    krathongEl.style.top = '3%';
+                    krathongEl.style.left = `${Math.max(10, Math.min(90, driftX))}%`;
+                    krathongEl.style.transform = 'translate(-50%, -50%) scale(0.28)';
+                    krathongEl.style.opacity = '0.75';
+                });
+            });
+
+            // ลบออกเมื่อลอยลับสายตาไปแล้ว (23 วินาที)
+            setTimeout(() => {
+                krathongEl.remove();
+            }, 23000);
+        }
+
+        // แสดงคำอธิษฐานลอยขึ้นไปบนฟ้า
+        function showFloatingWish(text) {
+            const container = document.getElementById('floating-wish-container');
+            const wishBadge = document.createElement('div');
+            wishBadge.className = 'wish-floating inline-block bg-slate-900/80 backdrop-blur-md border border-amber-300/60 text-amber-200 px-5 py-3 rounded-2xl shadow-[0_0_25px_rgba(251,191,36,0.4)] text-lg font-semibold max-w-xs break-words';
+            wishBadge.innerHTML = `✨ "${escapeHTML(text)}" ✨`;
+            
+            container.appendChild(wishBadge);
+
+            setTimeout(() => {
+                wishBadge.remove();
+            }, 6200);
+        }
+
+        // รีเซ็ตหน้าจอเพื่อประดิษฐ์กระทงใบใหม่
+        function resetForNewKrathong() {
+            state.isLaunching = false;
+            document.getElementById('relaunch-bar').classList.add('hidden');
+            document.getElementById('control-panel').classList.remove('translate-y-full');
+            
+            const previewWrapper = document.getElementById('preview-krathong-wrapper');
+            previewWrapper.style.opacity = '1';
+        }
+
+        // ป้องกัน XSS จากข้อความที่ผู้ใช้พิมพ์
+        function escapeHTML(str) {
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        // --- 6. Canvas Animation: คลื่นน้ำไหวเบาๆ และ พลุบนท้องฟ้า ---
+        const canvas = document.getElementById('effects-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        let ripples = [];
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        // สร้างคลื่นน้ำระยิบระยับเบาๆ ตลอดเวลา
+        function createWaterRipples() {
+            const riverTop = canvas.height * 0.45;
+            for (let i = 0; i < 28; i++) {
+                ripples.push({
+                    x: Math.random() * canvas.width,
+                    y: riverTop + Math.random() * (canvas.height - riverTop),
+                    length: 20 + Math.random() * 50,
+                    speed: 0.2 + Math.random() * 0.4,
+                    alpha: 0.05 + Math.random() * 0.15,
+                    phase: Math.random() * Math.PI * 2
+                });
+            }
+        }
+        createWaterRipples();
+
+        // สร้างพลุ 1 ลูก
+        function launchFirework() {
+            playFireworkSound();
+            const x = canvas.width * (0.2 + Math.random() * 0.6);
+            const y = canvas.height * (0.12 + Math.random() * 0.22);
+            const colors = ['#FDE047', '#F472B6', '#38BDF8', '#A78BFA', '#FB923C', '#4ADE80'];
+            const color = colors[Math.floor(Math.random() * colors.length)];
+
+            // แตกตัวเป็นสะเก็ดไฟ 45 เส้น
+            for (let i = 0; i < 45; i++) {
+                const angle = (Math.PI * 2 * i) / 45 + (Math.random() * 0.1);
+                const speed = 1.5 + Math.random() * 3.5;
+                particles.push({
+                    x: x,
+                    y: y,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed,
+                    color: color,
+                    alpha: 1,
+                    decay: 0.012 + Math.random() * 0.012,
+                    size: 2 + Math.random() * 2
+                });
+            }
+        }
+
+        // ลูปแอนิเมชันหลัก
+        function animateCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // 1. วาดเส้นคลื่นน้ำไหวเบาๆ
+            ripples.forEach(r => {
+                r.x += r.speed;
+                r.phase += 0.03;
+                if (r.x > canvas.width) r.x = -r.length;
+
+                const currentAlpha = r.alpha * (0.6 + 0.4 * Math.sin(r.phase));
+                ctx.strokeStyle = `rgba(186, 230, 253, ${currentAlpha})`;
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.moveTo(r.x, r.y);
+                ctx.lineTo(r.x + r.length, r.y);
+                ctx.stroke();
+            });
+
+            // 2. วาดสะเก็ดพลุบนท้องฟ้า
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vy += 0.04; // แรงโน้มถ่วงดึงลงเบาๆ
+                p.vx *= 0.98;
+                p.vy *= 0.98;
+                p.alpha -= p.decay;
+
+                if (p.alpha <= 0) {
+                    particles.splice(i, 1);
+                    continue;
+                }
+
+                ctx.save();
+                ctx.globalAlpha = p.alpha;
+                ctx.fillStyle = p.color;
+                ctx.shadowBlur = 8;
+                ctx.shadowColor = p.color;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+
+            requestAnimationFrame(animateCanvas);
+        }
+
+        // --- 7. สร้างดวงดาวบนท้องฟ้า ---
+        function generateStars() {
+            const container = document.getElementById('stars-container');
+            for (let i = 0; i < 35; i++) {
+                const star = document.createElement('div');
+                const size = Math.random() * 2.5 + 1;
+                star.style.position = 'absolute';
+                star.style.left = `${Math.random() * 100}%`;
+                star.style.top = `${Math.random() * 90}%`;
+                star.style.width = `${size}px`;
+                star.style.height = `${size}px`;
+                star.style.backgroundColor = '#FEF9C3';
+                star.style.borderRadius = '50%';
+                star.style.opacity = Math.random() * 0.8 + 0.2;
+                container.appendChild(star);
+            }
+        }
+
+        // --- 8. เริ่มต้นการทำงานเมื่อโหลดหน้าเว็บเสร็จ ---
+        window.onload = function() {
+            // โหลดจำนวนกระทงที่เคยลอยไว้จาก LocalStorage
+            const savedCount = localStorage.getItem('loy_krathong_count');
+            if (savedCount) {
+                state.count = parseInt(savedCount, 10) || 0;
+                document.getElementById('krathong-count').textContent = state.count;
+            }
+
+            generateStars();
+            renderPreview();
+            animateCanvas();
+        };
+    </script>
+
+</body></html>
