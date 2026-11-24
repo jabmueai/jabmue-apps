@@ -25,6 +25,7 @@
 | จับมือทำแอป ตามคำขอ: แอปเก็บคะแนนนักเรียน 📝 (Gemini Canvas · ชื่อและคะแนนในแอปเป็นตัวอย่างสมมติ) | [เล่นเลย](https://jabmueai.github.io/jabmue-apps/scores/) | [scores/index.html](scores/index.html) | [scores/prompt.txt](scores/prompt.txt) |
 | จับมือทำแอป ตอน 13: แอปเตือนวันหมดอายุ ⏰ (Gemini Canvas · รายการและวันที่ในแอปเป็นตัวอย่าง) | [เล่นเลย](https://jabmueai.github.io/jabmue-apps/expiry/) | [expiry/index.html](expiry/index.html) | [expiry/prompt.txt](expiry/prompt.txt) |
 | จับมือทำแอป ตอน 15: แอปจดค่าน้ำมัน ⛽ (Gemini Canvas · ตัวเลขในแอปเป็นตัวอย่าง) | [เล่นเลย](https://jabmueai.github.io/jabmue-apps/fuel/) | [fuel/index.html](fuel/index.html) | [fuel/prompt.txt](fuel/prompt.txt) |
+| จับมือทำแอป ตอนพิเศษวันลอยกระทง: แอปลอยกระทง 🪷 (Gemini Canvas · มีเสียงประกอบ กดเปิดเสียงก่อน) | [เล่นเลย](https://jabmueai.github.io/jabmue-apps/kratong/) | [kratong/index.html](kratong/index.html) | [kratong/prompt.txt](kratong/prompt.txt) |
 | จับมือทำ ตอน 3: เกมทายศัพท์ภาษาอังกฤษให้ลูก 🎮 | [เล่นเลย](https://jabmueai.github.io/jabmue-apps/word-game/) | [word-game/index.html](word-game/index.html) | [word-game/prompt.txt](word-game/prompt.txt) |
 | จับมือทำ ตอน 4: แอปจดค่าไฟบ้าน ⚡ | [เล่นเลย](https://jabmueai.github.io/jabmue-apps/electric/) | [electric/index.html](electric/index.html) | [electric/prompt.txt](electric/prompt.txt) |
 
