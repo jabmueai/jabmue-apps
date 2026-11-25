@@ -1,0 +1,1081 @@
+<!DOCTYPE html><html lang="th"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <!-- จับมือ AI: ไอคอน + ติดตั้งลงหน้าจอโฮม (เพิ่มทีหลัง โค้ดแอปเหมือนเดิม) -->
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="apple-touch-icon" href="icon-180.png">
+    <link rel="icon" type="image/png" href="icon-192.png">
+    <meta name="theme-color" content="#0369a1">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="มิเตอร์น้ำ">
+    <script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');</script>
+<title>จดมิเตอร์น้ำประปา</title>
+    <!-- โหลด Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- โหลดฟอนต์ Prompt และ Inter เพื่อความสวยงามและอ่านง่ายในภาษาไทย -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;family=Prompt:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+    <!-- โหลด Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest" crossorigin="anonymous"></script>
+    <style>
+        body {
+            font-family: 'Prompt', 'Inter', sans-serif;
+            background-color: #f0f7ff; /* สีฟ้าอ่อนสบายตา */
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+        /* ปรับแต่ง Scrollbar ให้ดูสะอาดตา */
+        ::-webkit-scrollbar {
+            width: 4px;
+            height: 4px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 9999px;
+        }
+        /* แอนิเมชันสำหรับ Modal */
+        @keyframes slideUp {
+            from { transform: translateY(100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .animate-slide-up {
+            animation: slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+    </style>
+<style>*, ::before, ::after{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }::backdrop{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }/* ! tailwindcss v3.4.17 | MIT License | https://tailwindcss.com */*,::after,::before{box-sizing:border-box;border-width:0;border-style:solid;border-color:#e5e7eb}::after,::before{--tw-content:''}:host,html{line-height:1.5;-webkit-text-size-adjust:100%;-moz-tab-size:4;tab-size:4;font-family:ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";font-feature-settings:normal;font-variation-settings:normal;-webkit-tap-highlight-color:transparent}body{margin:0;line-height:inherit}hr{height:0;color:inherit;border-top-width:1px}abbr:where([title]){-webkit-text-decoration:underline dotted;text-decoration:underline dotted}h1,h2,h3,h4,h5,h6{font-size:inherit;font-weight:inherit}a{color:inherit;text-decoration:inherit}b,strong{font-weight:bolder}code,kbd,pre,samp{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;font-feature-settings:normal;font-variation-settings:normal;font-size:1em}small{font-size:80%}sub,sup{font-size:75%;line-height:0;position:relative;vertical-align:baseline}sub{bottom:-.25em}sup{top:-.5em}table{text-indent:0;border-color:inherit;border-collapse:collapse}button,input,optgroup,select,textarea{font-family:inherit;font-feature-settings:inherit;font-variation-settings:inherit;font-size:100%;font-weight:inherit;line-height:inherit;letter-spacing:inherit;color:inherit;margin:0;padding:0}button,select{text-transform:none}button,input:where([type=button]),input:where([type=reset]),input:where([type=submit]){-webkit-appearance:button;background-color:transparent;background-image:none}:-moz-focusring{outline:auto}:-moz-ui-invalid{box-shadow:none}progress{vertical-align:baseline}::-webkit-inner-spin-button,::-webkit-outer-spin-button{height:auto}[type=search]{-webkit-appearance:textfield;outline-offset:-2px}::-webkit-search-decoration{-webkit-appearance:none}::-webkit-file-upload-button{-webkit-appearance:button;font:inherit}summary{display:list-item}blockquote,dd,dl,figure,h1,h2,h3,h4,h5,h6,hr,p,pre{margin:0}fieldset{margin:0;padding:0}legend{padding:0}menu,ol,ul{list-style:none;margin:0;padding:0}dialog{padding:0}textarea{resize:vertical}input::placeholder,textarea::placeholder{opacity:1;color:#9ca3af}[role=button],button{cursor:pointer}:disabled{cursor:default}audio,canvas,embed,iframe,img,object,svg,video{display:block;vertical-align:middle}img,video{max-width:100%;height:auto}[hidden]:where(:not([hidden=until-found])){display:none}.pointer-events-none{pointer-events:none}.fixed{position:fixed}.sticky{position:sticky}.inset-0{inset:0px}.bottom-0{bottom:0px}.left-0{left:0px}.left-1\/2{left:50%}.right-0{right:0px}.top-0{top:0px}.top-20{top:5rem}.z-10{z-index:10}.z-20{z-index:20}.z-50{z-index:50}.mx-auto{margin-left:auto;margin-right:auto}.my-2{margin-top:0.5rem;margin-bottom:0.5rem}.-mt-4{margin-top:-1rem}.mb-1{margin-bottom:0.25rem}.mb-2{margin-bottom:0.5rem}.mb-3{margin-bottom:0.75rem}.mb-4{margin-bottom:1rem}.mb-5{margin-bottom:1.25rem}.mb-6{margin-bottom:1.5rem}.mt-0\.5{margin-top:0.125rem}.mt-3{margin-top:0.75rem}.mt-4{margin-top:1rem}.mt-2{margin-top:0.5rem}.block{display:block}.flex{display:flex}.grid{display:grid}.hidden{display:none}.h-11{height:2.75rem}.h-14{height:3.5rem}.h-4{height:1rem}.h-44{height:11rem}.h-5{height:1.25rem}.h-6{height:1.5rem}.h-7{height:1.75rem}.h-8{height:2rem}.h-full{height:100%}.w-14{width:3.5rem}.w-4{width:1rem}.w-5{width:1.25rem}.w-6{width:1.5rem}.w-7{width:1.75rem}.w-8{width:2rem}.w-full{width:100%}.max-w-md{max-width:28rem}.max-w-sm{max-width:24rem}.max-w-\[38px\]{max-width:38px}.flex-1{flex:1 1 0%}.shrink-0{flex-shrink:0}.-translate-x-1\/2{--tw-translate-x:-50%;transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}.grid-cols-2{grid-template-columns:repeat(2, minmax(0, 1fr))}.grid-cols-3{grid-template-columns:repeat(3, minmax(0, 1fr))}.flex-col{flex-direction:column}.items-start{align-items:flex-start}.items-end{align-items:flex-end}.items-center{align-items:center}.items-baseline{align-items:baseline}.justify-end{justify-content:flex-end}.justify-center{justify-content:center}.justify-between{justify-content:space-between}.gap-1{gap:0.25rem}.gap-1\.5{gap:0.375rem}.gap-2{gap:0.5rem}.gap-2\.5{gap:0.625rem}.gap-3{gap:0.75rem}.space-y-3 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(0.75rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(0.75rem * var(--tw-space-y-reverse))}.space-y-5 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(1.25rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(1.25rem * var(--tw-space-y-reverse))}.space-y-1 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(0.25rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(0.25rem * var(--tw-space-y-reverse))}.overflow-hidden{overflow:hidden}.rounded-2xl{border-radius:1rem}.rounded-3xl{border-radius:1.5rem}.rounded-full{border-radius:9999px}.rounded-xl{border-radius:0.75rem}.rounded-b-3xl{border-bottom-right-radius:1.5rem;border-bottom-left-radius:1.5rem}.rounded-t-3xl{border-top-left-radius:1.5rem;border-top-right-radius:1.5rem}.rounded-t-xl{border-top-left-radius:0.75rem;border-top-right-radius:0.75rem}.border{border-width:1px}.border-2{border-width:2px}.border-t{border-top-width:1px}.border-red-200{--tw-border-opacity:1;border-color:rgb(254 202 202 / var(--tw-border-opacity, 1))}.border-sky-100{--tw-border-opacity:1;border-color:rgb(224 242 254 / var(--tw-border-opacity, 1))}.border-sky-200{--tw-border-opacity:1;border-color:rgb(186 230 253 / var(--tw-border-opacity, 1))}.border-slate-100{--tw-border-opacity:1;border-color:rgb(241 245 249 / var(--tw-border-opacity, 1))}.border-slate-200{--tw-border-opacity:1;border-color:rgb(226 232 240 / var(--tw-border-opacity, 1))}.bg-amber-100{--tw-bg-opacity:1;background-color:rgb(254 243 199 / var(--tw-bg-opacity, 1))}.bg-emerald-600{--tw-bg-opacity:1;background-color:rgb(5 150 105 / var(--tw-bg-opacity, 1))}.bg-red-100{--tw-bg-opacity:1;background-color:rgb(254 226 226 / var(--tw-bg-opacity, 1))}.bg-red-50{--tw-bg-opacity:1;background-color:rgb(254 242 242 / var(--tw-bg-opacity, 1))}.bg-red-500{--tw-bg-opacity:1;background-color:rgb(239 68 68 / var(--tw-bg-opacity, 1))}.bg-red-600{--tw-bg-opacity:1;background-color:rgb(220 38 38 / var(--tw-bg-opacity, 1))}.bg-rose-100{--tw-bg-opacity:1;background-color:rgb(255 228 230 / var(--tw-bg-opacity, 1))}.bg-sky-50{--tw-bg-opacity:1;background-color:rgb(240 249 255 / var(--tw-bg-opacity, 1))}.bg-sky-600{--tw-bg-opacity:1;background-color:rgb(2 132 199 / var(--tw-bg-opacity, 1))}.bg-slate-100{--tw-bg-opacity:1;background-color:rgb(241 245 249 / var(--tw-bg-opacity, 1))}.bg-slate-50{--tw-bg-opacity:1;background-color:rgb(248 250 252 / var(--tw-bg-opacity, 1))}.bg-slate-800{--tw-bg-opacity:1;background-color:rgb(30 41 59 / var(--tw-bg-opacity, 1))}.bg-slate-900\/60{background-color:rgb(15 23 42 / 0.6)}.bg-transparent{background-color:transparent}.bg-white{--tw-bg-opacity:1;background-color:rgb(255 255 255 / var(--tw-bg-opacity, 1))}.bg-white\/15{background-color:rgb(255 255 255 / 0.15)}.bg-white\/20{background-color:rgb(255 255 255 / 0.2)}.bg-sky-300{--tw-bg-opacity:1;background-color:rgb(125 211 252 / var(--tw-bg-opacity, 1))}.bg-gradient-to-t{background-image:linear-gradient(to top, var(--tw-gradient-stops))}.from-\[\#f0f7ff\]{--tw-gradient-from:#f0f7ff var(--tw-gradient-from-position);--tw-gradient-to:rgb(240 247 255 / 0) var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from), var(--tw-gradient-to)}.via-\[\#f0f7ff\]{--tw-gradient-to:rgb(240 247 255 / 0)  var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from), #f0f7ff var(--tw-gradient-via-position), var(--tw-gradient-to)}.to-transparent{--tw-gradient-to:transparent var(--tw-gradient-to-position)}.p-2{padding:0.5rem}.p-4{padding:1rem}.p-5{padding:1.25rem}.p-6{padding:1.5rem}.p-2\.5{padding:0.625rem}.px-1{padding-left:0.25rem;padding-right:0.25rem}.px-2\.5{padding-left:0.625rem;padding-right:0.625rem}.px-3{padding-left:0.75rem;padding-right:0.75rem}.px-3\.5{padding-left:0.875rem;padding-right:0.875rem}.px-4{padding-left:1rem;padding-right:1rem}.px-5{padding-left:1.25rem;padding-right:1.25rem}.py-1{padding-top:0.25rem;padding-bottom:0.25rem}.py-1\.5{padding-top:0.375rem;padding-bottom:0.375rem}.py-2{padding-top:0.5rem;padding-bottom:0.5rem}.py-2\.5{padding-top:0.625rem;padding-bottom:0.625rem}.py-3{padding-top:0.75rem;padding-bottom:0.75rem}.py-3\.5{padding-top:0.875rem;padding-bottom:0.875rem}.py-4{padding-top:1rem;padding-bottom:1rem}.pb-1{padding-bottom:0.25rem}.pb-28{padding-bottom:7rem}.pb-8{padding-bottom:2rem}.pt-3{padding-top:0.75rem}.pt-6{padding-top:1.5rem}.pt-0\.5{padding-top:0.125rem}.text-center{text-align:center}.text-right{text-align:right}.text-2xl{font-size:1.5rem;line-height:2rem}.text-3xl{font-size:1.875rem;line-height:2.25rem}.text-4xl{font-size:2.25rem;line-height:2.5rem}.text-5xl{font-size:3rem;line-height:1}.text-base{font-size:1rem;line-height:1.5rem}.text-lg{font-size:1.125rem;line-height:1.75rem}.text-sm{font-size:0.875rem;line-height:1.25rem}.text-xl{font-size:1.25rem;line-height:1.75rem}.text-xs{font-size:0.75rem;line-height:1rem}.font-bold{font-weight:700}.font-medium{font-weight:500}.font-normal{font-weight:400}.font-semibold{font-weight:600}.leading-relaxed{line-height:1.625}.tracking-tight{letter-spacing:-0.025em}.tracking-wider{letter-spacing:0.05em}.text-amber-800{--tw-text-opacity:1;color:rgb(146 64 14 / var(--tw-text-opacity, 1))}.text-red-600{--tw-text-opacity:1;color:rgb(220 38 38 / var(--tw-text-opacity, 1))}.text-red-700{--tw-text-opacity:1;color:rgb(185 28 28 / var(--tw-text-opacity, 1))}.text-rose-700{--tw-text-opacity:1;color:rgb(190 18 60 / var(--tw-text-opacity, 1))}.text-sky-100{--tw-text-opacity:1;color:rgb(224 242 254 / var(--tw-text-opacity, 1))}.text-sky-500{--tw-text-opacity:1;color:rgb(14 165 233 / var(--tw-text-opacity, 1))}.text-sky-600{--tw-text-opacity:1;color:rgb(2 132 199 / var(--tw-text-opacity, 1))}.text-sky-700{--tw-text-opacity:1;color:rgb(3 105 161 / var(--tw-text-opacity, 1))}.text-slate-400{--tw-text-opacity:1;color:rgb(148 163 184 / var(--tw-text-opacity, 1))}.text-slate-500{--tw-text-opacity:1;color:rgb(100 116 139 / var(--tw-text-opacity, 1))}.text-slate-600{--tw-text-opacity:1;color:rgb(71 85 105 / var(--tw-text-opacity, 1))}.text-slate-700{--tw-text-opacity:1;color:rgb(51 65 85 / var(--tw-text-opacity, 1))}.text-slate-800{--tw-text-opacity:1;color:rgb(30 41 59 / var(--tw-text-opacity, 1))}.text-slate-900{--tw-text-opacity:1;color:rgb(15 23 42 / var(--tw-text-opacity, 1))}.text-white{--tw-text-opacity:1;color:rgb(255 255 255 / var(--tw-text-opacity, 1))}.text-slate-300{--tw-text-opacity:1;color:rgb(203 213 225 / var(--tw-text-opacity, 1))}.opacity-0{opacity:0}.shadow-2xl{--tw-shadow:0 25px 50px -12px rgb(0 0 0 / 0.25);--tw-shadow-colored:0 25px 50px -12px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-lg{--tw-shadow:0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);--tw-shadow-colored:0 10px 15px -3px var(--tw-shadow-color), 0 4px 6px -4px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-md{--tw-shadow:0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);--tw-shadow-colored:0 4px 6px -1px var(--tw-shadow-color), 0 2px 4px -2px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-sm{--tw-shadow:0 1px 2px 0 rgb(0 0 0 / 0.05);--tw-shadow-colored:0 1px 2px 0 var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-sky-600\/30{--tw-shadow-color:rgb(2 132 199 / 0.3);--tw-shadow:var(--tw-shadow-colored)}.transition{transition-property:color, background-color, border-color, fill, stroke, opacity, box-shadow, transform, filter, -webkit-text-decoration-color, -webkit-backdrop-filter;transition-property:color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;transition-property:color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter, -webkit-text-decoration-color, -webkit-backdrop-filter;transition-timing-function:cubic-bezier(0.4, 0, 0.2, 1);transition-duration:150ms}.transition-opacity{transition-property:opacity;transition-timing-function:cubic-bezier(0.4, 0, 0.2, 1);transition-duration:150ms}.transition-all{transition-property:all;transition-timing-function:cubic-bezier(0.4, 0, 0.2, 1);transition-duration:150ms}.duration-300{transition-duration:300ms}.duration-500{transition-duration:500ms}.hover\:bg-amber-200:hover{--tw-bg-opacity:1;background-color:rgb(253 230 138 / var(--tw-bg-opacity, 1))}.hover\:bg-emerald-700:hover{--tw-bg-opacity:1;background-color:rgb(4 120 87 / var(--tw-bg-opacity, 1))}.hover\:bg-rose-200:hover{--tw-bg-opacity:1;background-color:rgb(254 205 211 / var(--tw-bg-opacity, 1))}.hover\:bg-sky-700:hover{--tw-bg-opacity:1;background-color:rgb(3 105 161 / var(--tw-bg-opacity, 1))}.hover\:bg-slate-200:hover{--tw-bg-opacity:1;background-color:rgb(226 232 240 / var(--tw-bg-opacity, 1))}.hover\:bg-white\/25:hover{background-color:rgb(255 255 255 / 0.25)}.hover\:bg-red-100:hover{--tw-bg-opacity:1;background-color:rgb(254 226 226 / var(--tw-bg-opacity, 1))}.hover\:bg-sky-100:hover{--tw-bg-opacity:1;background-color:rgb(224 242 254 / var(--tw-bg-opacity, 1))}.hover\:text-red-600:hover{--tw-text-opacity:1;color:rgb(220 38 38 / var(--tw-text-opacity, 1))}.hover\:text-sky-700:hover{--tw-text-opacity:1;color:rgb(3 105 161 / var(--tw-text-opacity, 1))}.hover\:underline:hover{-webkit-text-decoration-line:underline;text-decoration-line:underline}.focus\:border-sky-500:focus{--tw-border-opacity:1;border-color:rgb(14 165 233 / var(--tw-border-opacity, 1))}.focus\:outline-none:focus{outline:2px solid transparent;outline-offset:2px}.active\:scale-95:active{--tw-scale-x:.95;--tw-scale-y:.95;transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}.active\:scale-\[0\.98\]:active{--tw-scale-x:0.98;--tw-scale-y:0.98;transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}.active\:bg-sky-100:active{--tw-bg-opacity:1;background-color:rgb(224 242 254 / var(--tw-bg-opacity, 1))}</style></head>
+<body class="text-slate-800 pb-28">
+
+    <!-- ส่วนหัวแอป (Header) -->
+    <header class="bg-sky-600 text-white px-5 pt-6 pb-8 rounded-b-3xl shadow-md sticky top-0 z-10">
+        <div class="max-w-md mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-2.5">
+                <div class="bg-white/20 p-2 rounded-2xl">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="droplets" aria-hidden="true" class="lucide lucide-droplets w-7 h-7 text-white"><path d="M7 16.3c2.2 0 4-1.83 4-4.05 0-1.16-.57-2.26-1.71-3.19S7.29 6.75 7 5.3c-.29 1.45-1.14 2.84-2.29 3.76S3 11.1 3 12.25c0 2.22 1.8 4.05 4 4.05z"></path><path d="M12.56 6.6A10.97 10.97 0 0 0 14 3.02c.5 2.5 2 4.9 4 6.5s3 3.5 3 5.5a6.98 6.98 0 0 1-11.91 4.97"></path></svg>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold tracking-tight">จดมิเตอร์น้ำ</h1>
+                    <p class="text-xs text-sky-100">บันทึกและคำนวณค่าน้ำประปา</p>
+                </div>
+            </div>
+            <!-- ปุ่มตั้งค่าราคาต่อหน่วย -->
+            <button onclick="openSettingsModal()" class="bg-white/15 hover:bg-white/25 active:scale-95 transition px-3.5 py-2 rounded-2xl flex items-center gap-1.5 text-sm font-medium">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="settings" aria-hidden="true" class="lucide lucide-settings w-4 h-4"><path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                <span id="headerRateDisplay">15 บ./หน่วย</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- เนื้อหาหลัก -->
+    <main class="max-w-md mx-auto px-4 -mt-4 space-y-5">
+
+        <!-- การ์ดสรุปยอดเดือนล่าสุด (Hero Card) -->
+        <section id="summaryCard" class="bg-white rounded-3xl p-6 shadow-sm border border-sky-100">
+            <div class="flex justify-between items-start mb-1">
+                <span class="text-slate-500 font-medium text-base" id="latestMonthLabel">ยอดใช้น้ำเดือนพฤศจิกายน 2569</span>
+                <span id="latestDateLabel" class="text-xs bg-slate-100 text-slate-600 px-2.5 py-1 rounded-full font-medium">จดเมื่อ 24 พ.ย. 69</span>
+            </div>
+
+            <!-- ตัวเลขใหญ่แสดงหน่วยน้ำที่ใช้ -->
+            <div class="flex items-baseline gap-2 my-2">
+                <span id="latestUnits" class="text-5xl font-bold text-sky-600 tracking-tight">17</span>
+                <span class="text-xl font-semibold text-slate-600">หน่วย (ลบ.ม.)</span>
+            </div>
+
+            <!-- ประมาณการค่าน้ำ -->
+            <div class="flex items-center justify-between pt-3 border-t border-slate-100 mt-3">
+                <div>
+                    <p class="text-xs text-slate-400">ประมาณการค่าน้ำ</p>
+                    <p class="text-2xl font-bold text-slate-800"><span id="latestCost">255</span> <span class="text-base font-normal text-slate-500">บาท</span></p>
+                </div>
+                <!-- ป้ายเปรียบเทียบกับเดือนก่อน -->
+                <div id="comparisonBadge" class="px-3 py-1.5 rounded-2xl text-sm font-bold flex items-center gap-1 bg-amber-100 text-amber-800"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="trending-up" aria-hidden="true" class="lucide lucide-trending-up w-4 h-4"><path d="M16 7h6v6"></path><path d="m22 7-8.5 8.5-5-5L2 17"></path></svg> <span>มากขึ้น 2 หน่วย</span></div>
+            </div>
+
+            <!-- กล่องแจ้งเตือนน้ำรั่ว (ซ่อนไว้เป็นค่าเริ่มต้น จะแสดงเมื่อใช้น้ำผิดปกติ) -->
+            <div id="leakWarningBox" class="hidden mt-4 bg-red-50 border-2 border-red-200 rounded-2xl p-4 flex items-start gap-3">
+                <div class="bg-red-500 text-white p-2 rounded-xl shrink-0 mt-0.5">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="alert-triangle" aria-hidden="true" class="lucide lucide-alert-triangle w-6 h-6"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path></svg>
+                </div>
+                <div>
+                    <h3 class="font-bold text-red-700 text-base">ใช้น้ำมากผิดปกติ! อาจมีน้ำรั่ว</h3>
+                    <p id="leakWarningText" class="text-sm text-red-600 mt-0.5 leading-relaxed">
+                        ปริมาณการใช้น้ำสูงกว่าค่าเฉลี่ยมาก กรุณาตรวจสอบก๊อกน้ำ ชักโครก หรือท่อประปาภายในบ้าน
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- กราฟแท่งแสดงการใช้น้ำรายเดือน -->
+        <section class="bg-white rounded-3xl p-5 shadow-sm border border-sky-100">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="bar-chart-3" aria-hidden="true" class="lucide lucide-bar-chart-3 w-5 h-5 text-sky-500"><path d="M3 3v16a2 2 0 0 0 2 2h16"></path><path d="M18 17V9"></path><path d="M13 17V5"></path><path d="M8 17v-3"></path></svg>
+                    สถิติการใช้น้ำ (หน่วย)
+                </h2>
+                <span class="text-xs text-slate-400">6 เดือนล่าสุด</span>
+            </div>
+            
+            <!-- พื้นที่วาดกราฟแท่ง -->
+            <div id="barChartContainer" class="h-44 flex items-end justify-between gap-2 pt-6 pb-1 px-1"><div class="flex-1 flex flex-col items-center h-full justify-end group">
+                    <span class="text-xs font-bold mb-1 text-slate-600">
+                        14
+                    </span>
+                    <div class="w-full max-w-[38px] bg-sky-300 rounded-t-xl transition-all duration-500" style="height: 70%"></div>
+                    <span class="text-xs font-medium mt-2 text-slate-500">
+                        มิ.ย.
+                    </span>
+                </div><div class="flex-1 flex flex-col items-center h-full justify-end group">
+                    <span class="text-xs font-bold mb-1 text-slate-600">
+                        16
+                    </span>
+                    <div class="w-full max-w-[38px] bg-sky-300 rounded-t-xl transition-all duration-500" style="height: 80%"></div>
+                    <span class="text-xs font-medium mt-2 text-slate-500">
+                        ก.ค.
+                    </span>
+                </div><div class="flex-1 flex flex-col items-center h-full justify-end group">
+                    <span class="text-xs font-bold mb-1 text-slate-600">
+                        15
+                    </span>
+                    <div class="w-full max-w-[38px] bg-sky-300 rounded-t-xl transition-all duration-500" style="height: 75%"></div>
+                    <span class="text-xs font-medium mt-2 text-slate-500">
+                        ส.ค.
+                    </span>
+                </div><div class="flex-1 flex flex-col items-center h-full justify-end group">
+                    <span class="text-xs font-bold mb-1 text-slate-600">
+                        18
+                    </span>
+                    <div class="w-full max-w-[38px] bg-sky-300 rounded-t-xl transition-all duration-500" style="height: 90%"></div>
+                    <span class="text-xs font-medium mt-2 text-slate-500">
+                        ก.ย.
+                    </span>
+                </div><div class="flex-1 flex flex-col items-center h-full justify-end group">
+                    <span class="text-xs font-bold mb-1 text-slate-600">
+                        15
+                    </span>
+                    <div class="w-full max-w-[38px] bg-sky-300 rounded-t-xl transition-all duration-500" style="height: 75%"></div>
+                    <span class="text-xs font-medium mt-2 text-slate-500">
+                        ต.ค.
+                    </span>
+                </div><div class="flex-1 flex flex-col items-center h-full justify-end group">
+                    <span class="text-xs font-bold mb-1 text-sky-700">
+                        17
+                    </span>
+                    <div class="w-full max-w-[38px] bg-sky-600 rounded-t-xl transition-all duration-500" style="height: 85%"></div>
+                    <span class="text-xs font-medium mt-2 text-slate-900 font-bold">
+                        พ.ย.
+                    </span>
+                </div></div>
+        </section>
+
+        <!-- ประวัติการจดมิเตอร์ -->
+        <section class="space-y-3">
+            <div class="flex justify-between items-center px-1">
+                <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="history" aria-hidden="true" class="lucide lucide-history w-5 h-5 text-sky-500"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path><path d="M12 7v5l4 2"></path></svg>
+                    ประวัติการจดมิเตอร์
+                </h2>
+                <button onclick="confirmResetDemo()" class="text-xs text-sky-600 hover:underline font-medium">
+                    รีเซ็ตข้อมูลตัวอย่าง
+                </button>
+            </div>
+
+            <!-- รายการประวัติ -->
+            <div id="recordsList" class="space-y-3"><div class="bg-white rounded-2xl p-4 shadow-xs border border-slate-100 flex items-center justify-between gap-3">
+                    <div class="space-y-1">
+                        <div class="flex items-center gap-2">
+                            <span class="font-bold text-base text-slate-800">24 พ.ย. 69</span>
+                            
+                        </div>
+                        <div class="text-sm text-slate-500">
+                            เลขมิเตอร์: <span class="font-bold text-slate-700 text-base">1,335</span>
+                        </div>
+                        
+                            <div class="flex items-center gap-3 pt-0.5">
+                                <span class="text-sm font-bold text-sky-600">
+                                    ใช้ไป 17 หน่วย
+                                </span>
+                                <span class="text-slate-300">|</span>
+                                <span class="text-sm font-semibold text-slate-700">
+                                    ~255 บาท
+                                </span>
+                            </div>
+                        
+                    </div>
+
+                    <!-- ปุ่มแก้ไขและลบ -->
+                    <div class="flex flex-col gap-2 shrink-0">
+                        <button onclick="openEditModal('sample_0_1795615804169')" class="p-2.5 bg-slate-100 hover:bg-sky-100 text-slate-600 hover:text-sky-700 rounded-xl transition" aria-label="แก้ไข">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="pencil" aria-hidden="true" class="lucide lucide-pencil w-5 h-5"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"></path><path d="m15 5 4 4"></path></svg>
+                        </button>
+                        <button onclick="confirmDeleteRecord('sample_0_1795615804169')" class="p-2.5 bg-slate-100 hover:bg-red-100 text-slate-600 hover:text-red-600 rounded-xl transition" aria-label="ลบ">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="trash-2" aria-hidden="true" class="lucide lucide-trash-2 w-5 h-5"><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M3 6h18"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                        </button>
+                    </div>
+                </div><div class="bg-white rounded-2xl p-4 shadow-xs border border-slate-100 flex items-center justify-between gap-3">
+                    <div class="space-y-1">
+                        <div class="flex items-center gap-2">
+                            <span class="font-bold text-base text-slate-800">24 ต.ค. 69</span>
+                            
+                        </div>
+                        <div class="text-sm text-slate-500">
+                            เลขมิเตอร์: <span class="font-bold text-slate-700 text-base">1,318</span>
+                        </div>
+                        
+                            <div class="flex items-center gap-3 pt-0.5">
+                                <span class="text-sm font-bold text-sky-600">
+                                    ใช้ไป 15 หน่วย
+                                </span>
+                                <span class="text-slate-300">|</span>
+                                <span class="text-sm font-semibold text-slate-700">
+                                    ~225 บาท
+                                </span>
+                            </div>
+                        
+                    </div>
+
+                    <!-- ปุ่มแก้ไขและลบ -->
+                    <div class="flex flex-col gap-2 shrink-0">
+                        <button onclick="openEditModal('sample_1_1795615804169')" class="p-2.5 bg-slate-100 hover:bg-sky-100 text-slate-600 hover:text-sky-700 rounded-xl transition" aria-label="แก้ไข">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="pencil" aria-hidden="true" class="lucide lucide-pencil w-5 h-5"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"></path><path d="m15 5 4 4"></path></svg>
+                        </button>
+                        <button onclick="confirmDeleteRecord('sample_1_1795615804169')" class="p-2.5 bg-slate-100 hover:bg-red-100 text-slate-600 hover:text-red-600 rounded-xl transition" aria-label="ลบ">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="trash-2" aria-hidden="true" class="lucide lucide-trash-2 w-5 h-5"><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M3 6h18"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                        </button>
+                    </div>
+                </div><div class="bg-white rounded-2xl p-4 shadow-xs border border-slate-100 flex items-center justify-between gap-3">
+                    <div class="space-y-1">
+                        <div class="flex items-center gap-2">
+                            <span class="font-bold text-base text-slate-800">24 ก.ย. 69</span>
+                            
+                        </div>
+                        <div class="text-sm text-slate-500">
+                            เลขมิเตอร์: <span class="font-bold text-slate-700 text-base">1,303</span>
+                        </div>
+                        
+                            <div class="flex items-center gap-3 pt-0.5">
+                                <span class="text-sm font-bold text-sky-600">
+                                    ใช้ไป 18 หน่วย
+                                </span>
+                                <span class="text-slate-300">|</span>
+                                <span class="text-sm font-semibold text-slate-700">
+                                    ~270 บาท
+                                </span>
+                            </div>
+                        
+                    </div>
+
+                    <!-- ปุ่มแก้ไขและลบ -->
+                    <div class="flex flex-col gap-2 shrink-0">
+                        <button onclick="openEditModal('sample_2_1795615804169')" class="p-2.5 bg-slate-100 hover:bg-sky-100 text-slate-600 hover:text-sky-700 rounded-xl transition" aria-label="แก้ไข">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="pencil" aria-hidden="true" class="lucide lucide-pencil w-5 h-5"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"></path><path d="m15 5 4 4"></path></svg>
+                        </button>
+                        <button onclick="confirmDeleteRecord('sample_2_1795615804169')" class="p-2.5 bg-slate-100 hover:bg-red-100 text-slate-600 hover:text-red-600 rounded-xl transition" aria-label="ลบ">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="trash-2" aria-hidden="true" class="lucide lucide-trash-2 w-5 h-5"><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M3 6h18"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                        </button>
+                    </div>
+                </div><div class="bg-white rounded-2xl p-4 shadow-xs border border-slate-100 flex items-center justify-between gap-3">
+                    <div class="space-y-1">
+                        <div class="flex items-center gap-2">
+                            <span class="font-bold text-base text-slate-800">24 ส.ค. 69</span>
+                            
+                        </div>
+                        <div class="text-sm text-slate-500">
+                            เลขมิเตอร์: <span class="font-bold text-slate-700 text-base">1,285</span>
+                        </div>
+                        
+                            <div class="flex items-center gap-3 pt-0.5">
+                                <span class="text-sm font-bold text-sky-600">
+                                    ใช้ไป 15 หน่วย
+                                </span>
+                                <span class="text-slate-300">|</span>
+                                <span class="text-sm font-semibold text-slate-700">
+                                    ~225 บาท
+                                </span>
+                            </div>
+                        
+                    </div>
+
+                    <!-- ปุ่มแก้ไขและลบ -->
+                    <div class="flex flex-col gap-2 shrink-0">
+                        <button onclick="openEditModal('sample_3_1795615804169')" class="p-2.5 bg-slate-100 hover:bg-sky-100 text-slate-600 hover:text-sky-700 rounded-xl transition" aria-label="แก้ไข">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="pencil" aria-hidden="true" class="lucide lucide-pencil w-5 h-5"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"></path><path d="m15 5 4 4"></path></svg>
+                        </button>
+                        <button onclick="confirmDeleteRecord('sample_3_1795615804169')" class="p-2.5 bg-slate-100 hover:bg-red-100 text-slate-600 hover:text-red-600 rounded-xl transition" aria-label="ลบ">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="trash-2" aria-hidden="true" class="lucide lucide-trash-2 w-5 h-5"><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M3 6h18"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                        </button>
+                    </div>
+                </div><div class="bg-white rounded-2xl p-4 shadow-xs border border-slate-100 flex items-center justify-between gap-3">
+                    <div class="space-y-1">
+                        <div class="flex items-center gap-2">
+                            <span class="font-bold text-base text-slate-800">24 ก.ค. 69</span>
+                            
+                        </div>
+                        <div class="text-sm text-slate-500">
+                            เลขมิเตอร์: <span class="font-bold text-slate-700 text-base">1,270</span>
+                        </div>
+                        
+                            <div class="flex items-center gap-3 pt-0.5">
+                                <span class="text-sm font-bold text-sky-600">
+                                    ใช้ไป 16 หน่วย
+                                </span>
+                                <span class="text-slate-300">|</span>
+                                <span class="text-sm font-semibold text-slate-700">
+                                    ~240 บาท
+                                </span>
+                            </div>
+                        
+                    </div>
+
+                    <!-- ปุ่มแก้ไขและลบ -->
+                    <div class="flex flex-col gap-2 shrink-0">
+                        <button onclick="openEditModal('sample_4_1795615804169')" class="p-2.5 bg-slate-100 hover:bg-sky-100 text-slate-600 hover:text-sky-700 rounded-xl transition" aria-label="แก้ไข">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="pencil" aria-hidden="true" class="lucide lucide-pencil w-5 h-5"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"></path><path d="m15 5 4 4"></path></svg>
+                        </button>
+                        <button onclick="confirmDeleteRecord('sample_4_1795615804169')" class="p-2.5 bg-slate-100 hover:bg-red-100 text-slate-600 hover:text-red-600 rounded-xl transition" aria-label="ลบ">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="trash-2" aria-hidden="true" class="lucide lucide-trash-2 w-5 h-5"><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M3 6h18"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                        </button>
+                    </div>
+                </div><div class="bg-white rounded-2xl p-4 shadow-xs border border-slate-100 flex items-center justify-between gap-3">
+                    <div class="space-y-1">
+                        <div class="flex items-center gap-2">
+                            <span class="font-bold text-base text-slate-800">24 มิ.ย. 69</span>
+                            
+                        </div>
+                        <div class="text-sm text-slate-500">
+                            เลขมิเตอร์: <span class="font-bold text-slate-700 text-base">1,254</span>
+                        </div>
+                        
+                            <div class="flex items-center gap-3 pt-0.5">
+                                <span class="text-sm font-bold text-sky-600">
+                                    ใช้ไป 14 หน่วย
+                                </span>
+                                <span class="text-slate-300">|</span>
+                                <span class="text-sm font-semibold text-slate-700">
+                                    ~210 บาท
+                                </span>
+                            </div>
+                        
+                    </div>
+
+                    <!-- ปุ่มแก้ไขและลบ -->
+                    <div class="flex flex-col gap-2 shrink-0">
+                        <button onclick="openEditModal('sample_5_1795615804169')" class="p-2.5 bg-slate-100 hover:bg-sky-100 text-slate-600 hover:text-sky-700 rounded-xl transition" aria-label="แก้ไข">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="pencil" aria-hidden="true" class="lucide lucide-pencil w-5 h-5"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"></path><path d="m15 5 4 4"></path></svg>
+                        </button>
+                        <button onclick="confirmDeleteRecord('sample_5_1795615804169')" class="p-2.5 bg-slate-100 hover:bg-red-100 text-slate-600 hover:text-red-600 rounded-xl transition" aria-label="ลบ">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="trash-2" aria-hidden="true" class="lucide lucide-trash-2 w-5 h-5"><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M3 6h18"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                        </button>
+                    </div>
+                </div><div class="bg-white rounded-2xl p-4 shadow-xs border border-slate-100 flex items-center justify-between gap-3">
+                    <div class="space-y-1">
+                        <div class="flex items-center gap-2">
+                            <span class="font-bold text-base text-slate-800">24 พ.ค. 69</span>
+                            
+                        </div>
+                        <div class="text-sm text-slate-500">
+                            เลขมิเตอร์: <span class="font-bold text-slate-700 text-base">1,240</span>
+                        </div>
+                        
+                            <div class="text-xs text-slate-400 pt-0.5">เลขมิเตอร์เริ่มต้น (ฐานคำนวณ)</div>
+                        
+                    </div>
+
+                    <!-- ปุ่มแก้ไขและลบ -->
+                    <div class="flex flex-col gap-2 shrink-0">
+                        <button onclick="openEditModal('sample_6_1795615804169')" class="p-2.5 bg-slate-100 hover:bg-sky-100 text-slate-600 hover:text-sky-700 rounded-xl transition" aria-label="แก้ไข">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="pencil" aria-hidden="true" class="lucide lucide-pencil w-5 h-5"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"></path><path d="m15 5 4 4"></path></svg>
+                        </button>
+                        <button onclick="confirmDeleteRecord('sample_6_1795615804169')" class="p-2.5 bg-slate-100 hover:bg-red-100 text-slate-600 hover:text-red-600 rounded-xl transition" aria-label="ลบ">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="trash-2" aria-hidden="true" class="lucide lucide-trash-2 w-5 h-5"><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M3 6h18"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                        </button>
+                    </div>
+                </div></div>
+        </section>
+
+    </main>
+
+    <!-- ปุ่มจดมิเตอร์ขนาดใหญ่ด้านล่าง (Floating Bottom Bar) -->
+    <div class="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-[#f0f7ff] via-[#f0f7ff] to-transparent z-20">
+        <div class="max-w-md mx-auto">
+            <button onclick="openNumpadModal()" class="w-full bg-sky-600 hover:bg-sky-700 active:scale-[0.98] transition text-white font-bold text-xl py-4 rounded-2xl shadow-lg shadow-sky-600/30 flex items-center justify-center gap-3">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="plus-circle" aria-hidden="true" class="lucide lucide-plus-circle w-7 h-7"><circle cx="12" cy="12" r="10"></circle><path d="M8 12h8"></path><path d="M12 8v8"></path></svg>
+                <span>จดเลขมิเตอร์วันนี้</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- MODAL 1: แป้นตัวเลขสำหรับจด/แก้ไขมิเตอร์ (Numpad) -->
+    <!-- ========================================== -->
+    <div id="numpadModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden flex-col justify-end">
+        <div class="bg-white w-full max-w-md mx-auto rounded-t-3xl p-5 shadow-2xl animate-slide-up">
+            <!-- หัว Modal -->
+            <div class="flex justify-between items-center mb-3">
+                <h3 id="modalTitle" class="text-xl font-bold text-slate-800">จดเลขมิเตอร์ใหม่</h3>
+                <button onclick="closeNumpadModal()" class="p-2 bg-slate-100 rounded-full text-slate-500 hover:bg-slate-200">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="x" aria-hidden="true" class="lucide lucide-x w-6 h-6"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
+                </button>
+            </div>
+
+            <!-- เลือกวันที่จด -->
+            <div class="mb-3 flex items-center justify-between bg-slate-50 px-4 py-2.5 rounded-2xl border border-slate-200">
+                <label for="recordDateInput" class="text-sm font-medium text-slate-600 flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="calendar" aria-hidden="true" class="lucide lucide-calendar w-4 h-4 text-sky-600"><path d="M8 2v3"></path><path d="M16 2v3"></path><rect x="3" y="3" width="18" height="18" rx="2"></rect><path d="M3 9h18"></path></svg>
+                    วันที่จด:
+                </label>
+                <input type="date" id="recordDateInput" class="bg-transparent font-bold text-slate-800 text-base focus:outline-none" style="">
+            </div>
+
+            <!-- หน้าจอแสดงตัวเลขที่กำลังกด -->
+            <div class="bg-sky-50 border-2 border-sky-200 rounded-2xl p-4 mb-3 text-right">
+                <div class="flex justify-between items-center text-xs text-slate-500 mb-1">
+                    <span id="prevMeterHint">มิเตอร์ครั้งก่อน: -</span>
+                    <span id="calcPreviewHint" class="font-semibold text-sky-700">ใช้น้ำ: 0 หน่วย</span>
+                </div>
+                <div id="numpadDisplay" class="text-4xl font-bold tracking-wider text-slate-900 h-11 flex items-center justify-end overflow-hidden">
+                    0
+                </div>
+            </div>
+
+            <!-- แจ้งเตือนข้อผิดพลาดใน Modal (เช่น กรอกเลขน้อยกว่าครั้งก่อน) -->
+            <div id="numpadError" class="hidden text-red-600 text-sm font-medium text-center mb-2 bg-red-50 py-1.5 px-3 rounded-xl">
+                เลขมิเตอร์ต้องมากกว่าหรือเท่ากับครั้งก่อนหน้า
+            </div>
+
+            <!-- แป้นตัวเลขขนาดใหญ่ (Large Keypad) -->
+            <div class="grid grid-cols-3 gap-2.5 mb-4">
+                <button type="button" onclick="pressKey('1')" class="bg-slate-100 hover:bg-slate-200 active:bg-sky-100 active:scale-95 transition text-3xl font-bold py-4 rounded-2xl text-slate-800">1</button>
+                <button type="button" onclick="pressKey('2')" class="bg-slate-100 hover:bg-slate-200 active:bg-sky-100 active:scale-95 transition text-3xl font-bold py-4 rounded-2xl text-slate-800">2</button>
+                <button type="button" onclick="pressKey('3')" class="bg-slate-100 hover:bg-slate-200 active:bg-sky-100 active:scale-95 transition text-3xl font-bold py-4 rounded-2xl text-slate-800">3</button>
+                <button type="button" onclick="pressKey('4')" class="bg-slate-100 hover:bg-slate-200 active:bg-sky-100 active:scale-95 transition text-3xl font-bold py-4 rounded-2xl text-slate-800">4</button>
+                <button type="button" onclick="pressKey('5')" class="bg-slate-100 hover:bg-slate-200 active:bg-sky-100 active:scale-95 transition text-3xl font-bold py-4 rounded-2xl text-slate-800">5</button>
+                <button type="button" onclick="pressKey('6')" class="bg-slate-100 hover:bg-slate-200 active:bg-sky-100 active:scale-95 transition text-3xl font-bold py-4 rounded-2xl text-slate-800">6</button>
+                <button type="button" onclick="pressKey('7')" class="bg-slate-100 hover:bg-slate-200 active:bg-sky-100 active:scale-95 transition text-3xl font-bold py-4 rounded-2xl text-slate-800">7</button>
+                <button type="button" onclick="pressKey('8')" class="bg-slate-100 hover:bg-slate-200 active:bg-sky-100 active:scale-95 transition text-3xl font-bold py-4 rounded-2xl text-slate-800">8</button>
+                <button type="button" onclick="pressKey('9')" class="bg-slate-100 hover:bg-slate-200 active:bg-sky-100 active:scale-95 transition text-3xl font-bold py-4 rounded-2xl text-slate-800">9</button>
+                <button type="button" onclick="clearKey()" class="bg-amber-100 hover:bg-amber-200 active:scale-95 transition text-lg font-bold py-4 rounded-2xl text-amber-800">ล้าง</button>
+                <button type="button" onclick="pressKey('0')" class="bg-slate-100 hover:bg-slate-200 active:bg-sky-100 active:scale-95 transition text-3xl font-bold py-4 rounded-2xl text-slate-800">0</button>
+                <button type="button" onclick="backspaceKey()" class="bg-rose-100 hover:bg-rose-200 active:scale-95 transition flex items-center justify-center py-4 rounded-2xl text-rose-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="delete" aria-hidden="true" class="lucide lucide-delete w-8 h-8"><path d="M10 5a2 2 0 0 0-1.344.519l-6.328 5.74a1 1 0 0 0 0 1.481l6.328 5.741A2 2 0 0 0 10 19h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2z"></path><path d="m12 9 6 6"></path><path d="m18 9-6 6"></path></svg>
+                </button>
+            </div>
+
+            <!-- ปุ่มบันทึก -->
+            <button type="button" onclick="saveMeterRecord()" class="w-full bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] transition text-white font-bold text-xl py-4 rounded-2xl shadow-md flex items-center justify-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="check-circle-2" aria-hidden="true" class="lucide lucide-check-circle-2 w-6 h-6"><circle cx="12" cy="12" r="10"></circle><path d="m16 9-5.5 5.5L8 12"></path></svg>
+                <span>บันทึกเลขมิเตอร์</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- MODAL 2: ตั้งค่าราคาน้ำต่อหน่วย -->
+    <!-- ========================================== -->
+    <div id="settingsModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden items-center justify-center p-4">
+        <div class="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold text-slate-800">ตั้งค่าราคาน้ำ</h3>
+                <button onclick="closeSettingsModal()" class="p-2 bg-slate-100 rounded-full text-slate-500">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="x" aria-hidden="true" class="lucide lucide-x w-5 h-5"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
+                </button>
+            </div>
+            <p class="text-sm text-slate-500 mb-4">กำหนดราคาค่าน้ำต่อ 1 หน่วย (ลูกบาศก์เมตร) เพื่อใช้คำนวณค่าใช้จ่ายโดยประมาณ</p>
+            
+            <div class="mb-5">
+                <label class="block text-sm font-semibold text-slate-700 mb-2">ราคาต่อหน่วย (บาท)</label>
+                <input type="number" id="unitPriceInput" step="0.5" min="1" class="w-full text-2xl font-bold text-center border-2 border-sky-200 rounded-2xl py-3 px-4 focus:outline-none focus:border-sky-500" placeholder="15" style="">
+            </div>
+
+            <button onclick="saveSettings()" class="w-full bg-sky-600 hover:bg-sky-700 text-white font-bold text-lg py-3.5 rounded-2xl shadow-md">
+                บันทึกการตั้งค่า
+            </button>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- MODAL 3: กล่องยืนยันการลบ / รีเซ็ต (แทน confirm()) -->
+    <!-- ========================================== -->
+    <div id="confirmModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden items-center justify-center p-4">
+        <div class="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl text-center">
+            <div class="w-14 h-14 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="trash-2" aria-hidden="true" class="lucide lucide-trash-2 w-7 h-7"><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M3 6h18"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+            </div>
+            <h3 id="confirmTitle" class="text-xl font-bold text-slate-800 mb-2">ยืนยันการลบข้อมูล?</h3>
+            <p id="confirmMessage" class="text-sm text-slate-500 mb-6">คุณต้องการลบรายการจดมิเตอร์นี้ใช่หรือไม่?</p>
+            <div class="grid grid-cols-2 gap-3">
+                <button onclick="closeConfirmModal()" class="py-3 rounded-2xl bg-slate-100 text-slate-700 font-bold text-base">ยกเลิก</button>
+                <button id="confirmActionBtn" class="py-3 rounded-2xl bg-red-600 text-white font-bold text-base">ยืนยัน</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- กล่องข้อความแจ้งเตือนสั้นๆ (Toast) -->
+    <div id="toast" class="fixed top-20 left-1/2 -translate-x-1/2 bg-slate-800 text-white px-5 py-3 rounded-full shadow-lg text-sm font-medium z-50 opacity-0 pointer-events-none transition-opacity duration-300">
+        บันทึกสำเร็จ
+    </div>
+
+    <script>
+        // ==========================================
+        // การจัดการสถานะและข้อมูล (State Management)
+        // ==========================================
+        const STORAGE_KEY = 'thai_water_meter_records_v1';
+        const RATE_STORAGE_KEY = 'thai_water_meter_rate_v1';
+
+        let records = [];
+        let unitPrice = 15; // ค่าเริ่มต้น 15 บาท/หน่วย
+        let currentInputStr = '';
+        let editingId = null; // null = เพิ่มใหม่, string = กำลังแก้ไข ID นั้น
+
+        // ชื่อเดือนภาษาไทยแบบย่อและเต็ม
+        const THAI_MONTHS_SHORT = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+        const THAI_MONTHS_FULL = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
+
+        // เริ่มต้นทำงานเมื่อโหลดหน้าเว็บ
+        window.onload = function() {
+            loadData();
+            renderAll();
+            lucide.createIcons();
+        };
+
+        // สร้างข้อมูลตัวอย่าง 6 เดือนย้อนหลังนับจากวันที่ปัจจุบันในเครื่อง
+        function generateSampleData() {
+            const today = new Date();
+            const sampleUsages = [14, 16, 15, 18, 15, 17]; // หน่วยน้ำที่ใช้ในแต่ละเดือน (6 เดือน)
+            let baseReading = 1240; // เลขมิเตอร์เริ่มต้นเมื่อ 7 เดือนก่อน
+            const generated = [];
+
+            // สร้าง 7 จุดข้อมูล (เพื่อคำนวณส่วนต่างได้ครบ 6 เดือนเต็ม)
+            // จุดที่ 0 คือฐานของ 6 เดือนก่อน, จุดที่ 1-6 คือ 6 เดือนที่ผ่านมา
+            const totalPoints = 7;
+            for (let i = totalPoints - 1; i >= 0; i--) {
+                const d = new Date(today.getFullYear(), today.getMonth() - i, 25);
+                // ป้องกันวันที่เกินเดือนปัจจุบัน
+                if (d > today) {
+                    d.setDate(today.getDate());
+                }
+                const dateStr = d.toISOString().split('T')[0];
+
+                if (i < totalPoints - 1) {
+                    const usageIndex = (totalPoints - 2) - i;
+                    baseReading += sampleUsages[usageIndex];
+                }
+
+                generated.push({
+                    id: 'sample_' + i + '_' + Date.now(),
+                    date: dateStr,
+                    reading: baseReading
+                });
+            }
+            return generated;
+        }
+
+        // โหลดข้อมูลจาก LocalStorage
+        function loadData() {
+            try {
+                const savedRate = localStorage.getItem(RATE_STORAGE_KEY);
+                if (savedRate && !isNaN(parseFloat(savedRate))) {
+                    unitPrice = parseFloat(savedRate);
+                }
+
+                const savedRecords = localStorage.getItem(STORAGE_KEY);
+                if (savedRecords) {
+                    records = JSON.parse(savedRecords);
+                } else {
+                    records = generateSampleData();
+                    saveData();
+                }
+            } catch (e) {
+                console.error('Error loading data:', e);
+                records = generateSampleData();
+            }
+        }
+
+        // บันทึกข้อมูลลง LocalStorage
+        function saveData() {
+            try {
+                // เรียงลำดับตามวันที่จากเก่าไปใหม่เสมอ
+                records.sort((a, b) => new Date(a.date) - new Date(b.date));
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+                localStorage.setItem(RATE_STORAGE_KEY, unitPrice.toString());
+            } catch (e) {
+                console.error('Error saving data:', e);
+            }
+        }
+
+        // คำนวณหน่วยน้ำที่ใช้และค่าน้ำของแต่ละรายการ
+        function getProcessedRecords() {
+            // เรียงจากเก่า -> ใหม่ เพื่อหาส่วนต่าง
+            const sorted = [...records].sort((a, b) => new Date(a.date) - new Date(b.date));
+            return sorted.map((rec, index) => {
+                let unitsUsed = 0;
+                let hasPrevious = false;
+                if (index > 0) {
+                    unitsUsed = Math.max(0, rec.reading - sorted[index - 1].reading);
+                    hasPrevious = true;
+                }
+                const cost = Math.round(unitsUsed * unitPrice);
+                return {
+                    ...rec,
+                    unitsUsed,
+                    cost,
+                    hasPrevious
+                };
+            });
+        }
+
+        // แปลงวันที่ YYYY-MM-DD เป็นรูปแบบไทย เช่น "25 พ.ย. 69"
+        function formatThaiDate(dateStr) {
+            const parts = dateStr.split('-');
+            if (parts.length !== 3) return dateStr;
+            const yearBE = (parseInt(parts[0]) + 543).toString().slice(-2);
+            const monthIdx = parseInt(parts[1]) - 1;
+            const day = parseInt(parts[2]);
+            return `${day} ${THAI_MONTHS_SHORT[monthIdx]} ${yearBE}`;
+        }
+
+        // แปลงวันที่เป็นชื่อเดือนเต็ม เช่น "พฤศจิกายน 2569"
+        function formatThaiMonthYear(dateStr) {
+            const parts = dateStr.split('-');
+            if (parts.length !== 3) return '';
+            const yearBE = parseInt(parts[0]) + 543;
+            const monthIdx = parseInt(parts[1]) - 1;
+            return `${THAI_MONTHS_FULL[monthIdx]} ${yearBE}`;
+        }
+
+        // ==========================================
+        // การแสดงผลบนหน้าจอ (UI Rendering)
+        // ==========================================
+        function renderAll() {
+            document.getElementById('headerRateDisplay').textContent = `${unitPrice} บ./หน่วย`;
+            const processed = getProcessedRecords();
+            
+            renderSummaryCard(processed);
+            renderBarChart(processed);
+            renderRecordsList(processed);
+            lucide.createIcons();
+        }
+
+        // 1. แสดงผลการ์ดสรุปด้านบนสุด
+        function renderSummaryCard(processed) {
+            const validUsages = processed.filter(r => r.hasPrevious);
+            const latestUnitsEl = document.getElementById('latestUnits');
+            const latestCostEl = document.getElementById('latestCost');
+            const latestMonthEl = document.getElementById('latestMonthLabel');
+            const latestDateEl = document.getElementById('latestDateLabel');
+            const badgeEl = document.getElementById('comparisonBadge');
+            const leakBox = document.getElementById('leakWarningBox');
+            const leakText = document.getElementById('leakWarningText');
+
+            if (validUsages.length === 0) {
+                latestUnitsEl.textContent = '0';
+                latestCostEl.textContent = '0';
+                latestMonthEl.textContent = 'ยังไม่มีข้อมูลเปรียบเทียบ';
+                latestDateEl.textContent = processed.length > 0 ? `จดล่าสุด: ${formatThaiDate(processed[0].date)}` : '-';
+                badgeEl.innerHTML = '<span>รอจดครั้งถัดไป</span>';
+                badgeEl.className = 'px-3 py-1.5 rounded-2xl text-sm font-semibold bg-slate-100 text-slate-600';
+                leakBox.classList.add('hidden');
+                return;
+            }
+
+            const current = validUsages[validUsages.length - 1];
+            latestUnitsEl.textContent = current.unitsUsed.toLocaleString();
+            latestCostEl.textContent = current.cost.toLocaleString();
+            latestMonthEl.textContent = `ยอดใช้น้ำเดือน${formatThaiMonthYear(current.date)}`;
+            latestDateEl.textContent = `จดเมื่อ ${formatThaiDate(current.date)}`;
+
+            // เปรียบเทียบกับเดือนก่อนหน้า
+            if (validUsages.length >= 2) {
+                const prev = validUsages[validUsages.length - 2];
+                const diff = current.unitsUsed - prev.unitsUsed;
+
+                if (diff > 0) {
+                    badgeEl.className = 'px-3 py-1.5 rounded-2xl text-sm font-bold flex items-center gap-1 bg-amber-100 text-amber-800';
+                    badgeEl.innerHTML = `<i data-lucide="trending-up" class="w-4 h-4"></i> <span>มากขึ้น ${diff} หน่วย</span>`;
+                } else if (diff < 0) {
+                    badgeEl.className = 'px-3 py-1.5 rounded-2xl text-sm font-bold flex items-center gap-1 bg-emerald-100 text-emerald-800';
+                    badgeEl.innerHTML = `<i data-lucide="trending-down" class="w-4 h-4"></i> <span>น้อยลง ${Math.abs(diff)} หน่วย</span>`;
+                } else {
+                    badgeEl.className = 'px-3 py-1.5 rounded-2xl text-sm font-bold flex items-center gap-1 bg-sky-100 text-sky-800';
+                    badgeEl.innerHTML = `<i data-lucide="minus" class="w-4 h-4"></i> <span>เท่ากับเดือนก่อน</span>`;
+                }
+
+                // ตรวจสอบภาวะน้ำรั่ว (ใช้น้ำมากกว่าค่าเฉลี่ยย้อนหลัง 50% และเพิ่มขึ้นอย่างน้อย 8 หน่วย หรือเกิน 35 หน่วย)
+                const historySlice = validUsages.slice(0, -1);
+                const avgUsage = historySlice.reduce((sum, item) => sum + item.unitsUsed, 0) / historySlice.length;
+
+                if ((current.unitsUsed > avgUsage * 1.5 && (current.unitsUsed - avgUsage) >= 8) || current.unitsUsed >= 40) {
+                    leakBox.classList.remove('hidden');
+                    latestUnitsEl.classList.replace('text-sky-600', 'text-red-600');
+                    leakText.textContent = `เดือนนี้ใช้น้ำ ${current.unitsUsed} หน่วย (ปกติเฉลี่ย ${Math.round(avgUsage)} หน่วย/เดือน) กรุณาตรวจสอบก๊อกน้ำ ชักโครก หรือท่อประปา`;
+                } else {
+                    leakBox.classList.add('hidden');
+                    latestUnitsEl.classList.replace('text-red-600', 'text-sky-600');
+                }
+            } else {
+                badgeEl.className = 'px-3 py-1.5 rounded-2xl text-sm font-semibold bg-slate-100 text-slate-600';
+                badgeEl.innerHTML = '<span>เดือนแรกที่คำนวณได้</span>';
+                leakBox.classList.add('hidden');
+            }
+        }
+
+        // 2. วาดกราฟแท่งแสดงหน่วยน้ำ 6 เดือนล่าสุด
+        function renderBarChart(processed) {
+            const container = document.getElementById('barChartContainer');
+            container.innerHTML = '';
+
+            // เอาเฉพาะรายการที่มีการคำนวณหน่วยน้ำ (6 เดือนล่าสุด)
+            const chartData = processed.filter(r => r.hasPrevious).slice(-6);
+
+            if (chartData.length === 0) {
+                container.innerHTML = `<div class="w-full h-full flex items-center justify-center text-slate-400 text-sm">ต้องมีบันทึกอย่างน้อย 2 ครั้งเพื่อแสดงกราฟ</div>`;
+                return;
+            }
+
+            // หาค่าเฉลี่ยเพื่อเช็คสีแดงกรณีผิดปกติ
+            const avg = chartData.reduce((s, i) => s + i.unitsUsed, 0) / chartData.length;
+            const maxVal = Math.max(...chartData.map(d => d.unitsUsed), 20); // ขั้นต่ำสเกล 20
+
+            chartData.forEach((item, idx) => {
+                const heightPercent = Math.max(12, Math.round((item.unitsUsed / maxVal) * 100));
+                const isLatest = idx === chartData.length - 1;
+                const isAbnormal = (item.unitsUsed > avg * 1.5 && (item.unitsUsed - avg) >= 8) || item.unitsUsed >= 40;
+
+                const parts = item.date.split('-');
+                const monthShort = THAI_MONTHS_SHORT[parseInt(parts[1]) - 1];
+
+                let barColor = 'bg-sky-300';
+                if (isAbnormal) barColor = 'bg-red-500';
+                else if (isLatest) barColor = 'bg-sky-600';
+
+                const col = document.createElement('div');
+                col.className = 'flex-1 flex flex-col items-center h-full justify-end group';
+                col.innerHTML = `
+                    <span class="text-xs font-bold mb-1 ${isAbnormal ? 'text-red-600' : (isLatest ? 'text-sky-700' : 'text-slate-600')}">
+                        ${item.unitsUsed}
+                    </span>
+                    <div class="w-full max-w-[38px] ${barColor} rounded-t-xl transition-all duration-500" style="height: ${heightPercent}%"></div>
+                    <span class="text-xs font-medium mt-2 ${isLatest ? 'text-slate-900 font-bold' : 'text-slate-500'}">
+                        ${monthShort}
+                    </span>
+                `;
+                container.appendChild(col);
+            });
+        }
+
+        // 3. แสดงรายการประวัติการจดมิเตอร์ (เรียงจากใหม่ไปเก่า)
+        function renderRecordsList(processed) {
+            const listContainer = document.getElementById('recordsList');
+            listContainer.innerHTML = '';
+
+            if (processed.length === 0) {
+                listContainer.innerHTML = `
+                    <div class="bg-white rounded-3xl p-8 text-center text-slate-400 border border-dashed border-slate-300">
+                        <p class="text-base">ยังไม่มีประวัติการจดมิเตอร์</p>
+                        <p class="text-sm mt-1">กดปุ่ม "จดเลขมิเตอร์วันนี้" ด้านล่างเพื่อเริ่มต้น</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // คำนวณค่าเฉลี่ยเพื่อไฮไลต์รายการที่ผิดปกติ
+            const validList = processed.filter(r => r.hasPrevious);
+            const avg = validList.length > 0 ? validList.reduce((s, i) => s + i.unitsUsed, 0) / validList.length : 0;
+
+            // กลับด้านให้เดือนล่าสุดอยู่บนสุด
+            const reversed = [...processed].reverse();
+
+            reversed.forEach((item) => {
+                const isAbnormal = item.hasPrevious && ((item.unitsUsed > avg * 1.5 && (item.unitsUsed - avg) >= 8) || item.unitsUsed >= 40);
+
+                const card = document.createElement('div');
+                card.className = `bg-white rounded-2xl p-4 shadow-xs border ${isAbnormal ? 'border-red-300 bg-red-50/30' : 'border-slate-100'} flex items-center justify-between gap-3`;
+
+                card.innerHTML = `
+                    <div class="space-y-1">
+                        <div class="flex items-center gap-2">
+                            <span class="font-bold text-base text-slate-800">${formatThaiDate(item.date)}</span>
+                            ${isAbnormal ? '<span class="text-[11px] font-bold bg-red-100 text-red-700 px-2 py-0.5 rounded-full">ใช้น้ำสูงผิดปกติ</span>' : ''}
+                        </div>
+                        <div class="text-sm text-slate-500">
+                            เลขมิเตอร์: <span class="font-bold text-slate-700 text-base">${item.reading.toLocaleString()}</span>
+                        </div>
+                        ${item.hasPrevious ? `
+                            <div class="flex items-center gap-3 pt-0.5">
+                                <span class="text-sm font-bold ${isAbnormal ? 'text-red-600' : 'text-sky-600'}">
+                                    ใช้ไป ${item.unitsUsed} หน่วย
+                                </span>
+                                <span class="text-slate-300">|</span>
+                                <span class="text-sm font-semibold text-slate-700">
+                                    ~${item.cost.toLocaleString()} บาท
+                                </span>
+                            </div>
+                        ` : `
+                            <div class="text-xs text-slate-400 pt-0.5">เลขมิเตอร์เริ่มต้น (ฐานคำนวณ)</div>
+                        `}
+                    </div>
+
+                    <!-- ปุ่มแก้ไขและลบ -->
+                    <div class="flex flex-col gap-2 shrink-0">
+                        <button onclick="openEditModal('${item.id}')" class="p-2.5 bg-slate-100 hover:bg-sky-100 text-slate-600 hover:text-sky-700 rounded-xl transition" aria-label="แก้ไข">
+                            <i data-lucide="pencil" class="w-5 h-5"></i>
+                        </button>
+                        <button onclick="confirmDeleteRecord('${item.id}')" class="p-2.5 bg-slate-100 hover:bg-red-100 text-slate-600 hover:text-red-600 rounded-xl transition" aria-label="ลบ">
+                            <i data-lucide="trash-2" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+                `;
+                listContainer.appendChild(card);
+            });
+        }
+
+        // ==========================================
+        // การจัดการแป้นตัวเลข (Numpad Modal)
+        // ==========================================
+        function openNumpadModal() {
+            editingId = null;
+            currentInputStr = '';
+            document.getElementById('modalTitle').textContent = 'จดเลขมิเตอร์ใหม่';
+            
+            // ตั้งวันที่เป็นวันนี้
+            const todayStr = new Date().toISOString().split('T')[0];
+            document.getElementById('recordDateInput').value = todayStr;
+            
+            updateNumpadDisplay();
+            document.getElementById('numpadError').classList.add('hidden');
+            
+            const modal = document.getElementById('numpadModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            lucide.createIcons();
+        }
+
+        function openEditModal(id) {
+            const target = records.find(r => r.id === id);
+            if (!target) return;
+
+            editingId = id;
+            currentInputStr = target.reading.toString();
+            document.getElementById('modalTitle').textContent = 'แก้ไขเลขมิเตอร์';
+            document.getElementById('recordDateInput').value = target.date;
+
+            updateNumpadDisplay();
+            document.getElementById('numpadError').classList.add('hidden');
+
+            const modal = document.getElementById('numpadModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            lucide.createIcons();
+        }
+
+        function closeNumpadModal() {
+            const modal = document.getElementById('numpadModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        // กดปุ่มตัวเลข 0-9
+        function pressKey(digit) {
+            if (currentInputStr.length >= 7) return; // จำกัดสูงสุด 7 หลัก
+            if (currentInputStr === '0') {
+                currentInputStr = digit;
+            } else {
+                currentInputStr += digit;
+            }
+            document.getElementById('numpadError').classList.add('hidden');
+            updateNumpadDisplay();
+        }
+
+        // กดปุ่มลบทีละตัว
+        function backspaceKey() {
+            currentInputStr = currentInputStr.slice(0, -1);
+            document.getElementById('numpadError').classList.add('hidden');
+            updateNumpadDisplay();
+        }
+
+        // กดปุ่มล้างทั้งหมด
+        function clearKey() {
+            currentInputStr = '';
+            document.getElementById('numpadError').classList.add('hidden');
+            updateNumpadDisplay();
+        }
+
+        // หาเลขมิเตอร์ก่อนหน้า (อิงตามวันที่ที่เลือก)
+        function getPreviousReadingForDate(dateStr, excludeId = null) {
+            const filtered = records
+                .filter(r => r.id !== excludeId && new Date(r.date) <= new Date(dateStr))
+                .sort((a, b) => new Date(a.date) - new Date(b.date));
+            
+            if (filtered.length === 0) return null;
+            return filtered[filtered.length - 1].reading;
+        }
+
+        // อัปเดตหน้าจอแสดงผลใน Numpad
+        function updateNumpadDisplay() {
+            const displayEl = document.getElementById('numpadDisplay');
+            const prevHintEl = document.getElementById('prevMeterHint');
+            const calcHintEl = document.getElementById('calcPreviewHint');
+            const selectedDate = document.getElementById('recordDateInput').value;
+
+            const val = currentInputStr === '' ? 0 : parseInt(currentInputStr, 10);
+            displayEl.textContent = currentInputStr === '' ? '0' : val.toLocaleString();
+            displayEl.className = `text-4xl font-bold tracking-wider h-11 flex items-center justify-end overflow-hidden ${currentInputStr === '' ? 'text-slate-300' : 'text-slate-900'}`;
+
+            const prevReading = getPreviousReadingForDate(selectedDate, editingId);
+            if (prevReading !== null) {
+                prevHintEl.textContent = `ครั้งก่อน: ${prevReading.toLocaleString()}`;
+                if (currentInputStr !== '' && val >= prevReading) {
+                    const diff = val - prevReading;
+                    calcHintEl.textContent = `ใช้น้ำ: ${diff} หน่วย (~${Math.round(diff * unitPrice).toLocaleString()} บ.)`;
+                    calcHintEl.className = 'font-semibold text-sky-700';
+                } else if (currentInputStr !== '' && val < prevReading) {
+                    calcHintEl.textContent = `น้อยกว่าครั้งก่อน!`;
+                    calcHintEl.className = 'font-semibold text-red-600';
+                } else {
+                    calcHintEl.textContent = `ใช้น้ำ: - หน่วย`;
+                }
+            } else {
+                prevHintEl.textContent = 'ไม่มีข้อมูลก่อนหน้า';
+                calcHintEl.textContent = 'บันทึกเป็นค่าเริ่มต้น';
+            }
+        }
+
+        // อัปเดตคำนวณล่วงหน้าเมื่อเปลี่ยนวันที่ใน Modal
+        document.getElementById('recordDateInput').addEventListener('change', updateNumpadDisplay);
+
+        // บันทึกเลขมิเตอร์
+        function saveMeterRecord() {
+            const dateVal = document.getElementById('recordDateInput').value;
+            const errorEl = document.getElementById('numpadError');
+
+            if (!dateVal) {
+                errorEl.textContent = 'กรุณาเลือกวันที่จดมิเตอร์';
+                errorEl.classList.remove('hidden');
+                return;
+            }
+
+            if (currentInputStr === '') {
+                errorEl.textContent = 'กรุณากดตัวเลขมิเตอร์';
+                errorEl.classList.remove('hidden');
+                return;
+            }
+
+            const readingVal = parseInt(currentInputStr, 10);
+            const prevReading = getPreviousReadingForDate(dateVal, editingId);
+
+            if (prevReading !== null && readingVal < prevReading) {
+                errorEl.textContent = `เลขมิเตอร์ (${readingVal}) ต้องไม่น้อยกว่าครั้งก่อน (${prevReading})`;
+                errorEl.classList.remove('hidden');
+                return;
+            }
+
+            if (editingId) {
+                // อัปเดตรายการเดิม
+                const idx = records.findIndex(r => r.id === editingId);
+                if (idx !== -1) {
+                    records[idx].date = dateVal;
+                    records[idx].reading = readingVal;
+                }
+                showToast('แก้ไขข้อมูลเรียบร้อยแล้ว');
+            } else {
+                // เพิ่มรายการใหม่
+                records.push({
+                    id: 'rec_' + Date.now(),
+                    date: dateVal,
+                    reading: readingVal
+                });
+                showToast('บันทึกเลขมิเตอร์เรียบร้อยแล้ว');
+            }
+
+            saveData();
+            renderAll();
+            closeNumpadModal();
+        }
+
+        // ==========================================
+        // การตั้งค่าราคาน้ำ & การลบ/รีเซ็ต
+        // ==========================================
+        function openSettingsModal() {
+            document.getElementById('unitPriceInput').value = unitPrice;
+            const modal = document.getElementById('settingsModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeSettingsModal() {
+            const modal = document.getElementById('settingsModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function saveSettings() {
+            const val = parseFloat(document.getElementById('unitPriceInput').value);
+            if (!isNaN(val) && val > 0) {
+                unitPrice = val;
+                saveData();
+                renderAll();
+                closeSettingsModal();
+                showToast(`ตั้งค่าราคา ${unitPrice} บาท/หน่วย แล้ว`);
+            }
+        }
+
+        // ยืนยันการลบรายการ
+        function confirmDeleteRecord(id) {
+            const target = records.find(r => r.id === id);
+            if (!target) return;
+
+            document.getElementById('confirmTitle').textContent = 'ลบรายการนี้?';
+            document.getElementById('confirmMessage').textContent = `ต้องการลบรายการวันที่ ${formatThaiDate(target.date)} (เลข ${target.reading}) ใช่หรือไม่?`;
+            
+            const confirmBtn = document.getElementById('confirmActionBtn');
+            confirmBtn.onclick = function() {
+                records = records.filter(r => r.id !== id);
+                saveData();
+                renderAll();
+                closeConfirmModal();
+                showToast('ลบรายการเรียบร้อยแล้ว');
+            };
+
+            const modal = document.getElementById('confirmModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        // ยืนยันการรีเซ็ตข้อมูลตัวอย่าง
+        function confirmResetDemo() {
+            document.getElementById('confirmTitle').textContent = 'รีเซ็ตข้อมูลตัวอย่าง?';
+            document.getElementById('confirmMessage').textContent = 'ข้อมูลปัจจุบันทั้งหมดจะถูกแทนที่ด้วยข้อมูลตัวอย่าง 6 เดือนย้อนหลัง';
+            
+            const confirmBtn = document.getElementById('confirmActionBtn');
+            confirmBtn.onclick = function() {
+                records = generateSampleData();
+                saveData();
+                renderAll();
+                closeConfirmModal();
+                showToast('รีเซ็ตข้อมูลตัวอย่างเรียบร้อย');
+            };
+
+            const modal = document.getElementById('confirmModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeConfirmModal() {
+            const modal = document.getElementById('confirmModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        // แสดงข้อความแจ้งเตือนสั้นๆ
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.classList.remove('opacity-0');
+            setTimeout(() => {
+                toast.classList.add('opacity-0');
+            }, 2500);
+        }
+    </script>
+
+</body></html>
