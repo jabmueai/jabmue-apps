@@ -1,0 +1,10 @@
+{
+  "name": "jabmue-bus",
+  "private": true,
+  "type": "module",
+  "description": "รถมาหรือยัง · ดูรถเมล์/สองแถวต่างจังหวัดแบบสด",
+  "scripts": {
+    "dev": "node dev-server.js"
+  },
+  "engines": { "node": ">=18" }
+}

@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ผู้ดูแล · รถมาหรือยัง</title>
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/icon-180.png">
+<link rel="icon" type="image/png" href="/icon-192.png">
+<meta name="theme-color" content="#e11d48">
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<div class="wrap">
+  <div id="vLoad" class="center" style="padding:60px 0"><div style="font-size:64px">⚙️</div><p class="mut">กำลังโหลด...</p></div>
+
+  <!-- ตั้งรหัสครั้งแรก -->
+  <div id="vSetup" class="hide">
+    <h1>⚙️ เริ่มต้นใช้งาน</h1>
+    <p class="sub">ตั้งรหัสผู้ดูแล (ตัวเลข 4-8 หลัก) ใช้เข้าหน้านี้ครั้งต่อไป · <b>จดไว้ อย่าลืม</b></p>
+    <div class="card">
+      <label for="sp1">รหัสผู้ดูแล</label>
+      <input id="sp1" type="tel" inputmode="numeric" maxlength="8" autocomplete="off" placeholder="เช่น 2580">
+      <label for="sp2">พิมพ์รหัสอีกครั้ง</label>
+      <input id="sp2" type="tel" inputmode="numeric" maxlength="8" autocomplete="off">
+      <div class="status bad hide" id="spErr" style="margin-top:12px"></div>
+      <button class="big pri" id="btnSetup" style="margin-top:14px">ตั้งรหัส แล้วเริ่มใช้งาน</button>
+    </div>
+  </div>
+
+  <!-- เข้าสู่ระบบ -->
+  <div id="vLogin" class="hide">
+    <h1>⚙️ สำหรับผู้ดูแล</h1>
+    <div class="card">
+      <label for="lp">รหัสผู้ดูแล</label>
+      <input id="lp" type="password" inputmode="numeric" maxlength="8" autocomplete="current-password">
+      <div class="status bad hide" id="lpErr" style="margin-top:12px"></div>
+      <button class="big pri" id="btnLogin" style="margin-top:14px">เข้าสู่ระบบ</button>
+    </div>
+  </div>
+
+  <!-- หน้าหลัก -->
+  <div id="vMain" class="hide">
+    <div id="dbWarn" class="status warn hide">
+      ⚠️ <b>ยังไม่ได้เชื่อมฐานข้อมูล</b> ข้อมูลจะหายเมื่อระบบรีสตาร์ท และตำแหน่งรถอาจไม่ขึ้น<br>
+      <small>วิธีแก้: เข้า Vercel → โปรเจกต์นี้ → Storage → Create Database → เลือก Upstash (Redis) → Connect แล้วกด Redeploy</small>
+    </div>
+    <div class="tabs" id="tabs">
+      <button data-t="live" class="on"><span>🗺️</span>ดูรถ</button>
+      <button data-t="routes"><span>🛣️</span>สายรถ</button>
+      <button data-t="drivers"><span>👤</span>คนขับ</button>
+      <button data-t="settings"><span>⚙️</span>ตั้งค่า</button>
+    </div>
+
+    <!-- ดูรถ -->
+    <section id="tLive">
+      <div class="map tall" id="liveMap"></div>
+      <div class="card" style="margin-top:14px">
+        <h3 id="liveTitle">รถที่วิ่งอยู่</h3>
+        <div id="liveList"></div>
+      </div>
+      <div class="card" id="startGuide">
+        <h3>เริ่มต้นใน 3 ขั้น</h3>
+        <ol style="margin:0;padding-left:24px;line-height:1.8">
+          <li>แท็บ <b>🛣️ สายรถ</b> → เพิ่มสาย แล้วแตะแผนที่เพื่อปักป้ายรถ</li>
+          <li>แท็บ <b>👤 คนขับ</b> → เพิ่มชื่อคนขับ ตั้งรหัสให้ แล้วส่งลิงก์ให้คนขับ</li>
+          <li>แท็บ <b>⚙️ ตั้งค่า</b> → ส่งลิงก์ให้ผู้โดยสารทาง LINE</li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- สายรถ -->
+    <section id="tRoutes" class="hide">
+      <div id="routeIndex">
+        <div class="card"><div id="routeList"></div></div>
+        <button class="big pri" id="btnAddRoute">➕ เพิ่มสายรถ</button>
+      </div>
+      <div id="routeEdit" class="hide">
+        <div class="topbar"><button class="ghost" id="btnRouteBack">‹ รายการสาย</button><div class="t"><b id="reTitle"></b></div></div>
+        <div class="card">
+          <label for="reName" style="margin-top:0">ชื่อสาย</label>
+          <input id="reName" type="text" maxlength="60" placeholder="เช่น สองแถว ตลาด - บ้านนาโพธิ์">
+          <label>สีของสาย</label>
+          <div class="swatches" id="reColors"></div>
+        </div>
+
+        <div class="card">
+          <h3>ป้ายรถ (เรียงจากต้นสายไปปลายสาย)</h3>
+          <div class="row" style="margin-bottom:10px">
+            <input id="reSearch" type="text" placeholder="ค้นหาหมู่บ้าน ตำบล อำเภอ">
+            <button class="ghost" id="btnSearch" style="flex:0 0 auto">🔍</button>
+          </div>
+          <div class="col" id="searchRes" style="margin-bottom:10px"></div>
+          <div class="status ok small" style="margin-bottom:10px">👆 <b>แตะบนแผนที่</b> ตรงที่มีป้ายรถ เพื่อเพิ่มป้าย · กดค้างที่หมุดแล้วลากเพื่อย้าย</div>
+          <div class="map tall" id="editMap"></div>
+          <button class="big ghost" id="btnStopHere" style="margin-top:10px;width:100%">📍 เพิ่มป้ายตรงที่ฉันยืนอยู่</button>
+          <div id="roadStatus" class="small mut" style="margin:10px 2px"></div>
+          <label style="display:flex;gap:10px;align-items:center;font-weight:400"><input type="checkbox" id="reRoad" style="width:26px;height:26px"> ให้เส้นทางวิ่งตามถนนจริง (OpenStreetMap)</label>
+          <div id="stopList" style="margin-top:8px"></div>
+        </div>
+
+        <div class="card">
+          <h3>เวลารถออกจากต้นสาย</h3>
+          <div class="times" id="reTimes" style="margin-bottom:10px"></div>
+          <div class="row">
+            <input id="reTimeIn" type="text" inputmode="decimal" placeholder="เช่น 06:00 07:30 09:00">
+            <button class="ghost" id="btnAddTime" style="flex:0 0 auto">เพิ่ม</button>
+          </div>
+          <label for="reSpeed">ความเร็วเฉลี่ย (ใช้คำนวณเวลาถึง)</label>
+          <select id="reSpeed">
+            <option value="20">ช้า · ถนนในหมู่บ้าน จอดบ่อย (20 กม./ชม.)</option>
+            <option value="30">ปกติ · ถนนทั่วไป (30 กม./ชม.)</option>
+            <option value="45">เร็ว · ถนนใหญ่ (45 กม./ชม.)</option>
+            <option value="60">เร็วมาก · ทางหลวง (60 กม./ชม.)</option>
+          </select>
+          <label for="reNote">ประกาศ / หมายเหตุ (ผู้โดยสารเห็น)</label>
+          <textarea id="reNote" rows="2" maxlength="200" placeholder="เช่น ค่าโดยสาร 20 บาท · วันอาทิตย์ไม่มีรถ"></textarea>
+        </div>
+        <div class="row">
+          <button class="big line" id="btnShareRoute">📤 ส่งลิงก์สายนี้</button>
+        </div>
+        <button class="big ghost" id="btnDelRoute" style="margin-top:12px;width:100%;color:var(--bad)">🗑 ลบสายนี้</button>
+      </div>
+    </section>
+
+    <!-- คนขับ -->
+    <section id="tDrivers" class="hide">
+      <div id="driverList"></div>
+      <button class="big pri" id="btnAddDriver">➕ เพิ่มคนขับ</button>
+      <div class="card" style="margin-top:14px">
+        <h3>ส่งลิงก์ให้คนขับ</h3>
+        <p class="small mut" style="margin-top:0">คนขับเปิดลิงก์ → กดชื่อตัวเอง → ใส่รหัส → เลือกทาง → กด "เริ่มวิ่ง"</p>
+        <div class="row"><a class="btn line" id="lineDriver" target="_blank" rel="noopener">LINE</a><button class="ghost" id="btnShareDriver">📤 คัดลอก/แชร์</button></div>
+      </div>
+    </section>
+
+    <!-- ตั้งค่า -->
+    <section id="tSettings" class="hide">
+      <div class="card">
+        <label for="svcName" style="margin-top:0">ชื่อบริการ (แสดงหน้าแรก)</label>
+        <input id="svcName" type="text" maxlength="80" placeholder="เช่น รถสองแถว ต.บ้านใหม่">
+      </div>
+      <div class="card">
+        <h3>ส่งลิงก์ให้ผู้โดยสาร</h3>
+        <p class="small mut" style="margin-top:0">ส่งในกลุ่ม LINE หมู่บ้าน หรือพิมพ์ติดที่ป้ายรถ ผู้โดยสารเปิดดูได้เลย ไม่ต้องสมัคร</p>
+        <div class="row"><a class="btn line" id="linePassenger" target="_blank" rel="noopener">LINE</a><button class="ghost" id="btnSharePassenger">📤 คัดลอก/แชร์</button></div>
+        <p class="small mut center" id="passUrl" style="word-break:break-all"></p>
+      </div>
+      <div class="card">
+        <h3>เปลี่ยนรหัสผู้ดูแล</h3>
+        <input id="newPin" type="tel" inputmode="numeric" maxlength="8" placeholder="รหัสใหม่ 4-8 หลัก" autocomplete="off">
+        <button class="big ghost" id="btnPin" style="margin-top:10px;width:100%">เปลี่ยนรหัส</button>
+      </div>
+      <div class="card">
+        <h3>สำรองข้อมูล</h3>
+        <p class="small mut" style="margin-top:0">เก็บไฟล์สายรถและรายชื่อคนขับไว้ (ไม่รวมรหัส)</p>
+        <div class="row"><button class="ghost" id="btnBackup">💾 ดาวน์โหลด</button><button class="ghost" id="btnRestore">📂 นำเข้า</button></div>
+        <input type="file" id="restoreFile" accept=".json,application/json" hidden>
+      </div>
+      <button class="big ghost" id="btnLogout" style="width:100%">ออกจากระบบ</button>
+    </section>
+  </div>
+
+  <div class="foot"><a href="/">หน้าผู้โดยสาร</a> · <a href="/driver">หน้าคนขับ</a></div>
+</div>
+<div class="saved" id="saved"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="/common.js"></script>
+<script>
+'use strict';
+const COLORS = ['#e11d48', '#2563eb', '#16a34a', '#ea580c', '#7c3aed', '#0891b2', '#ca8a04', '#4b5563'];
+let token = store.get('bus.admin'), cfg = null, tab = 'live', liveTimer = null, editing = null;
+let liveMap = null, liveLayers = null, liveFitted = false, editMap = null, editLayers = null;
+
+const views = ['vLoad', 'vSetup', 'vLogin', 'vMain'];
+function show(v) { views.forEach((x) => $('#' + x).classList.toggle('hide', x !== v)); }
+const routeById = (id) => cfg.routes.find((r) => r.id === id);
+const uid = () => Math.random().toString(36).slice(2, 9);
+
+async function boot() {
+  let st;
+  try { st = await api('status'); } catch (e) { $('#vLoad').innerHTML = `<p>${esc(e.message)}</p><button class="big pri" onclick="location.reload()">ลองใหม่</button>`; return; }
+  $('#dbWarn').classList.toggle('hide', st.db);
+  if (!st.hasAdmin) return show('vSetup');
+  if (token && (await loadCfg())) return main();
+  show('vLogin');
+}
+async function loadCfg() {
+  try {
+    cfg = await api('admin-config', { token });
+    return true;
+  } catch (e) {
+    if (e.status === 401) { store.del('bus.admin'); token = null; }
+    return false;
+  }
+}
+
+$('#btnSetup').onclick = async () => {
+  const a = $('#sp1').value.trim(), b = $('#sp2').value.trim(), err = $('#spErr');
+  err.classList.add('hide');
+  if (!/^\d{4,8}$/.test(a)) { err.textContent = 'รหัสต้องเป็นตัวเลข 4-8 หลัก'; return err.classList.remove('hide'); }
+  if (a !== b) { err.textContent = 'รหัสสองช่องไม่ตรงกัน'; return err.classList.remove('hide'); }
+  try {
+    ({ token } = await api('setup', { pin: a }));
+    store.set('bus.admin', token);
+    await loadCfg();
+    main();
+  } catch (e) { err.textContent = e.message; err.classList.remove('hide'); }
+};
+async function doLogin() {
+  const err = $('#lpErr');
+  err.classList.add('hide');
+  try {
+    ({ token } = await api('admin-login', { pin: $('#lp').value.trim() }));
+    store.set('bus.admin', token);
+    await loadCfg();
+    main();
+  } catch (e) { err.textContent = e.message; err.classList.remove('hide'); }
+}
+$('#btnLogin').onclick = doLogin;
+$('#lp').onkeydown = (e) => { if (e.key === 'Enter') doLogin(); };
+
+function main() {
+  show('vMain');
+  setTab(cfg.routes.length ? 'live' : 'routes');
+}
+$('#tabs').onclick = (e) => { const b = e.target.closest('[data-t]'); if (b) setTab(b.dataset.t); };
+function setTab(t) {
+  tab = t;
+  [...$('#tabs').children].forEach((b) => b.classList.toggle('on', b.dataset.t === t));
+  ['live', 'routes', 'drivers', 'settings'].forEach((x) => $('#t' + x[0].toUpperCase() + x.slice(1)).classList.toggle('hide', x !== t));
+  clearInterval(liveTimer);
+  if (t === 'live') { renderLive(); liveTimer = setInterval(renderLive, 10000); }
+  if (t === 'routes') { editing ? openRoute(editing) : renderRoutes(); }
+  if (t === 'drivers') renderDrivers();
+  if (t === 'settings') renderSettings();
+  window.scrollTo(0, 0);
+}
+
+// ---------- บันทึกอัตโนมัติ ----------
+let saveTimer = null, saving = null;
+function dirty() {
+  clearTimeout(saveTimer);
+  flash('กำลังบันทึก...');
+  saveTimer = setTimeout(save, 1000);
+}
+async function save() {
+  clearTimeout(saveTimer);
+  saveTimer = null;
+  const body = { token, config: cfg };
+  saving = api('save-config', body).then(() => {
+    cfg.drivers.forEach((d) => { if (d.pin) { d.hasPin = true; delete d.pin; } });
+    flash('บันทึกแล้ว ✓', 1500);
+    if (tab === 'drivers') renderDrivers();
+  }).catch((e) => {
+    flash('⚠️ บันทึกไม่สำเร็จ: ' + e.message, 5000);
+    if (e.status === 401) { alert('กรุณาเข้าสู่ระบบใหม่'); location.reload(); }
+  }).finally(() => { saving = null; });
+  return saving;
+}
+function flash(t, ms) {
+  const s = $('#saved');
+  s.textContent = t;
+  s.classList.add('show');
+  clearTimeout(s._h);
+  if (ms) s._h = setTimeout(() => s.classList.remove('show'), ms);
+}
+window.addEventListener('beforeunload', (e) => { if (saveTimer) { save(); e.preventDefault(); } });
+document.addEventListener('visibilitychange', () => { if (document.hidden && saveTimer) save(); });
+
+// ---------- ดูรถ ----------
+async function renderLive() {
+  if (!window.L) return;
+  if (!liveMap) { liveMap = makeMap($('#liveMap')); liveLayers = { r: L.layerGroup().addTo(liveMap), b: L.layerGroup().addTo(liveMap) }; }
+  setTimeout(() => liveMap.invalidateSize(), 50);
+  liveLayers.r.clearLayers();
+  const all = [];
+  cfg.routes.forEach((r) => {
+    const g = buildRoute(r);
+    if (g.pts.length) { L.polyline(g.pts, { color: r.color, weight: 5, opacity: 0.7 }).addTo(liveLayers.r); all.push(...g.pts); }
+    r.stops.forEach((s, i) => L.marker([s.lat, s.lng], { icon: stopIcon(false, i + 1) }).bindTooltip(s.name).addTo(liveLayers.r));
+  });
+  let live = { buses: [] };
+  try { live = await api('live'); } catch { /* */ }
+  liveLayers.b.clearLayers();
+  const now = Date.now();
+  live.buses.forEach((b) => {
+    const r = routeById(b.routeId);
+    const stale = now - b.ts > 150000;
+    L.marker([b.lat, b.lng], { icon: busIcon(stale ? '#9ca3af' : r?.color || '#111', b.name, b.full), zIndexOffset: 1000 }).addTo(liveLayers.b);
+    all.push([b.lat, b.lng]);
+  });
+  if (!liveFitted && all.length) { liveFitted = true; liveMap.fitBounds(L.latLngBounds(all).pad(0.1), { maxZoom: 15 }); }
+  $('#liveTitle').textContent = `รถที่วิ่งอยู่ ${live.buses.length} คัน`;
+  $('#liveList').innerHTML = live.buses.length ? live.buses.map((b) => {
+    const r = routeById(b.routeId);
+    return `<div class="bus" data-ll="${b.lat},${b.lng}"><div class="ic">🚌</div><div class="t"><b>${esc(b.name)}${b.plate ? ' · ' + esc(b.plate) : ''}</b>
+      <div>${r ? esc(r.name) + ' · ไป ' + esc(headingTo(r, b.dir)) : ''}${b.full ? ' · รถเต็ม' : ''}</div></div>
+      <div class="m"><span class="badge ${now - b.ts > 150000 ? 'warn' : ''}">${now - b.ts > 150000 ? 'สัญญาณหาย' : 'ออนไลน์'}</span><small>${fmtAgo(b.ts, now)}</small></div></div>`;
+  }).join('') : '<p class="mut" style="margin:0">ยังไม่มีคนขับเปิดแชร์ตำแหน่ง</p>';
+  $('#startGuide').classList.toggle('hide', cfg.routes.length > 0 && cfg.drivers.length > 0);
+}
+$('#liveList').onclick = (e) => { const b = e.target.closest('[data-ll]'); if (b) { liveMap.setView(b.dataset.ll.split(',').map(Number), 16); window.scrollTo({ top: 0, behavior: 'smooth' }); } };
+
+// ---------- สายรถ ----------
+function renderRoutes() {
+  editing = null;
+  $('#routeIndex').classList.remove('hide');
+  $('#routeEdit').classList.add('hide');
+  $('#routeList').innerHTML = cfg.routes.length ? cfg.routes.map((r) => `<div class="item"><span class="n" style="background:${r.color}">🛣️</span>
+    <div class="t"><b>${esc(r.name)}</b><div class="small mut">${r.stops.length} ป้าย · ${r.times.length} เที่ยว/วัน</div></div>
+    <button class="ghost" data-edit="${esc(r.id)}">แก้ไข</button></div>`).join('') : '<p class="mut" style="margin:0">ยังไม่มีสายรถ กดปุ่มด้านล่างเพื่อเพิ่ม</p>';
+}
+$('#routeList').onclick = (e) => { const b = e.target.closest('[data-edit]'); if (b) openRoute(b.dataset.edit); };
+$('#btnAddRoute').onclick = () => {
+  const r = { id: uid(), name: `สาย ${cfg.routes.length + 1}`, color: COLORS[cfg.routes.length % COLORS.length], speed: 30, note: '', stops: [], path: null, road: true, times: [] };
+  cfg.routes.push(r);
+  dirty();
+  openRoute(r.id);
+};
+$('#btnRouteBack').onclick = renderRoutes;
+
+function openRoute(id) {
+  const r = routeById(id);
+  if (!r) return renderRoutes();
+  editing = id;
+  $('#routeIndex').classList.add('hide');
+  $('#routeEdit').classList.remove('hide');
+  $('#reTitle').textContent = r.name;
+  $('#reName').value = r.name;
+  $('#reSpeed').value = String([20, 30, 45, 60].reduce((a, b) => (Math.abs(b - r.speed) < Math.abs(a - r.speed) ? b : a)));
+  $('#reNote').value = r.note || '';
+  $('#reRoad').checked = r.road !== false;
+  $('#searchRes').innerHTML = '';
+  drawColors(r);
+  drawTimes(r);
+  if (window.L) {
+    if (!editMap) {
+      editMap = makeMap($('#editMap'));
+      editLayers = L.layerGroup().addTo(editMap);
+      editMap.on('click', (e) => addStop(e.latlng.lat, e.latlng.lng));
+    }
+    setTimeout(() => editMap.invalidateSize(), 50);
+  }
+  drawStops(true);
+  window.scrollTo(0, 0);
+}
+const cur = () => routeById(editing);
+$('#reName').oninput = () => { cur().name = $('#reName').value; $('#reTitle').textContent = cur().name; dirty(); };
+$('#reSpeed').onchange = () => { cur().speed = Number($('#reSpeed').value); dirty(); };
+$('#reNote').oninput = () => { cur().note = $('#reNote').value; dirty(); };
+$('#reRoad').onchange = () => { cur().road = $('#reRoad').checked; stopsChanged(); };
+
+function drawColors(r) {
+  $('#reColors').innerHTML = COLORS.map((c) => `<button data-c="${c}" class="${c === r.color ? 'on' : ''}" style="background:${c}" aria-label="สี"></button>`).join('');
+}
+$('#reColors').onclick = (e) => { const b = e.target.closest('[data-c]'); if (b) { cur().color = b.dataset.c; drawColors(cur()); drawStops(false); dirty(); } };
+
+function drawStops(fit) {
+  const r = cur();
+  $('#stopList').innerHTML = r.stops.length ? r.stops.map((s, i) => `<div class="item"><span class="n">${i + 1}</span><div class="t">${esc(s.name)}</div>
+    <button class="ghost" data-a="ren" data-i="${i}" aria-label="เปลี่ยนชื่อ">✏️</button>
+    <button class="ghost" data-a="up" data-i="${i}" ${i === 0 ? 'disabled' : ''} aria-label="เลื่อนขึ้น">⬆️</button>
+    <button class="ghost" data-a="down" data-i="${i}" ${i === r.stops.length - 1 ? 'disabled' : ''} aria-label="เลื่อนลง">⬇️</button>
+    <button class="ghost" data-a="del" data-i="${i}" aria-label="ลบ">🗑</button></div>`).join('')
+    : '<p class="mut" style="margin:0">ยังไม่มีป้าย · ค้นหาชื่อหมู่บ้านด้านบน แล้วแตะบนแผนที่ตรงที่มีป้าย</p>';
+  const g = buildRoute(r);
+  $('#roadStatus').innerHTML = r.stops.length < 2 ? 'ต้องมีอย่างน้อย 2 ป้าย (ต้นสายและปลายสาย)'
+    : r.path ? `✅ เส้นทางตามถนน ยาวประมาณ ${fmtDist(g.len)}` : `เส้นตรงระหว่างป้าย ยาวประมาณ ${fmtDist(g.len)}${r.road !== false ? ' · กำลังหาเส้นตามถนน...' : ''}`;
+  if (!editMap) return;
+  editLayers.clearLayers();
+  if (g.pts.length > 1) L.polyline(g.pts, { color: r.color, weight: 6, opacity: 0.75 }).addTo(editLayers);
+  r.stops.forEach((s, i) => {
+    const m = L.marker([s.lat, s.lng], { icon: stopIcon(i === 0 || i === r.stops.length - 1, i + 1), draggable: true }).bindTooltip(s.name).addTo(editLayers);
+    m.on('dragend', () => { const ll = m.getLatLng(); s.lat = ll.lat; s.lng = ll.lng; stopsChanged(); });
+  });
+  if (fit && r.stops.length) editMap.fitBounds(L.latLngBounds(r.stops.map((s) => [s.lat, s.lng])).pad(0.2), { maxZoom: 16 });
+  else if (fit) getPosition({ timeout: 8000 }).then((p) => editMap.setView([p.coords.latitude, p.coords.longitude], 15)).catch(() => {});
+}
+$('#stopList').onclick = (e) => {
+  const b = e.target.closest('[data-a]');
+  if (!b) return;
+  const r = cur(), i = Number(b.dataset.i), s = r.stops;
+  if (b.dataset.a === 'ren') { const n = prompt('ชื่อป้าย', s[i].name); if (!n) return; s[i].name = n.trim(); drawStops(false); return dirty(); }
+  if (b.dataset.a === 'up') [s[i - 1], s[i]] = [s[i], s[i - 1]];
+  if (b.dataset.a === 'down') [s[i + 1], s[i]] = [s[i], s[i + 1]];
+  if (b.dataset.a === 'del') { if (!confirm(`ลบป้าย "${s[i].name}"?`)) return; s.splice(i, 1); }
+  stopsChanged();
+};
+function addStop(lat, lng) {
+  const r = cur();
+  const name = prompt('ตั้งชื่อป้ายนี้ (เช่น หน้าวัด, ปากซอย 3)', `ป้าย ${r.stops.length + 1}`);
+  if (name === null) return;
+  r.stops.push({ id: uid(), name: name.trim() || `ป้าย ${r.stops.length + 1}`, lat, lng });
+  stopsChanged();
+  toast(`เพิ่ม "${r.stops[r.stops.length - 1].name}" แล้ว`);
+}
+$('#btnStopHere').onclick = async () => {
+  const b = $('#btnStopHere');
+  b.disabled = true;
+  b.textContent = '⏳ กำลังหาตำแหน่ง...';
+  try {
+    const p = await getPosition({ maximumAge: 0 });
+    editMap?.setView([p.coords.latitude, p.coords.longitude], 17);
+    addStop(p.coords.latitude, p.coords.longitude);
+  } catch (e) { toast(e.message, 4000); }
+  b.disabled = false;
+  b.textContent = '📍 เพิ่มป้ายตรงที่ฉันยืนอยู่';
+};
+
+// เส้นทางตามถนน (OSRM ใช้ข้อมูล OpenStreetMap)
+let roadTimer = null;
+function stopsChanged() {
+  const r = cur();
+  r.path = null;
+  drawStops(false);
+  dirty();
+  clearTimeout(roadTimer);
+  if (r.road !== false && r.stops.length >= 2) roadTimer = setTimeout(() => snapRoad(r), 1200);
+}
+async function snapRoad(r) {
+  const coords = r.stops.slice(0, 100).map((s) => `${s.lng.toFixed(6)},${s.lat.toFixed(6)}`).join(';');
+  try {
+    const res = await fetch(`https://router.project-osrm.org/route/v1/driving/${coords}?overview=full&geometries=geojson`);
+    const j = await res.json();
+    if (j.code !== 'Ok') throw new Error(j.code);
+    if (cur() !== r && !cfg.routes.includes(r)) return;
+    r.path = simplify(j.routes[0].geometry.coordinates.map(([x, y]) => [y, x]), 6);
+    dirty();
+  } catch {
+    if (cur() === r) $('#roadStatus').textContent = 'หาเส้นตามถนนไม่ได้ตอนนี้ จะใช้เส้นตรงแทน (ยังใช้งานได้ปกติ)';
+    return;
+  }
+  if (cur() === r) drawStops(false);
+}
+// ลดจำนวนจุดของเส้น (Douglas–Peucker) ให้ไฟล์เล็ก
+function simplify(pts, tolM) {
+  if (pts.length < 3) return pts;
+  const kx = Math.cos(toRad(pts[0][0])) * 111320, ky = 110540;
+  const xy = pts.map((p) => [p[1] * kx, p[0] * ky]);
+  const keep = new Uint8Array(pts.length);
+  keep[0] = keep[pts.length - 1] = 1;
+  const stack = [[0, pts.length - 1]];
+  while (stack.length) {
+    const [a, b] = stack.pop();
+    let md = 0, mi = -1;
+    const [ax, ay] = xy[a], [bx, by] = xy[b];
+    const dx = bx - ax, dy = by - ay, L2 = dx * dx + dy * dy || 1;
+    for (let i = a + 1; i < b; i++) {
+      const t = Math.max(0, Math.min(1, ((xy[i][0] - ax) * dx + (xy[i][1] - ay) * dy) / L2));
+      const d = Math.hypot(xy[i][0] - ax - t * dx, xy[i][1] - ay - t * dy);
+      if (d > md) { md = d; mi = i; }
+    }
+    if (md > tolM) { keep[mi] = 1; stack.push([a, mi], [mi, b]); }
+  }
+  return pts.filter((_, i) => keep[i]);
+}
+
+$('#btnSearch').onclick = searchPlace;
+$('#reSearch').onkeydown = (e) => { if (e.key === 'Enter') searchPlace(); };
+async function searchPlace() {
+  const q = $('#reSearch').value.trim();
+  if (!q) return;
+  $('#searchRes').innerHTML = '<span class="mut">กำลังค้นหา...</span>';
+  try {
+    const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=5&countrycodes=th&accept-language=th&q=${encodeURIComponent(q)}`);
+    const j = await res.json();
+    $('#searchRes').innerHTML = j.length ? j.map((p) => `<button class="choice" style="min-height:56px;font-size:17px" data-ll="${p.lat},${p.lon}">📍 ${esc(p.display_name)}</button>`).join('')
+      : '<span class="mut">ไม่พบ ลองพิมพ์ชื่ออำเภอหรือจังหวัด</span>';
+  } catch { $('#searchRes').innerHTML = '<span class="mut">ค้นหาไม่ได้ตอนนี้ ลองเลื่อนแผนที่เอง</span>'; }
+}
+$('#searchRes').onclick = (e) => {
+  const b = e.target.closest('[data-ll]');
+  if (!b) return;
+  editMap.setView(b.dataset.ll.split(',').map(Number), 15);
+  $('#searchRes').innerHTML = '';
+};
+
+function drawTimes(r) {
+  $('#reTimes').innerHTML = r.times.length ? r.times.map((t, i) => `<span>${t}<button class="chip-x" data-i="${i}" aria-label="ลบ">×</button></span>`).join('') : '<span class="mut" style="background:none;padding:0;font-weight:400">ยังไม่มีเวลา (ไม่ใส่ก็ได้)</span>';
+}
+$('#reTimes').onclick = (e) => { const b = e.target.closest('[data-i]'); if (b) { cur().times.splice(Number(b.dataset.i), 1); drawTimes(cur()); dirty(); } };
+function parseTimes(s) {
+  return (s.match(/\d{1,2}[:.]\d{2}|\d{3,4}/g) || []).map((t) => {
+    const d = t.replace(/[:.]/, '');
+    const h = Number(d.slice(0, -2)), m = Number(d.slice(-2));
+    return h < 24 && m < 60 ? `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}` : null;
+  }).filter(Boolean);
+}
+$('#btnAddTime').onclick = () => {
+  const ts = parseTimes($('#reTimeIn').value);
+  if (!ts.length) return toast('พิมพ์เวลาแบบ 06:00 หรือ 6.30');
+  const r = cur();
+  r.times = [...new Set([...r.times, ...ts])].sort();
+  $('#reTimeIn').value = '';
+  drawTimes(r);
+  dirty();
+};
+$('#reTimeIn').onkeydown = (e) => { if (e.key === 'Enter') $('#btnAddTime').click(); };
+$('#btnShareRoute').onclick = () => shareLink(`${location.origin}/?r=${encodeURIComponent(cur().id)}`, `ดูรถ ${cur().name} ว่าอีกกี่นาทีจะมา`);
+$('#btnDelRoute').onclick = () => {
+  if (!confirm(`ลบสาย "${cur().name}" ทั้งหมด?`)) return;
+  cfg.routes = cfg.routes.filter((r) => r.id !== editing);
+  dirty();
+  renderRoutes();
+};
+
+// ---------- คนขับ ----------
+function renderDrivers() {
+  const opts = (sel) => cfg.routes.map((r) => `<option value="${esc(r.id)}" ${r.id === sel ? 'selected' : ''}>${esc(r.name)}</option>`).join('');
+  $('#driverList').innerHTML = cfg.drivers.length ? cfg.drivers.map((d, i) => `<div class="card" data-i="${i}">
+    <div class="row" style="align-items:center"><h3 style="margin:0;flex:1">👤 ${esc(d.name || 'คนขับ')}</h3><button class="ghost" data-del="${i}" style="flex:0 0 auto;min-height:46px;color:var(--bad)">🗑 ลบ</button></div>
+    <label>ชื่อ (คนขับกดเลือกชื่อนี้)</label><input type="text" data-f="name" value="${esc(d.name)}" maxlength="40">
+    <label>ทะเบียนรถ</label><input type="text" data-f="plate" value="${esc(d.plate)}" maxlength="20" placeholder="เช่น 10-1234 ขอนแก่น">
+    <label>สายประจำ</label><select data-f="routeId"><option value="">-</option>${opts(d.routeId)}</select>
+    <label>รหัสคนขับ (ตัวเลข 4-8 หลัก) ${d.hasPin && !d.pin ? '<span class="badge">ตั้งแล้ว</span>' : '<span class="badge warn">ยังไม่ตั้ง</span>'}</label>
+    <input type="tel" inputmode="numeric" maxlength="8" data-f="pin" value="${esc(d.pin || '')}" placeholder="${d.hasPin ? 'พิมพ์เพื่อเปลี่ยนรหัส' : 'เช่น 1234'}" autocomplete="off">
+  </div>`).join('') : '<div class="card mut">ยังไม่มีคนขับ</div>';
+}
+$('#driverList').oninput = (e) => {
+  const f = e.target.dataset.f;
+  if (!f) return;
+  const d = cfg.drivers[Number(e.target.closest('[data-i]').dataset.i)];
+  if (f === 'pin') {
+    e.target.value = e.target.value.replace(/\D/g, '');
+    if (e.target.value.length < 4) { delete d.pin; return; }
+  }
+  d[f] = e.target.value;
+  if (f === 'name') e.target.closest('.card').querySelector('h3').textContent = '👤 ' + (d.name || 'คนขับ');
+  dirty();
+};
+$('#driverList').onchange = $('#driverList').oninput;
+$('#driverList').onclick = (e) => {
+  const b = e.target.closest('[data-del]');
+  if (!b) return;
+  const d = cfg.drivers[Number(b.dataset.del)];
+  if (!confirm(`ลบคนขับ "${d.name}"?`)) return;
+  cfg.drivers.splice(Number(b.dataset.del), 1);
+  renderDrivers();
+  dirty();
+};
+$('#btnAddDriver').onclick = () => {
+  cfg.drivers.push({ id: uid(), name: `คนขับ ${cfg.drivers.length + 1}`, plate: '', routeId: cfg.routes[0]?.id || '', hasPin: false });
+  renderDrivers();
+  const cards = $('#driverList').querySelectorAll('.card');
+  const last = cards[cards.length - 1];
+  last.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  setTimeout(() => last.querySelector('[data-f=name]').select(), 300);
+  dirty();
+};
+const driverUrl = () => `${location.origin}/driver`;
+$('#lineDriver').href = lineShare(driverUrl(), 'ลิงก์สำหรับคนขับ เปิดแล้วกดชื่อตัวเอง ใส่รหัส แล้วกดเริ่มวิ่ง');
+$('#btnShareDriver').onclick = () => shareLink(driverUrl(), 'ลิงก์สำหรับคนขับ เปิดแล้วกดชื่อตัวเอง ใส่รหัส แล้วกดเริ่มวิ่ง');
+
+// ---------- ตั้งค่า ----------
+function renderSettings() {
+  $('#svcName').value = cfg.name || '';
+  $('#passUrl').textContent = location.origin + '/';
+  $('#linePassenger').href = lineShare(location.origin + '/', `ดูว่ารถ${cfg.name ? ' ' + cfg.name : ''} อยู่ตรงไหน อีกกี่นาทีจะถึงป้าย`);
+  $('#lineDriver').href = lineShare(driverUrl(), 'ลิงก์สำหรับคนขับ เปิดแล้วกดชื่อตัวเอง ใส่รหัส แล้วกดเริ่มวิ่ง');
+}
+$('#svcName').oninput = () => { cfg.name = $('#svcName').value; dirty(); };
+$('#btnSharePassenger').onclick = () => shareLink(location.origin + '/', `ดูว่ารถ${cfg.name ? ' ' + cfg.name : ''} อยู่ตรงไหน อีกกี่นาทีจะถึงป้าย`);
+$('#btnPin').onclick = async () => {
+  const p = $('#newPin').value.trim();
+  try { await api('admin-pin', { token, pin: p }); $('#newPin').value = ''; toast('เปลี่ยนรหัสแล้ว'); } catch (e) { toast(e.message, 4000); }
+};
+$('#btnBackup').onclick = () => {
+  const data = { ...cfg, drivers: cfg.drivers.map(({ id, name, plate, routeId }) => ({ id, name, plate, routeId })) };
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([JSON.stringify(data, null, 1)], { type: 'application/json' }));
+  a.download = `bus-backup-${new Date().toISOString().slice(0, 10)}.json`;
+  a.click();
+};
+$('#btnRestore').onclick = () => $('#restoreFile').click();
+$('#restoreFile').onchange = async (e) => {
+  const f = e.target.files[0];
+  if (!f) return;
+  try {
+    const d = JSON.parse(await f.text());
+    if (!Array.isArray(d.routes)) throw new Error();
+    if (!confirm('แทนที่ข้อมูลปัจจุบันด้วยไฟล์นี้?')) return;
+    const pins = new Map(cfg.drivers.map((x) => [x.id, x.hasPin]));
+    cfg = { name: d.name || cfg.name, routes: d.routes, drivers: (d.drivers || []).map((x) => ({ ...x, hasPin: pins.get(x.id) || false })) };
+    await save();
+    await loadCfg();
+    toast('นำเข้าแล้ว');
+    renderSettings();
+  } catch { toast('ไฟล์ไม่ถูกต้อง'); }
+  e.target.value = '';
+};
+$('#btnLogout').onclick = () => { store.del('bus.admin'); location.reload(); };
+
+boot();
+</script>
+</body>
+</html>
