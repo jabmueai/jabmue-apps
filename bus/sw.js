@@ -1,6 +1,6 @@
 // เปิดแอปได้แม้เน็ตไม่ดี: หน้าเว็บดึงใหม่ก่อน ไฟล์อื่นใช้ของที่เก็บไว้ · ไม่เก็บ /api และแผนที่
-const C = 'jabmue-bus-v2';
-const SHELL = ['/', '/driver', '/admin', '/common.js', '/style.css', '/manifest.webmanifest', '/icon-192.png', '/vendor/leaflet/leaflet.js', '/vendor/leaflet/leaflet.css'];
+const C = 'jabmue-bus-v3';
+const SHELL = ['/', '/driver', '/admin', '/help', '/common.js', '/style.css', '/manifest.webmanifest', '/icon-192.png', '/vendor/leaflet/leaflet.js', '/vendor/leaflet/leaflet.css'];
 self.addEventListener('install', (e) => { e.waitUntil(caches.open(C).then((c) => c.addAll(SHELL)).catch(() => {})); self.skipWaiting(); });
 self.addEventListener('activate', (e) => {
   e.waitUntil(caches.keys().then((ks) => Promise.all(ks.filter((k) => k !== C).map((k) => caches.delete(k)))));

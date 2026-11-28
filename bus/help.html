@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>วิธีใช้ · รถมาหรือยัง</title>
+<meta name="description" content="วิธีใช้แอปรถมาหรือยัง สำหรับผู้โดยสาร คนขับ และผู้ดูแล">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/icon-180.png">
+<link rel="icon" type="image/png" href="/icon-192.png">
+<meta name="theme-color" content="#e11d48">
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/style.css">
+<style>
+  .hero { text-align: center; padding: 8px 0 4px; }
+  .hero .ic { font-size: 64px; line-height: 1; }
+  .who { display: grid; grid-template-columns: 1fr; gap: 10px; margin: 16px 0 6px; }
+  .who a { display: flex; align-items: center; gap: 14px; text-decoration: none; color: var(--ink); background: #fff; border: 3px solid var(--line); border-radius: 18px; padding: 14px 16px; font-size: 21px; font-weight: 600; }
+  .who a span { font-size: 36px; }
+  .who a small { display: block; font-size: 16px; font-weight: 400; color: var(--mut); }
+  section.part { scroll-margin-top: 12px; margin-top: 30px; }
+  section.part > h2 { font-size: 26px; display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-radius: 18px; color: #fff; margin-bottom: 14px; }
+  .step { background: #fff; border-radius: 20px; padding: 16px; margin-bottom: 14px; box-shadow: 0 2px 10px rgba(0,0,0,.06); }
+  .step h3 { display: flex; gap: 10px; align-items: flex-start; font-size: 21px; margin: 0 0 8px; }
+  .step h3 .no { flex: none; width: 36px; height: 36px; border-radius: 50%; background: var(--ink); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 19px; }
+  .step p, .step li { margin: 6px 0; }
+  .step ul, .step ol { padding-left: 24px; margin: 6px 0; }
+  .shot { display: block; width: 100%; max-width: 360px; margin: 12px auto 4px; border-radius: 16px; border: 2px solid var(--line); box-shadow: 0 4px 14px rgba(0,0,0,.08); }
+  .shot.wide { max-width: 100%; }
+  .tip { background: var(--okbg); color: #14532d; border-radius: 14px; padding: 10px 14px; margin: 10px 0 0; font-size: 17px; }
+  .warnbox { background: var(--warnbg); color: #78350f; border-radius: 14px; padding: 10px 14px; margin: 10px 0 0; font-size: 17px; }
+  details.faq { background: #fff; border-radius: 16px; margin-bottom: 10px; box-shadow: 0 2px 8px rgba(0,0,0,.05); }
+  details.faq summary { padding: 16px; font-weight: 600; font-size: 19px; cursor: pointer; list-style: none; display: flex; gap: 10px; }
+  details.faq summary::before { content: '➕'; font-size: 16px; margin-top: 3px; }
+  details.faq[open] summary::before { content: '➖'; }
+  details.faq > div { padding: 0 16px 16px; }
+  .totop { display: block; text-align: right; margin: -4px 4px 0; font-size: 16px; color: var(--mut); }
+  kbd { background: #f3ece2; border-radius: 8px; padding: 1px 8px; font-family: inherit; font-weight: 600; border: 1px solid var(--line); }
+  .btnline { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+  .btnline .btn { flex: 1; min-width: 150px; }
+</style>
+</head>
+<body>
+<div class="wrap" id="top">
+
+  <div class="hero">
+    <div class="ic">🚌</div>
+    <h1>วิธีใช้ "รถมาหรือยัง"</h1>
+    <p class="sub">ดูว่ารถเมล์ รถสองแถว อยู่ตรงไหน อีกกี่นาทีจะถึงป้าย<br>ไม่ต้องสมัคร ไม่ต้องโหลดแอป เปิดลิงก์ได้เลย</p>
+  </div>
+
+  <div class="card">
+    <h3>แอปนี้ทำงานอย่างไร</h3>
+    <ol style="margin:0;padding-left:24px;line-height:1.8">
+      <li><b>ผู้ดูแล</b> ใส่สายรถ ป้ายรถ และรายชื่อคนขับ (ทำครั้งเดียว)</li>
+      <li><b>คนขับ</b> เปิดมือถือ กด "เริ่มวิ่ง" มือถือจะส่งตำแหน่งรถให้ระบบ</li>
+      <li><b>ผู้โดยสาร</b> เปิดลิงก์ เห็นว่ารถอยู่ไหน อีกประมาณกี่นาทีจะถึงป้ายของตัวเอง</li>
+    </ol>
+  </div>
+
+  <h2 style="margin-top:22px">คุณคือใคร? กดเลือกได้เลย</h2>
+  <div class="who">
+    <a href="#passenger"><span>🙋</span><div>ผู้โดยสาร<small>คนที่ยืนรอรถ อยากรู้ว่ารถจะมาเมื่อไหร่</small></div></a>
+    <a href="#driver"><span>👨‍✈️</span><div>คนขับรถ<small>คนที่ขับรถเมล์ / รถสองแถว</small></div></a>
+    <a href="#admin"><span>⚙️</span><div>ผู้ดูแล<small>คนที่ตั้งค่าสายรถ ป้าย และคนขับ</small></div></a>
+    <a href="#install"><span>📲</span><div>วางแอปไว้หน้าจอมือถือ<small>เปิดครั้งต่อไปกดไอคอนได้เลย</small></div></a>
+    <a href="#faq"><span>❓</span><div>มีปัญหา / คำถามที่พบบ่อย<small>แผนที่ไม่ขึ้น, หาตำแหน่งไม่ได้, รถไม่ขึ้น</small></div></a>
+  </div>
+
+  <!-- ================= ผู้โดยสาร ================= -->
+  <section class="part" id="passenger">
+    <h2 style="background:#e11d48">🙋 สำหรับผู้โดยสาร</h2>
+
+    <div class="step">
+      <h3><span class="no">1</span>เปิดลิงก์ที่ได้รับ</h3>
+      <p>ลิงก์มักส่งมาทางกลุ่ม LINE หมู่บ้าน หรือติดไว้ที่ป้ายรถ กดเปิดได้เลย ไม่ต้องสมัคร ไม่ต้องใส่รหัส</p>
+      <p>ถ้ามีหลายสาย หน้าแรกจะให้ <b>กดเลือกสายรถ</b> ที่จะขึ้น (ข้างชื่อสายจะบอกว่าตอนนี้ "วิ่งอยู่กี่คัน")</p>
+    </div>
+
+    <div class="step">
+      <h3><span class="no">2</span>เลือกป้ายที่คุณยืนรอ</h3>
+      <p>วิธีที่ง่ายที่สุด: กดปุ่มสีแดง <kbd>📍 หาป้ายใกล้ฉันอัตโนมัติ</kbd></p>
+      <ul>
+        <li>มือถือจะถาม "อนุญาตให้ใช้ตำแหน่ง?" ให้กด <b>อนุญาต</b></li>
+        <li>ป้ายที่ใกล้คุณที่สุดจะมีกรอบสีแดง และคำว่า "ใกล้ที่สุด ✓"</li>
+        <li>กดที่ป้ายนั้น</li>
+      </ul>
+      <img class="shot" src="/help/p2-near.jpg" alt="หน้าเลือกป้าย มีป้ายใกล้ที่สุดเป็นกรอบสีแดง" loading="lazy">
+      <p class="tip">💡 ถ้าไม่อยากให้ใช้ตำแหน่ง ก็กดเลือกชื่อป้ายจากรายการเองได้เลย</p>
+    </div>
+
+    <div class="step">
+      <h3><span class="no">3</span>ดูว่ารถจะมาอีกกี่นาที</h3>
+      <p>กล่องสีใหญ่ด้านบนบอก <b>รถคันที่ใกล้ที่สุด</b> ว่าจะถึงป้ายของคุณอีกประมาณกี่นาที อยู่ห่างกี่กิโลเมตร กำลังวิ่งไปทางไหน และทะเบียนรถ</p>
+      <img class="shot" src="/help/p3-watch.jpg" alt="หน้าดูรถ บอกว่าประมาณ 10 นาที" loading="lazy">
+      <ul>
+        <li>กล่องเป็น <b style="color:var(--ok)">สีเขียว กระพริบ</b> แปลว่า "ใกล้ถึงแล้ว!" เตรียมตัวขึ้นรถได้</li>
+        <li>กล่องเป็น <b style="color:#6b7280">สีเทา</b> แปลว่า ตอนนี้ยังไม่มีรถวิ่ง (จะบอกเวลาเที่ยวต่อไปให้ ถ้ามีตาราง)</li>
+        <li>ถ้าเขียนว่า <b>"ผ่านไปแล้ว จะวนกลับมาอีกใน..."</b> แปลว่ารถเพิ่งผ่านป้ายคุณไป ต้องรอขากลับ</li>
+        <li>ถ้าเห็นคำว่า <b>"รถเต็ม"</b> คนขับกดบอกไว้ว่าไม่มีที่ว่าง</li>
+        <li>ถ้าเห็น <b>"สัญญาณหาย"</b> แปลว่ามือถือคนขับไม่ได้ส่งตำแหน่งมาสักพัก (อาจอยู่ในที่ไม่มีเน็ต)</li>
+      </ul>
+      <p class="tip">💡 หน้านี้อัปเดตเองทุก 10 วินาที ไม่ต้องกดอะไร เปิดทิ้งไว้ได้เลย</p>
+    </div>
+
+    <div class="step">
+      <h3><span class="no">4</span>ปุ่มช่วยเหลือ</h3>
+      <ul>
+        <li><kbd>🔊 ฟังเสียง</kbd> มือถือจะอ่านให้ฟัง เช่น "รถจะถึงป้ายหน้าวัด ในอีกประมาณ 10 นาที" เหมาะกับผู้สูงอายุที่อ่านตัวหนังสือไม่ถนัด</li>
+        <li><kbd>📤 ส่งให้เพื่อน</kbd> ส่งลิงก์ป้ายนี้ทาง LINE ให้ลูกหลาน หรือคนที่รอรถป้ายเดียวกัน เปิดแล้วเห็นป้ายนี้ทันที</li>
+        <li><kbd>เปลี่ยนป้าย</kbd> (มุมขวาบน) ถ้าจะไปรอป้ายอื่น</li>
+      </ul>
+    </div>
+
+    <div class="step">
+      <h3><span class="no">5</span>แผนที่ และเวลารถออก</h3>
+      <p>เลื่อนลงมาจะเห็นแผนที่: <b>🟡 วงกลมสีเหลือง</b> = ป้ายของคุณ, <b>🚌</b> = รถ, <b>🔵 จุดสีฟ้า</b> = ตัวคุณ · ใช้สองนิ้วถ่างเพื่อซูม</p>
+      <img class="shot" src="/help/p4-map.jpg" alt="แผนที่แสดงเส้นทางและป้าย" loading="lazy">
+      <p>ด้านล่างสุดเป็น <b>เวลารถออกวันนี้</b> เวลาที่ผ่านไปแล้วจะมีขีดฆ่า เวลาถัดไปเป็นสีแดง และมีประกาศจากผู้ดูแล (เช่น ค่าโดยสาร)</p>
+      <img class="shot" src="/help/p5-times.jpg" alt="ตารางเวลารถออก" loading="lazy">
+      <p class="tip">💡 ครั้งต่อไปที่เปิดแอป จะเข้าหน้าป้ายเดิมของคุณทันที ไม่ต้องเลือกใหม่</p>
+    </div>
+    <a class="totop" href="#top">⬆ กลับด้านบน</a>
+  </section>
+
+  <!-- ================= คนขับ ================= -->
+  <section class="part" id="driver">
+    <h2 style="background:#15803d">👨‍✈️ สำหรับคนขับ</h2>
+
+    <div class="warnbox" style="margin:0 0 14px">ก่อนเริ่ม: ขอ <b>ลิงก์หน้าคนขับ</b> และ <b>รหัส 4 ตัว</b> ของคุณจากผู้ดูแล · เปิด <b>GPS (ตำแหน่ง)</b> และ <b>อินเทอร์เน็ต</b> ในมือถือ</div>
+
+    <div class="step">
+      <h3><span class="no">1</span>กดชื่อของคุณ</h3>
+      <p>เปิดลิงก์หน้าคนขับ (ลงท้ายด้วย <b>/driver</b>) จะเห็นรายชื่อคนขับ กดที่ชื่อตัวเอง</p>
+      <img class="shot" src="/help/d1-who.jpg" alt="หน้าเลือกชื่อคนขับ" loading="lazy">
+    </div>
+
+    <div class="step">
+      <h3><span class="no">2</span>ใส่รหัส แล้วกด "ตกลง"</h3>
+      <p>กดตัวเลขบนแป้นใหญ่ ใส่ผิดกด <kbd>ลบ</kbd> ครบแล้วกด <kbd>ตกลง</kbd> สีเขียว</p>
+      <img class="shot" src="/help/d2-pin.jpg" alt="แป้นใส่รหัส" loading="lazy">
+      <p class="tip">💡 ใส่รหัสครั้งเดียว มือถือจะจำไว้ ครั้งต่อไปไม่ต้องใส่อีก</p>
+    </div>
+
+    <div class="step">
+      <h3><span class="no">3</span>เลือกทางที่จะไป แล้วกด "▶ เริ่มวิ่ง"</h3>
+      <ul>
+        <li>ถ้าขับได้หลายสาย ให้กดเลือก <b>สายที่ขับวันนี้</b> ก่อน</li>
+        <li>เลือก <b>ทางที่กำลังจะไป</b> เช่น "ไป โรงเรียนบ้านนา" หรือ "ไป ตลาดสด"</li>
+        <li>กดปุ่มเขียวใหญ่ <kbd>▶ เริ่มวิ่ง</kbd> · ถ้ามือถือถามเรื่องตำแหน่ง ให้กด <b>อนุญาต</b></li>
+      </ul>
+      <img class="shot" src="/help/d3-ready.jpg" alt="หน้าเลือกทางและปุ่มเริ่มวิ่ง" loading="lazy">
+    </div>
+
+    <div class="step">
+      <h3><span class="no">4</span>ขณะขับ: เปิดหน้านี้ค้างไว้</h3>
+      <p>ถ้าเห็น <b style="color:var(--ok)">● กำลังแชร์ตำแหน่ง</b> สีเขียว แปลว่าผู้โดยสารเห็นรถคุณแล้ว ไม่ต้องกดอะไรเพิ่ม ขับรถได้ตามปกติ</p>
+      <img class="shot" src="/help/d4-run.jpg" alt="หน้าคนขับขณะแชร์ตำแหน่ง" loading="lazy">
+      <div class="warnbox">⚠️ <b>สำคัญมาก:</b> วางมือถือไว้ที่หน้ารถ <b>เปิดหน้าจอค้างไว้</b> อย่ากดปิดจอ อย่าสลับไปเล่น LINE / Facebook ถ้าทำ มือถือจะหยุดส่งตำแหน่ง ควร <b>เสียบสายชาร์จ</b> ไว้ด้วย</div>
+      <ul style="margin-top:12px">
+        <li><kbd>🙋 รถยังว่าง (กดเมื่อรถเต็ม)</kbd> กดเมื่อรถเต็ม ผู้โดยสารจะเห็นว่า "รถเต็ม" กดอีกครั้งเมื่อมีที่ว่าง</li>
+        <li><kbd>🔁 กลับรถแล้ว (สลับทาง)</kbd> ปกติ <b>ระบบสลับให้เอง</b> เมื่อรถวิ่งย้อนกลับ แต่ถ้าชื่อ "มุ่งหน้าไป" ไม่ถูก กดปุ่มนี้ได้</li>
+        <li>บรรทัด "ป้ายถัดไป" บอกว่าใกล้ถึงป้ายไหน อีกกี่เมตร</li>
+      </ul>
+      <p class="tip">💡 ถ้าเผลอปิดหน้า หรือมือถือดับ เปิดลิงก์หน้าคนขับใหม่ ระบบจะแชร์ต่อให้เองทันที</p>
+    </div>
+
+    <div class="step">
+      <h3><span class="no">5</span>ถึงปลายทาง / เลิกวิ่ง: กด "■ หยุดวิ่ง"</h3>
+      <p>กดปุ่มแดง <kbd>■ หยุดวิ่ง / ถึงปลายทาง</kbd> แล้วกด <b>ตกลง</b> รถจะหายจากหน้าผู้โดยสาร ถ้าจะวิ่งเที่ยวต่อไป ค่อยกด "เริ่มวิ่ง" ใหม่</p>
+      <p class="tip">💡 วิ่งไป-กลับต่อเนื่อง ไม่ต้องกดหยุด ปล่อยให้ระบบสลับทางเอง กดหยุดตอนเลิกงานก็พอ · ถ้าลืมกดหยุด รถจะหายจากระบบเองหลังไม่ส่งตำแหน่ง 15 นาที</p>
+    </div>
+    <a class="totop" href="#top">⬆ กลับด้านบน</a>
+  </section>
+
+  <!-- ================= ผู้ดูแล ================= -->
+  <section class="part" id="admin">
+    <h2 style="background:#374151">⚙️ สำหรับผู้ดูแล</h2>
+    <p>ผู้ดูแลตั้งค่าครั้งแรกประมาณ 15–30 นาที หลังจากนั้นแทบไม่ต้องทำอะไร เปิดหน้า <b>/admin</b> (แนะนำทำบนมือถือหรือคอมพิวเตอร์ก็ได้)</p>
+
+    <div class="step">
+      <h3><span class="no">1</span>ตั้งรหัสผู้ดูแล (ครั้งแรกครั้งเดียว)</h3>
+      <p>ครั้งแรกที่เปิด จะให้ตั้งรหัสเป็นตัวเลข 4–8 หลัก พิมพ์สองครั้งให้ตรงกัน แล้วกด <kbd>ตั้งรหัส แล้วเริ่มใช้งาน</kbd></p>
+      <img class="shot" src="/help/a1-setup.jpg" alt="หน้าตั้งรหัสผู้ดูแล" loading="lazy">
+      <div class="warnbox">⚠️ จดรหัสไว้ อย่าลืม · คนที่เปิดหน้านี้คนแรกจะได้ตั้งรหัส ดังนั้นควรตั้งทันทีหลังติดตั้ง</div>
+      <p>ครั้งต่อไปเปิด /admin จะถามรหัส และมีเมนู 4 อย่างด้านบน:</p>
+      <img class="shot wide" src="/help/a0-tabs.jpg" alt="แท็บ ดูรถ สายรถ คนขับ ตั้งค่า" loading="lazy">
+    </div>
+
+    <div class="step">
+      <h3><span class="no">2</span>เพิ่มสายรถ</h3>
+      <p>กดแท็บ <kbd>🛣️ สายรถ</kbd> → <kbd>➕ เพิ่มสายรถ</kbd> แล้วพิมพ์ <b>ชื่อสาย</b> ที่ชาวบ้านเรียกกัน เช่น "สองแถว ตลาด - บ้านนา" และเลือก <b>สีของสาย</b> (ถ้ามีหลายสาย สีช่วยให้แยกกันง่าย)</p>
+      <img class="shot" src="/help/a3-route-name.jpg" alt="ช่องชื่อสายและสี" loading="lazy">
+      <p class="tip">💡 ไม่มีปุ่มบันทึก ระบบบันทึกเองทุกครั้งที่แก้ จะเห็นป้าย "บันทึกแล้ว ✓" มุมขวาล่าง</p>
+    </div>
+
+    <div class="step">
+      <h3><span class="no">3</span>หาหมู่บ้านบนแผนที่</h3>
+      <p>พิมพ์ชื่อหมู่บ้าน ตำบล หรืออำเภอในช่องค้นหา แล้วกด <kbd>🔍</kbd> จะมีรายการขึ้นมา กดรายการที่ถูกต้อง แผนที่จะเลื่อนไปที่นั่น</p>
+      <img class="shot" src="/help/a4-search.jpg" alt="ผลการค้นหาหมู่บ้าน" loading="lazy">
+      <p class="tip">💡 ถ้าค้นไม่เจอ ลองพิมพ์ชื่ออำเภอหรือจังหวัด หรือใช้นิ้วเลื่อน/ซูมแผนที่เอง</p>
+    </div>
+
+    <div class="step">
+      <h3><span class="no">4</span>ปักป้ายรถ: แตะบนแผนที่</h3>
+      <p><b>แตะบนแผนที่ตรงที่มีป้ายรถ</b> จะมีช่องให้ตั้งชื่อป้าย (เช่น "หน้าวัดโพธิ์", "ปากซอย 5") แล้วกด <b>ตกลง</b></p>
+      <ul>
+        <li>ปักให้ <b>เรียงตามลำดับที่รถวิ่ง</b> เริ่มจาก <b>ต้นสาย</b> ไปจนถึง <b>ปลายสาย</b> (ต้องมีอย่างน้อย 2 ป้าย)</li>
+        <li>ระบบจะ <b>ลากเส้นตามถนนจริง</b> ให้อัตโนมัติ (เส้นสีบนแผนที่) ทำให้คำนวณเวลาได้แม่นขึ้น</li>
+        <li>ป้ายปักผิดที่? <b>กดค้างที่หมุดแล้วลาก</b> ไปที่ใหม่ได้</li>
+        <li>ถ้าเส้นวิ่งผิดถนน ให้ปักป้ายเพิ่มบนถนนที่รถวิ่งจริง เส้นจะวิ่งผ่านป้ายนั้น</li>
+      </ul>
+      <img class="shot" src="/help/a5-map-stops.jpg" alt="แผนที่ที่ปักป้าย 4 ป้าย และเส้นตามถนน" loading="lazy">
+      <p class="tip">💡 วิธีที่แม่นที่สุด: นั่งรถไปตามสาย พอถึงแต่ละป้ายกด <kbd>📍 เพิ่มป้ายตรงที่ฉันยืนอยู่</kbd></p>
+    </div>
+
+    <div class="step">
+      <h3><span class="no">5</span>แก้ไขรายการป้าย</h3>
+      <p>ใต้แผนที่จะมีรายการป้ายเรียงตามลำดับ แต่ละป้ายมีปุ่ม:</p>
+      <ul>
+        <li><kbd>✏️</kbd> เปลี่ยนชื่อป้าย</li>
+        <li><kbd>⬆️</kbd> <kbd>⬇️</kbd> เลื่อนลำดับ (ถ้าปักสลับกัน)</li>
+        <li><kbd>🗑</kbd> ลบป้าย</li>
+      </ul>
+      <img class="shot" src="/help/a6-stoplist.jpg" alt="รายการป้ายพร้อมปุ่มแก้ไข" loading="lazy">
+      <p>บรรทัด "✅ เส้นทางตามถนน ยาวประมาณ ... กม." แปลว่าระบบลากเส้นตามถนนได้แล้ว ถ้าขึ้นว่าใช้เส้นตรง ก็ยังใช้งานได้ แค่เวลาอาจคลาดเคลื่อนมากขึ้น</p>
+    </div>
+
+    <div class="step">
+      <h3><span class="no">6</span>เวลารถออก ความเร็ว และประกาศ</h3>
+      <ul>
+        <li><b>เวลารถออกจากต้นสาย</b>: พิมพ์ได้หลายเวลาพร้อมกัน เช่น <kbd>06:00 07:30 9.00</kbd> แล้วกด <kbd>เพิ่ม</kbd> · ลบเวลาที่ผิดด้วยปุ่ม ×  (ไม่ใส่ก็ได้)</li>
+        <li><b>ความเร็วเฉลี่ย</b>: เลือกให้ใกล้ความจริง รถจอดรับคนบ่อยในหมู่บ้าน = ช้า (20) · ถนนทั่วไป = ปกติ (30) · ถนนใหญ่ = เร็ว (45) · ใช้คำนวณ "อีกกี่นาที"</li>
+        <li><b>ประกาศ / หมายเหตุ</b>: ผู้โดยสารจะเห็น เช่น ค่าโดยสาร, วันหยุดไม่มีรถ</li>
+      </ul>
+      <img class="shot" src="/help/a7-times.jpg" alt="เวลารถออก ความเร็ว ประกาศ" loading="lazy">
+      <p class="tip">💡 ถ้าผู้โดยสารบอกว่ารถมาเร็ว/ช้ากว่าที่แอปบอกบ่อย ๆ ให้ปรับความเร็วเฉลี่ย</p>
+    </div>
+
+    <div class="step">
+      <h3><span class="no">7</span>เพิ่มคนขับ และตั้งรหัส</h3>
+      <p>กดแท็บ <kbd>👤 คนขับ</kbd> → <kbd>➕ เพิ่มคนขับ</kbd> แล้วกรอก:</p>
+      <ul>
+        <li><b>ชื่อ</b> ที่คนขับจะกดเลือก (เช่น "ลุงสมชาย")</li>
+        <li><b>ทะเบียนรถ</b> ผู้โดยสารจะเห็น ช่วยให้รู้ว่าคันไหน</li>
+        <li><b>สายประจำ</b> ที่คนขับคนนี้ขับเป็นปกติ</li>
+        <li><b>รหัสคนขับ</b> ตัวเลข 4–8 หลัก พอบันทึกแล้วจะขึ้นป้าย <span class="badge">ตั้งแล้ว</span> แล้วบอกรหัสนี้ให้คนขับ</li>
+      </ul>
+      <img class="shot" src="/help/a8-driver.jpg" alt="ฟอร์มข้อมูลคนขับ" loading="lazy">
+      <p class="tip">💡 คนขับลืมรหัส? พิมพ์รหัสใหม่ในช่องรหัสได้เลย (รหัสเก่าจะใช้ไม่ได้) · คนขับเลิกขับ? กด 🗑 ลบ</p>
+    </div>
+
+    <div class="step">
+      <h3><span class="no">8</span>ส่งลิงก์ให้คนขับ และผู้โดยสาร</h3>
+      <p><b>ให้คนขับ</b>: ด้านล่างแท็บ <kbd>👤 คนขับ</kbd> กด <kbd>LINE</kbd> เพื่อส่งลิงก์หน้าคนขับ (บอกรหัสแยกต่างหาก ไม่ควรพิมพ์รหัสในกลุ่ม)</p>
+      <img class="shot" src="/help/a9-driver-link.jpg" alt="ปุ่มส่งลิงก์ให้คนขับ" loading="lazy">
+      <p><b>ให้ผู้โดยสาร</b>: แท็บ <kbd>⚙️ ตั้งค่า</kbd> ตั้ง <b>ชื่อบริการ</b> (เช่น "รถสองแถว ต.บ้านนา") แล้วกด <kbd>LINE</kbd> ส่งในกลุ่มหมู่บ้าน หรือพิมพ์ลิงก์ติดไว้ที่ป้ายรถ</p>
+      <img class="shot" src="/help/a10-share.jpg" alt="ปุ่มส่งลิงก์ให้ผู้โดยสาร" loading="lazy">
+      <p class="tip">💡 ในหน้าแก้ไขสาย มีปุ่ม <kbd>📤 ส่งลิงก์สายนี้</kbd> ส่งลิงก์ที่เปิดแล้วเข้าสายนั้นทันที</p>
+    </div>
+
+    <div class="step">
+      <h3><span class="no">9</span>ดูรถทุกคัน</h3>
+      <p>แท็บ <kbd>🗺️ ดูรถ</kbd> แสดงรถทุกคันที่กำลังวิ่งบนแผนที่ พร้อมสถานะ <span class="badge">ออนไลน์</span> หรือ <span class="badge warn">สัญญาณหาย</span> และเวลาที่ส่งตำแหน่งล่าสุด กดที่รายชื่อรถเพื่อซูมไปดู</p>
+    </div>
+
+    <div class="step">
+      <h3><span class="no">10</span>ตั้งค่าอื่น ๆ</h3>
+      <ul>
+        <li><b>เปลี่ยนรหัสผู้ดูแล</b>: แท็บ ⚙️ ตั้งค่า → พิมพ์รหัสใหม่ → กดเปลี่ยนรหัส</li>
+        <li><b>สำรองข้อมูล</b>: กด <kbd>💾 ดาวน์โหลด</kbd> เก็บไฟล์สายรถและรายชื่อคนขับไว้ ถ้าข้อมูลหายหรือทำพลาด กด <kbd>📂 นำเข้า</kbd> ไฟล์นั้นได้ (ไฟล์ไม่มีรหัสคนขับ ต้องตั้งรหัสใหม่)</li>
+        <li><b>ออกจากระบบ</b>: ใช้เมื่อยืมมือถือคนอื่นเข้า</li>
+      </ul>
+    </div>
+    <a class="totop" href="#top">⬆ กลับด้านบน</a>
+  </section>
+
+  <!-- ================= ติดตั้ง ================= -->
+  <section class="part" id="install">
+    <h2 style="background:#2563eb">📲 วางแอปไว้หน้าจอมือถือ</h2>
+    <p>ทำครั้งเดียว ครั้งต่อไปกดไอคอน 🚌 ที่หน้าจอได้เลย เหมือนแอปทั่วไป (ไม่ต้องโหลดจาก Store)</p>
+    <div class="step">
+      <h3><span class="no">A</span>Android (Samsung, OPPO, vivo, Xiaomi ฯลฯ)</h3>
+      <ol>
+        <li>เปิดลิงก์ด้วย <b>Chrome</b></li>
+        <li>กดจุดสามจุด <kbd>⋮</kbd> มุมขวาบน</li>
+        <li>กด <b>"ติดตั้งแอป"</b> หรือ <b>"เพิ่มลงในหน้าจอหลัก"</b></li>
+        <li>กด <b>ติดตั้ง / เพิ่ม</b></li>
+      </ol>
+    </div>
+    <div class="step">
+      <h3><span class="no">B</span>iPhone / iPad</h3>
+      <ol>
+        <li>เปิดลิงก์ด้วย <b>Safari</b> (ถ้าเปิดจาก LINE ให้กด ⋯ แล้วเลือก "เปิดใน Safari" ก่อน)</li>
+        <li>กดปุ่มแชร์ <kbd>⬆️</kbd> (สี่เหลี่ยมมีลูกศรชี้ขึ้น)</li>
+        <li>เลื่อนลง กด <b>"เพิ่มไปยังหน้าจอโฮม"</b></li>
+        <li>กด <b>เพิ่ม</b> มุมขวาบน</li>
+      </ol>
+    </div>
+    <p class="tip">💡 คนขับ: ให้เพิ่ม <b>หน้าคนขับ</b> (/driver) ลงหน้าจอ จะได้ไอคอนสีเขียวแยกจากของผู้โดยสาร</p>
+    <a class="totop" href="#top">⬆ กลับด้านบน</a>
+  </section>
+
+  <!-- ================= FAQ ================= -->
+  <section class="part" id="faq">
+    <h2 style="background:#b45309">❓ มีปัญหา / คำถามที่พบบ่อย</h2>
+
+    <details class="faq"><summary>หาตำแหน่งไม่ได้ / ขึ้นว่า "ยังไม่ได้อนุญาตให้ใช้ตำแหน่ง"</summary><div>
+      <p><b>1. เปิด GPS ในมือถือ:</b> ปัดหน้าจอจากด้านบนลงมา กดเปิด <b>ตำแหน่ง / Location / GPS</b></p>
+      <p><b>2. อนุญาตให้เว็บใช้ตำแหน่ง:</b></p>
+      <ul>
+        <li><b>Android (Chrome):</b> กดไอคอนหน้าชื่อเว็บ (🔒 หรือ ⚙) ด้านบน → สิทธิ์ → ตำแหน่ง → อนุญาต แล้วรีเฟรชหน้า</li>
+        <li><b>iPhone:</b> ตั้งค่า → ความเป็นส่วนตัวและความปลอดภัย → บริการหาตำแหน่ง → เปิด · แล้วเลื่อนหา <b>Safari</b> (หรือ "เว็บไซต์ Safari") → เลือก "ขณะใช้แอป" · กลับมาที่เว็บแล้วรีเฟรช</li>
+      </ul>
+      <p><b>3.</b> ออกไปที่โล่ง ไม่อยู่ใต้หลังคาหนา ๆ แล้วลองใหม่</p>
+    </div></details>
+
+    <details class="faq"><summary>แผนที่ไม่ขึ้น / เป็นพื้นสีเทา</summary><div>
+      <ul>
+        <li>ถ้าเปิด <b>VPN</b> หรือแอปบล็อกโฆษณา ลองปิดก่อน แล้วรีเฟรชหน้า</li>
+        <li>สัญญาณเน็ตอ่อน รอสักครู่ หรือย้ายไปที่สัญญาณดีกว่า</li>
+        <li>ถ้าเคยเปิดแอปนานแล้ว ปิดแอป/แท็บ แล้วเปิดใหม่ 1–2 ครั้ง เพื่อให้โหลดเวอร์ชันใหม่</li>
+        <li>แม้แผนที่ไม่ขึ้น <b>ตัวเลข "อีกกี่นาที" ยังใช้ได้ปกติ</b></li>
+      </ul>
+    </div></details>
+
+    <details class="faq"><summary>ผู้โดยสารไม่เห็นรถ ทั้งที่คนขับวิ่งอยู่</summary><div>
+      <ul>
+        <li>ดูที่มือถือคนขับ ต้องขึ้น <b style="color:var(--ok)">● กำลังแชร์ตำแหน่ง</b> สีเขียว ถ้าไม่ใช่ ให้กด "หยุดวิ่ง" แล้ว "เริ่มวิ่ง" ใหม่</li>
+        <li>คนขับต้อง <b>เปิดหน้าคนขับค้างไว้</b> ไม่ปิดจอ ไม่สลับแอป</li>
+        <li>คนขับเลือก <b>สาย</b> ถูกไหม (ผู้โดยสารดูสายเดียวกันหรือเปล่า)</li>
+        <li>มือถือคนขับมีอินเทอร์เน็ตไหม · ถ้าขึ้น "⚠️ ส่งไม่ได้ กำลังลองใหม่" ระบบจะส่งเองเมื่อมีสัญญาณ</li>
+        <li>ตำแหน่งรถอาจช้ากว่าจริงประมาณ 10 วินาที เป็นเรื่องปกติ</li>
+      </ul>
+    </div></details>
+
+    <details class="faq"><summary>เวลาที่แอปบอก ไม่ตรงกับที่รถมาจริง</summary><div>
+      <p>เวลาเป็น <b>ค่าประมาณ</b> จากระยะทางตามถนน หารด้วยความเร็วเฉลี่ยที่ผู้ดูแลตั้งไว้ รถอาจช้าเพราะจอดรับคน รถติด หรือแวะพัก</p>
+      <ul>
+        <li>ถ้ารถมา <b>ช้ากว่า</b> ที่บอกบ่อย ๆ → ผู้ดูแลลดความเร็วเฉลี่ย (เช่น จาก 30 เป็น 20)</li>
+        <li>ถ้ารถมา <b>เร็วกว่า</b> ที่บอกบ่อย ๆ → เพิ่มความเร็วเฉลี่ย</li>
+        <li>ถ้าเส้นทางบนแผนที่ไม่ตรงถนนจริง → ผู้ดูแลปักป้ายเพิ่มบนถนนที่รถวิ่งจริง</li>
+      </ul>
+    </div></details>
+
+    <details class="faq"><summary>"มุ่งหน้าไป" ขึ้นผิดทาง</summary><div>
+      <p>ระบบจะสลับทางให้เองเมื่อรถวิ่งย้อนกลับเกิน 400 เมตร ถ้ายังผิด ให้คนขับกด <kbd>🔁 กลับรถแล้ว (สลับทาง)</kbd> หนึ่งครั้ง</p>
+    </div></details>
+
+    <details class="faq"><summary>คนขับลืมรหัส / เปลี่ยนมือถือใหม่</summary><div>
+      <p>ผู้ดูแลเข้าแท็บ 👤 คนขับ พิมพ์รหัสใหม่ในช่องรหัสของคนขับคนนั้น แล้วบอกรหัสใหม่ · บนมือถือใหม่ คนขับเปิดลิงก์ /driver กดชื่อ แล้วใส่รหัส</p>
+    </div></details>
+
+    <details class="faq"><summary>ผู้ดูแลลืมรหัส</summary><div>
+      <p>ถ้ายังเข้าระบบค้างอยู่บนมือถือเครื่องไหน ให้เปลี่ยนรหัสจากแท็บ ⚙️ ตั้งค่า · ถ้าไม่มีเครื่องไหนเข้าได้แล้ว คนที่ดูแลระบบ Vercel ต้องตั้ง Environment Variable ชื่อ <b>ADMIN_PIN</b> เป็นรหัสใหม่ แล้ว Redeploy</p>
+    </div></details>
+
+    <details class="faq"><summary>ใช้เน็ตมือถือเยอะไหม / เปลืองแบตไหม</summary><div>
+      <ul>
+        <li><b>ผู้โดยสาร</b>: ใช้เน็ตน้อยมาก (ส่วนใหญ่คือภาพแผนที่ตอนเปิดครั้งแรก)</li>
+        <li><b>คนขับ</b>: ส่งตำแหน่งทุกประมาณ 10 วินาที ใช้เน็ตไม่มาก แต่ GPS กับหน้าจอที่เปิดค้างกินแบต จึงควรเสียบสายชาร์จในรถ</li>
+      </ul>
+    </div></details>
+
+    <details class="faq"><summary>ข้อมูลส่วนตัวปลอดภัยไหม</summary><div>
+      <ul>
+        <li>ผู้โดยสาร: ตำแหน่งของคุณใช้หาป้ายใกล้ในมือถือเท่านั้น <b>ไม่ส่งไปที่ไหน</b></li>
+        <li>คนขับ: ระบบเก็บเฉพาะตำแหน่งล่าสุดของรถตอนกด "เริ่มวิ่ง" เท่านั้น กด "หยุดวิ่ง" แล้วตำแหน่งจะถูกลบ ไม่เก็บประวัติการเดินทาง</li>
+        <li>รหัสทั้งหมดเก็บแบบเข้ารหัส ผู้ดูแลก็ดูรหัสเดิมไม่ได้ (ตั้งใหม่ได้อย่างเดียว)</li>
+      </ul>
+    </div></details>
+    <a class="totop" href="#top">⬆ กลับด้านบน</a>
+  </section>
+
+  <div class="card center" style="margin-top:26px">
+    <h3>พร้อมใช้งานแล้ว</h3>
+    <div class="btnline">
+      <a class="btn pri" href="/">🙋 หน้าผู้โดยสาร</a>
+      <a class="btn go" href="/driver">👨‍✈️ หน้าคนขับ</a>
+      <a class="btn ghost" href="/admin">⚙️ หน้าผู้ดูแล</a>
+    </div>
+  </div>
+
+  <div class="foot">แผนที่ © ผู้ร่วมพัฒนา OpenStreetMap · ทำโดย จับมือ AI</div>
+</div>
+<script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});</script>
+</body>
+</html>
