@@ -3,13 +3,14 @@
 
 const API = '/api/bus';
 
-async function api(action, body) {
+async function api(action, body, params) {
   const opt = body
     ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }
     : { cache: 'no-store' };
+  const qs = params ? '&' + new URLSearchParams(params).toString() : '';
   let r;
   try {
-    r = await fetch(`${API}?a=${action}${body ? '' : '&t=' + Math.floor(Date.now() / 5000)}`, opt);
+    r = await fetch(`${API}?a=${action}${qs}${body || params ? '' : '&t=' + Math.floor(Date.now() / 5000)}`, opt);
   } catch {
     throw Object.assign(new Error('ไม่มีอินเทอร์เน็ต หรือสัญญาณไม่ดี'), { offline: true });
   }
@@ -179,13 +180,33 @@ async function shareLink(url, text) {
 const lineShare = (url, text) => `https://line.me/R/share?text=${encodeURIComponent(`${text}\n${url}`)}`;
 
 // ---------- แผนที่ (Leaflet + OpenStreetMap) ----------
+// ภาพแผนที่: ใช้ OpenStreetMap ก่อน ถ้าโหลดไม่ขึ้น (บางเน็ต/VPN ถูกบล็อก) สลับไปใช้ CARTO อัตโนมัติ
+const TILES = [
+  { url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png', attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' },
+  { url: 'https://basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png', attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>' },
+];
 function makeMap(el, opts = {}) {
   const m = L.map(el, { zoomControl: true, attributionControl: true, ...opts });
-  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19,
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-  }).addTo(m);
+  let i = Number(sessionStorage.getItem('bus.tiles') || 0) % TILES.length;
+  let layer = null, ok = 0, bad = 0;
+  const use = (n) => {
+    if (layer) m.removeLayer(layer);
+    ok = 0; bad = 0;
+    layer = L.tileLayer(TILES[n].url, { maxZoom: 19, attribution: TILES[n].attribution }).addTo(m);
+    layer.on('tileload', () => ok++);
+    layer.on('tileerror', () => {
+      bad++;
+      if (bad >= 3 && ok === 0 && n === i && i < TILES.length - 1) {
+        i++;
+        sessionStorage.setItem('bus.tiles', String(i));
+        use(i);
+      }
+    });
+  };
+  use(i);
   m.setView([13.4, 101.0], 6);
+  // ถ้ากล่องแผนที่เปลี่ยนขนาด (เช่น เพิ่งแสดง) ให้วาดใหม่ ไม่งั้นจะเป็นพื้นเทา
+  if (window.ResizeObserver) new ResizeObserver(() => m.invalidateSize()).observe(el);
   return m;
 }
 function busIcon(color, label, full) {
@@ -219,3 +240,6 @@ function gpsError(e) {
 }
 
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
+if (!window.L && document.querySelector('script[src*="leaflet"]')) {
+  window.addEventListener('load', () => { if (!window.L) toast('โหลดแผนที่ไม่ได้ ลองปิด VPN หรือรีเฟรชหน้า', 5000); });
+}
