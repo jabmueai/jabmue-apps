@@ -27,10 +27,12 @@
 | จับมือทำแอป ตอน 15: แอปจดค่าน้ำมัน ⛽ (Gemini Canvas · ตัวเลขในแอปเป็นตัวอย่าง) | [เล่นเลย](https://jabmueai.github.io/jabmue-apps/fuel/) | [fuel/index.html](fuel/index.html) | [fuel/prompt.txt](fuel/prompt.txt) |
 | จับมือทำแอป ตอนพิเศษวันลอยกระทง: แอปลอยกระทง 🪷 (Gemini Canvas · มีเสียงประกอบ กดเปิดเสียงก่อน) | [เล่นเลย](https://jabmueai.github.io/jabmue-apps/kratong/) | [kratong/index.html](kratong/index.html) | [kratong/prompt.txt](kratong/prompt.txt) |
 | จับมือทำแอป ตอน 16: แอปจดมิเตอร์น้ำ 💧 (Gemini Canvas · เลขมิเตอร์ในแอปเป็นตัวอย่าง) | [เล่นเลย](https://jabmueai.github.io/jabmue-apps/meter/) | [meter/index.html](meter/index.html) | [meter/prompt.txt](meter/prompt.txt) |
-| จับมือทำแอป ตามคำขอ: แอปรถมาหรือยัง 🚌 ดูรถเมล์/สองแถวแบบสด (มีหน้าคนขับ + ผู้ดูแล · ต้อง deploy บน Vercel วิธีอยู่ใน [bus/README.md](bus/README.md)) | [เล่นเลย](https://jabmue-bus.vercel.app) · [วิธีใช้](https://jabmue-bus.vercel.app/help) | [bus/](bus/) · [เบื้องหลัง](bus/BUILD-STORY.md) | [bus/prompt.txt](bus/prompt.txt) |
+| จับมือทำแอป ตามคำขอ: แอปรถมาหรือยัง 🚌 ดูรถเมล์/สองแถวแบบสด (มีหน้าคนขับ + ผู้ดูแล · ต้อง deploy บน Vercel วิธีอยู่ใน [bus/README.md](bus/README.md)) | deploy เอง | [bus/](bus/) | - |
 | จับมือทำ ตอน 3: เกมทายศัพท์ภาษาอังกฤษให้ลูก 🎮 | [เล่นเลย](https://jabmueai.github.io/jabmue-apps/word-game/) | [word-game/index.html](word-game/index.html) | [word-game/prompt.txt](word-game/prompt.txt) |
 | จับมือทำ ตอน 4: แอปจดค่าไฟบ้าน ⚡ | [เล่นเลย](https://jabmueai.github.io/jabmue-apps/electric/) | [electric/index.html](electric/index.html) | [electric/prompt.txt](electric/prompt.txt) |
 
-แอปเก็บข้อมูลไว้ในเครื่องของคนเล่นเท่านั้น (localStorage) ไม่ส่งไปที่ไหน (ยกเว้นแอปรถมาหรือยัง ที่ต้องส่งตำแหน่งรถผ่านเซิร์ฟเวอร์)
+แอปที่กดเล่นจากลิงก์ในนี้ (index.html) เก็บข้อมูลไว้ในเครื่องของคนเล่นเท่านั้น (localStorage) ไม่ส่งไปที่ไหน (ยกเว้นแอปรถมาหรือยัง ที่ต้องส่งตำแหน่งรถผ่านเซิร์ฟเวอร์)
+
+💾 prompt.txt ของแอปที่ต้องจดข้อมูลอัปเดตเป็นแบบใหม่แล้ว: เอา prompt ไปทำใน Gemini Canvas แล้วเปิดจากลิงก์แชร์ของ Gemini ข้อมูลจะเก็บในบัญชี Google ของคุณเอง (ฐานข้อมูลส่วนตัวของ Gemini คนอื่นที่เปิดลิงก์เดียวกันมองไม่เห็น) ปิดแล้วเปิดใหม่ข้อมูลยังอยู่ ส่วน index.html ในนี้ยังเป็นแอปที่ทำจาก prompt เดิม
 
 ทำได้จริง ทำตามได้ทุกคน 🤝 · YouTube [@jabmueai](https://www.youtube.com/@jabmueai) · TikTok [@jabmue.ai](https://www.tiktok.com/@jabmue.ai) · [Facebook](https://www.facebook.com/profile.php?id=61596056038143)
