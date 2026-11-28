@@ -49,7 +49,7 @@ prompt ที่ใช้จริง 3 รอบ อยู่ใน [prompt.txt
         🗄️ Upstash Redis (ฟรี ผ่าน Vercel Storage)
           config = สาย ป้าย เวลา คนขับ   ·   live = ตำแหน่งล่าสุดของรถแต่ละคัน
                                                                      
-  🗺️ ภาพแผนที่: OpenStreetMap (สำรอง CARTO) แสดงด้วย Leaflet
+  🗺️ ภาพแผนที่: OpenStreetMap (สำรอง Esri, OSM France) แสดงด้วย Leaflet
 ```
 
 ### ชิ้นส่วนที่ใช้
@@ -58,7 +58,7 @@ prompt ที่ใช้จริง 3 รอบ อยู่ใน [prompt.txt
 |---|---|---|
 | หน้าเว็บ | HTML + CSS + JavaScript ล้วน | ไม่ต้อง build ง่าย แก้ง่าย โหลดเร็วบนเน็ตต่างจังหวัด |
 | ติดตั้งเป็นแอป | PWA (manifest + service worker) | กดเพิ่มลงหน้าจอได้ ไม่ต้องผ่าน App Store |
-| แผนที่ | Leaflet + OpenStreetMap (สำรอง CARTO) | ฟรี ไม่ต้องมี API key |
+| แผนที่ | Leaflet + OpenStreetMap (สำรอง Esri, OSM France) | ฟรี ไม่ต้องมี API key |
 | เส้นทางตามถนน | OSRM (ข้อมูล OSM) | ลากเส้นระหว่างป้ายตามถนนจริง คำนวณระยะแม่นขึ้น |
 | ค้นหาหมู่บ้าน | Nominatim (สำรอง Photon) | ฟรี รองรับชื่อภาษาไทย |
 | เซิร์ฟเวอร์ | Vercel Functions (Node.js) | ฟรี deploy อัตโนมัติเมื่อแก้โค้ดใน GitHub |

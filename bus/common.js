@@ -180,28 +180,36 @@ async function shareLink(url, text) {
 const lineShare = (url, text) => `https://line.me/R/share?text=${encodeURIComponent(`${text}\n${url}`)}`;
 
 // ---------- แผนที่ (Leaflet + OpenStreetMap) ----------
-// ภาพแผนที่: ใช้ OpenStreetMap ก่อน ถ้าโหลดไม่ขึ้น (บางเน็ต/VPN ถูกบล็อก) สลับไปใช้ CARTO อัตโนมัติ
+// ภาพแผนที่: ใช้ OpenStreetMap ก่อน ถ้าโหลดไม่ขึ้น (บางเน็ต/VPN/เบราว์เซอร์ในแอป LINE ถูกบล็อก) สลับเจ้าถัดไปอัตโนมัติ
+// ทุกเจ้าในรายการนี้ใช้ได้ฟรีโดยไม่ต้องมี API key
+const OSM_ATTR = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>';
 const TILES = [
-  { url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png', attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' },
-  { url: 'https://basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png', attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>' },
+  { url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png', attribution: OSM_ATTR, maxZoom: 19 },
+  { url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', attribution: 'Tiles &copy; Esri', maxZoom: 19 },
+  { url: 'https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', attribution: OSM_ATTR + ' &copy; OSM France', maxZoom: 19, subdomains: 'abc' },
 ];
+const TILE_KEY = 'bus.tiles3';
 function makeMap(el, opts = {}) {
   const m = L.map(el, { zoomControl: true, attributionControl: true, ...opts });
-  let i = Number(sessionStorage.getItem('bus.tiles') || 0) % TILES.length;
-  let layer = null, ok = 0, bad = 0;
+  let i = Number(sessionStorage.getItem(TILE_KEY) || 0) % TILES.length;
+  let layer = null, ok = 0, bad = 0, timer = null;
+  const next = () => {
+    if (ok > 0 || i >= TILES.length - 1) return;
+    i++;
+    sessionStorage.setItem(TILE_KEY, String(i));
+    use(i);
+  };
   const use = (n) => {
     if (layer) m.removeLayer(layer);
     ok = 0; bad = 0;
-    layer = L.tileLayer(TILES[n].url, { maxZoom: 19, attribution: TILES[n].attribution }).addTo(m);
-    layer.on('tileload', () => ok++);
-    layer.on('tileerror', () => {
-      bad++;
-      if (bad >= 3 && ok === 0 && n === i && i < TILES.length - 1) {
-        i++;
-        sessionStorage.setItem('bus.tiles', String(i));
-        use(i);
-      }
-    });
+    const t = TILES[n];
+    // ส่ง Referer เสมอ (OSM ไม่ให้ภาพถ้าไม่มี) แม้เบราว์เซอร์ในแอปจะตั้งค่าไม่ส่ง
+    layer = L.tileLayer(t.url, { maxZoom: t.maxZoom, attribution: t.attribution, subdomains: t.subdomains || 'abc', referrerPolicy: 'strict-origin-when-cross-origin', crossOrigin: false }).addTo(m);
+    layer.on('tileload', () => { ok++; clearTimeout(timer); });
+    layer.on('tileerror', () => { bad++; if (bad >= 3 && ok === 0 && n === i) next(); });
+    // โหลดนานเกินไปแต่ไม่ error (บางเน็ตค้าง) ก็สลับเหมือนกัน
+    clearTimeout(timer);
+    timer = setTimeout(() => { if (ok === 0 && n === i && navigator.onLine !== false) next(); }, 8000);
   };
   use(i);
   m.setView([13.4, 101.0], 6);
