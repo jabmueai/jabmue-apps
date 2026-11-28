@@ -1,5 +1,5 @@
 // เปิดแอปได้แม้เน็ตไม่ดี: หน้าเว็บดึงใหม่ก่อน ไฟล์อื่นใช้ของที่เก็บไว้ · ไม่เก็บ /api และแผนที่
-const C = 'jabmue-bus-v3';
+const C = 'jabmue-bus-v4';
 const SHELL = ['/', '/driver', '/admin', '/help', '/common.js', '/style.css', '/manifest.webmanifest', '/icon-192.png', '/vendor/leaflet/leaflet.js', '/vendor/leaflet/leaflet.css'];
 self.addEventListener('install', (e) => { e.waitUntil(caches.open(C).then((c) => c.addAll(SHELL)).catch(() => {})); self.skipWaiting(); });
 self.addEventListener('activate', (e) => {
@@ -8,7 +8,7 @@ self.addEventListener('activate', (e) => {
 });
 self.addEventListener('fetch', (e) => {
   const u = new URL(e.request.url);
-  if (e.request.method !== 'GET' || u.pathname.startsWith('/api/') || u.hostname.includes('tile.openstreetmap') || u.hostname.includes('cartocdn')) return;
+  if (e.request.method !== 'GET' || u.pathname.startsWith('/api/') || u.hostname.includes('tile.openstreetmap') || u.hostname.includes('cartocdn') || u.hostname.includes('arcgisonline') || u.hostname.includes('openstreetmap.fr')) return;
   const own = u.origin === location.origin;
   e.respondWith(caches.open(C).then(async (c) => {
     const hit = await c.match(e.request, { ignoreSearch: e.request.mode === 'navigate' });
