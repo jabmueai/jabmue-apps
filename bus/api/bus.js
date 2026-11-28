@@ -85,6 +85,28 @@ function cleanConfig(input, old) {
   return { name: str(input.name, 80) || EMPTY.name, routes, drivers, updated: Date.now() };
 }
 
+const UA = { 'User-Agent': 'jabmue-bus/1.0 (https://github.com/jabmueai/jabmue-apps)', 'Accept-Language': 'th,en' };
+function fetchT(url, ms = 8000) {
+  return fetch(url, { headers: UA, signal: AbortSignal.timeout(ms) });
+}
+async function geocode(q) {
+  try {
+    const r = await fetchT(`https://nominatim.openstreetmap.org/search?format=json&limit=6&countrycodes=th&accept-language=th&q=${encodeURIComponent(q)}`);
+    if (r.ok) {
+      const j = await r.json();
+      if (Array.isArray(j) && j.length) return j.map((p) => ({ name: p.display_name, lat: Number(p.lat), lng: Number(p.lon) }));
+    }
+  } catch { /* ลองอีกที่ */ }
+  try {
+    const r = await fetchT(`https://photon.komoot.io/api/?limit=6&lat=15&lon=101&q=${encodeURIComponent(q)}`);
+    const j = await r.json();
+    return (j.features || []).filter((f) => !f.properties.countrycode || f.properties.countrycode === 'TH').map((f) => {
+      const p = f.properties;
+      return { name: [p.name, p.district, p.city, p.county, p.state].filter(Boolean).filter((v, i, a) => a.indexOf(v) === i).join(', '), lat: f.geometry.coordinates[1], lng: f.geometry.coordinates[0] };
+    });
+  } catch { return []; }
+}
+
 async function handle(a, req, body) {
   // ---------- สาธารณะ ----------
   if (a === 'config') {
@@ -103,6 +125,26 @@ async function handle(a, req, body) {
       buses.push(b);
     }
     return { cache: 4, data: { now, buses } };
+  }
+
+  // ค้นหาสถานที่ (ผ่านเซิร์ฟเวอร์เรา จะได้ไม่โดนบล็อกจากเน็ต/VPN ของผู้ใช้) · Nominatim ก่อน ไม่ได้ค่อยใช้ Photon
+  if (a === 'geo') {
+    const q = str(req.query?.q, 120);
+    if (q.length < 2) return { status: 400, data: { error: 'พิมพ์ชื่อสถานที่' } };
+    const results = await geocode(q);
+    return { cache: 86400, data: { results } };
+  }
+
+  // เส้นทางตามถนนจริงระหว่างป้าย (OSRM ข้อมูล OpenStreetMap)
+  if (a === 'road') {
+    const pts = String(req.query?.p || '').split(';').slice(0, 100)
+      .map((x) => x.split(',').map(Number)).filter((x) => x.length === 2 && x.every(Number.isFinite));
+    if (pts.length < 2) return { status: 400, data: { error: 'ต้องมีอย่างน้อย 2 ป้าย' } };
+    const coords = pts.map(([lat, lng]) => `${lng.toFixed(6)},${lat.toFixed(6)}`).join(';');
+    const j = await fetchT(`https://router.project-osrm.org/route/v1/driving/${coords}?overview=full&geometries=geojson`, 10000)
+      .then((r) => r.json()).catch(() => ({}));
+    if (j.code !== 'Ok') return { status: 502, data: { error: 'หาเส้นตามถนนไม่ได้' } };
+    return { cache: 86400, data: { path: j.routes[0].geometry.coordinates.map(([x, y]) => [y, x]), meters: j.routes[0].distance } };
   }
 
   if (a === 'status') {
@@ -202,7 +244,7 @@ export default async function handler(req, res) {
   if (typeof body === 'string') {
     try { body = JSON.parse(body); } catch { body = {}; }
   }
-  const isRead = ['config', 'live', 'status'].includes(a);
+  const isRead = ['config', 'live', 'status', 'geo', 'road'].includes(a);
   if (!isRead && req.method !== 'POST') {
     res.status(405).json({ error: 'POST only' });
     return;

@@ -9,7 +9,7 @@
 <link rel="icon" type="image/png" href="/icon-192.png">
 <meta name="theme-color" content="#e11d48">
 <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="/vendor/leaflet/leaflet.css">
 <link rel="stylesheet" href="/style.css">
 </head>
 <body>
@@ -167,7 +167,7 @@
 </div>
 <div class="saved" id="saved"></div>
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="/vendor/leaflet/leaflet.js"></script>
 <script src="/common.js"></script>
 <script>
 'use strict';
@@ -421,17 +421,17 @@ function stopsChanged() {
   clearTimeout(roadTimer);
   if (r.road !== false && r.stops.length >= 2) roadTimer = setTimeout(() => snapRoad(r), 1200);
 }
+let roadSeq = 0;
 async function snapRoad(r) {
-  const coords = r.stops.slice(0, 100).map((s) => `${s.lng.toFixed(6)},${s.lat.toFixed(6)}`).join(';');
+  const seq = ++roadSeq;
+  const p = r.stops.slice(0, 100).map((s) => `${s.lat.toFixed(6)},${s.lng.toFixed(6)}`).join(';');
   try {
-    const res = await fetch(`https://router.project-osrm.org/route/v1/driving/${coords}?overview=full&geometries=geojson`);
-    const j = await res.json();
-    if (j.code !== 'Ok') throw new Error(j.code);
-    if (cur() !== r && !cfg.routes.includes(r)) return;
-    r.path = simplify(j.routes[0].geometry.coordinates.map(([x, y]) => [y, x]), 6);
+    const j = await api('road', null, { p });
+    if (seq !== roadSeq || !cfg.routes.includes(r)) return; // ระหว่างรอ มีการแก้ป้ายอีก
+    r.path = simplify(j.path, 6);
     dirty();
   } catch {
-    if (cur() === r) $('#roadStatus').textContent = 'หาเส้นตามถนนไม่ได้ตอนนี้ จะใช้เส้นตรงแทน (ยังใช้งานได้ปกติ)';
+    if (seq === roadSeq && cur() === r) $('#roadStatus').textContent = 'หาเส้นตามถนนไม่ได้ตอนนี้ จะใช้เส้นตรงแทน (ยังใช้งานได้ปกติ)';
     return;
   }
   if (cur() === r) drawStops(false);
@@ -466,11 +466,10 @@ async function searchPlace() {
   if (!q) return;
   $('#searchRes').innerHTML = '<span class="mut">กำลังค้นหา...</span>';
   try {
-    const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=5&countrycodes=th&accept-language=th&q=${encodeURIComponent(q)}`);
-    const j = await res.json();
-    $('#searchRes').innerHTML = j.length ? j.map((p) => `<button class="choice" style="min-height:56px;font-size:17px" data-ll="${p.lat},${p.lon}">📍 ${esc(p.display_name)}</button>`).join('')
+    const { results } = await api('geo', null, { q });
+    $('#searchRes').innerHTML = results.length ? results.map((p) => `<button class="choice" style="min-height:56px;font-size:17px" data-ll="${p.lat},${p.lng}">📍 ${esc(p.name)}</button>`).join('')
       : '<span class="mut">ไม่พบ ลองพิมพ์ชื่ออำเภอหรือจังหวัด</span>';
-  } catch { $('#searchRes').innerHTML = '<span class="mut">ค้นหาไม่ได้ตอนนี้ ลองเลื่อนแผนที่เอง</span>'; }
+  } catch { $('#searchRes').innerHTML = '<span class="mut">ค้นหาไม่ได้ตอนนี้ ลองเลื่อนแผนที่เอง หรือกด "เพิ่มป้ายตรงที่ฉันยืนอยู่"</span>'; }
 }
 $('#searchRes').onclick = (e) => {
   const b = e.target.closest('[data-ll]');
