@@ -10,6 +10,8 @@
 
 ไม่ต้องสมัครสมาชิก ไม่ต้องติดตั้งจาก Store (เพิ่มลงหน้าจอโฮมได้)
 
+📖 **วิธีใช้แบบละเอียด มีรูปทุกขั้นตอน:** หน้า `/help` ในแอป (เช่น https://jabmue-bus.vercel.app/help)
+
 ## Deploy บน Vercel (ฟรี)
 
 1. เข้า [vercel.com/new](https://vercel.com/new) → Import repo นี้
