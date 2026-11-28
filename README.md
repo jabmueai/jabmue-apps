@@ -27,7 +27,7 @@
 | จับมือทำแอป ตอน 15: แอปจดค่าน้ำมัน ⛽ (Gemini Canvas · ตัวเลขในแอปเป็นตัวอย่าง) | [เล่นเลย](https://jabmueai.github.io/jabmue-apps/fuel/) | [fuel/index.html](fuel/index.html) | [fuel/prompt.txt](fuel/prompt.txt) |
 | จับมือทำแอป ตอนพิเศษวันลอยกระทง: แอปลอยกระทง 🪷 (Gemini Canvas · มีเสียงประกอบ กดเปิดเสียงก่อน) | [เล่นเลย](https://jabmueai.github.io/jabmue-apps/kratong/) | [kratong/index.html](kratong/index.html) | [kratong/prompt.txt](kratong/prompt.txt) |
 | จับมือทำแอป ตอน 16: แอปจดมิเตอร์น้ำ 💧 (Gemini Canvas · เลขมิเตอร์ในแอปเป็นตัวอย่าง) | [เล่นเลย](https://jabmueai.github.io/jabmue-apps/meter/) | [meter/index.html](meter/index.html) | [meter/prompt.txt](meter/prompt.txt) |
-| จับมือทำแอป ตามคำขอ: แอปรถมาหรือยัง 🚌 ดูรถเมล์/สองแถวแบบสด (มีหน้าคนขับ + ผู้ดูแล · ต้อง deploy บน Vercel วิธีอยู่ใน [bus/README.md](bus/README.md)) | deploy เอง | [bus/](bus/) | - |
+| จับมือทำแอป ตามคำขอ: แอปรถมาหรือยัง 🚌 ดูรถเมล์/สองแถวแบบสด (มีหน้าคนขับ + ผู้ดูแล · ต้อง deploy บน Vercel วิธีอยู่ใน [bus/README.md](bus/README.md)) | [เล่นเลย](https://jabmue-bus.vercel.app) · [วิธีใช้](https://jabmue-bus.vercel.app/help) | [bus/](bus/) · [เบื้องหลัง](bus/BUILD-STORY.md) | [bus/prompt.txt](bus/prompt.txt) |
 | จับมือทำ ตอน 3: เกมทายศัพท์ภาษาอังกฤษให้ลูก 🎮 | [เล่นเลย](https://jabmueai.github.io/jabmue-apps/word-game/) | [word-game/index.html](word-game/index.html) | [word-game/prompt.txt](word-game/prompt.txt) |
 | จับมือทำ ตอน 4: แอปจดค่าไฟบ้าน ⚡ | [เล่นเลย](https://jabmueai.github.io/jabmue-apps/electric/) | [electric/index.html](electric/index.html) | [electric/prompt.txt](electric/prompt.txt) |
 
