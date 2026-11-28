@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>รถมาหรือยัง</title>
+<meta name="description" content="ดูว่ารถเมล์ รถสองแถว อยู่ตรงไหน อีกกี่นาทีจะถึงป้าย">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/icon-180.png">
+<link rel="icon" type="image/png" href="/icon-192.png">
+<meta name="theme-color" content="#e11d48">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="รถมาหรือยัง">
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<div class="wrap">
+
+  <!-- กำลังโหลด -->
+  <div id="vLoad" class="center" style="padding:60px 0">
+    <div style="font-size:64px">🚌</div>
+    <p class="mut">กำลังโหลด...</p>
+  </div>
+
+  <!-- ยังไม่มีสายรถ -->
+  <div id="vEmpty" class="hide">
+    <h1>🚌 รถมาหรือยัง</h1>
+    <div class="card">
+      <h2>ยังไม่มีสายรถ</h2>
+      <p>ผู้ดูแล (แอดมิน) ต้องเพิ่มสายรถและป้ายก่อน แล้วจะใช้งานได้</p>
+      <a class="btn big pri" href="/admin">ไปหน้าแอดมิน</a>
+    </div>
+  </div>
+
+  <!-- ขั้นที่ 1: เลือกสาย -->
+  <div id="vRoutes" class="hide">
+    <h1 id="svcName">🚌 รถมาหรือยัง</h1>
+    <p class="sub">ขั้นที่ 1 · กดเลือก <b>สายรถ</b> ที่จะขึ้น</p>
+    <div class="col" id="routeList"></div>
+    <button class="big ghost" id="btnNearAll" style="margin-top:14px">📍 หาป้ายที่ใกล้ฉันที่สุด</button>
+  </div>
+
+  <!-- ขั้นที่ 2: เลือกป้าย -->
+  <div id="vStops" class="hide">
+    <div class="topbar">
+      <button class="ghost" id="backRoutes">‹ กลับ</button>
+      <div class="t"><b id="stopsTitle"></b></div>
+    </div>
+    <p class="sub">ขั้นที่ 2 · กดเลือก <b>ป้ายที่คุณยืนรอ</b></p>
+    <button class="big pri" id="btnNear">📍 หาป้ายใกล้ฉันอัตโนมัติ</button>
+    <div id="gpsMsg" class="status warn hide" style="margin-top:12px"></div>
+    <div class="col" id="stopList" style="margin-top:14px"></div>
+  </div>
+
+  <!-- ขั้นที่ 3: ดูรถ -->
+  <div id="vWatch" class="hide">
+    <div class="topbar">
+      <div class="t"><b id="wRoute"></b><span id="wStop"></span></div>
+      <button class="ghost" id="btnChange">เปลี่ยนป้าย</button>
+    </div>
+
+    <div class="next none" id="next">
+      <div class="lb" id="nextLb"></div>
+      <div class="eta" id="nextEta"></div>
+      <div class="info" id="nextInfo"></div>
+      <div class="acts">
+        <button id="btnSpeak">🔊 ฟังเสียง</button>
+        <button id="btnShare">📤 ส่งให้เพื่อน</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 id="busesTitle">รถที่วิ่งอยู่ตอนนี้</h3>
+      <div id="busList"></div>
+      <div class="small mut" id="updated" style="margin-top:8px"></div>
+    </div>
+
+    <div class="map" id="map"></div>
+    <p class="small mut" style="margin:6px 4px 14px">🟡 = ป้ายของคุณ · 🚌 = รถ · 🔵 = คุณ · เวลาเป็นค่าประมาณ อาจช้าเร็วกว่านี้ตามสภาพถนน</p>
+
+    <div class="card" id="schedCard">
+      <h3>🕒 เวลารถออก วันนี้</h3>
+      <div class="times" id="times"></div>
+      <p class="small mut" id="routeNote" style="margin:10px 0 0"></p>
+    </div>
+  </div>
+
+  <div class="foot">
+    <a href="/driver">สำหรับคนขับ</a> · <a href="/admin">สำหรับผู้ดูแล</a>
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="/common.js"></script>
+<script>
+'use strict';
+let cfg = null, live = { buses: [], now: Date.now() }, sel = null, geo = {}, map = null, layers = null, fitted = false, myPos = null, liveTimer = null;
+
+const views = ['vLoad', 'vEmpty', 'vRoutes', 'vStops', 'vWatch'];
+function show(v) { views.forEach((x) => $('#' + x).classList.toggle('hide', x !== v)); window.scrollTo(0, 0); }
+const routeById = (id) => cfg.routes.find((r) => r.id === id);
+const busesOn = (rid) => live.buses.filter((b) => b.routeId === rid);
+
+async function boot() {
+  try {
+    cfg = await api('config');
+  } catch (e) {
+    cfg = store.get('bus.cfgCache');
+    if (!cfg) { $('#vLoad').innerHTML = `<div style="font-size:64px">📶</div><p>${esc(e.message)}</p><button class="big pri" onclick="location.reload()">ลองใหม่</button>`; return; }
+    toast('ไม่มีเน็ต แสดงข้อมูลเก่า');
+  }
+  store.set('bus.cfgCache', cfg);
+  cfg.routes.forEach((r) => (geo[r.id] = buildRoute(r)));
+  document.title = cfg.name ? `รถมาหรือยัง · ${cfg.name}` : 'รถมาหรือยัง';
+  $('#svcName').textContent = '🚌 ' + (cfg.name || 'รถมาหรือยัง');
+  const valid = cfg.routes.filter((r) => r.stops.length);
+  if (!valid.length) return show('vEmpty');
+
+  // ลิงก์ที่เพื่อนส่งมา (?r=สาย&s=ป้าย) หรือที่เลือกไว้ครั้งก่อน
+  const q = new URLSearchParams(location.search);
+  const want = q.get('r') ? { r: q.get('r'), s: q.get('s') } : store.get('bus.sel');
+  if (q.get('r')) history.replaceState(null, '', location.pathname);
+  await refreshLive();
+  if (want && routeById(want.r)) {
+    const r = routeById(want.r);
+    const si = r.stops.findIndex((s) => s.id === want.s);
+    if (si >= 0) return watch(r.id, si);
+    return pickStop(r.id);
+  }
+  if (valid.length === 1) return pickStop(valid[0].id);
+  pickRoute();
+}
+
+function pickRoute() {
+  stopLive();
+  $('#routeList').innerHTML = cfg.routes.filter((r) => r.stops.length).map((r) => {
+    const n = busesOn(r.id).length;
+    return `<button class="choice" data-r="${esc(r.id)}"><span class="dot" style="background:${r.color}"></span>
+      <span class="t">${esc(r.name)}<small>${esc(r.stops[0].name)} ↔ ${esc(r.stops[r.stops.length - 1].name)}</small></span>
+      <span class="badge ${n ? '' : 'gray'}">${n ? `วิ่งอยู่ ${n} คัน` : 'ยังไม่มีรถวิ่ง'}</span></button>`;
+  }).join('');
+  show('vRoutes');
+}
+$('#routeList').onclick = (e) => { const b = e.target.closest('[data-r]'); if (b) pickStop(b.dataset.r); };
+
+function pickStop(rid, highlight) {
+  stopLive();
+  const r = routeById(rid);
+  sel = { r: rid };
+  $('#stopsTitle').textContent = r.name;
+  $('#backRoutes').classList.toggle('hide', cfg.routes.filter((x) => x.stops.length).length < 2);
+  const d = myPos ? r.stops.map((s) => dist(myPos, [s.lat, s.lng])) : null;
+  const nearest = d ? d.indexOf(Math.min(...d)) : -1;
+  $('#stopList').innerHTML = r.stops.map((s, i) => `<button class="choice${i === (highlight ?? nearest) ? ' on' : ''}" data-i="${i}">
+      <span class="item" style="padding:0;border:0"><span class="n">${i + 1}</span></span>
+      <span class="t">${esc(s.name)}${d ? `<small>ห่างจากคุณ ${fmtDist(d[i])}${i === nearest ? ' · ใกล้ที่สุด ✓' : ''}</small>` : ''}</span></button>`).join('');
+  show('vStops');
+  if (nearest >= 0) setTimeout(() => $('#stopList .on')?.scrollIntoView({ block: 'center', behavior: 'smooth' }), 100);
+}
+$('#stopList').onclick = (e) => { const b = e.target.closest('[data-i]'); if (b) watch(sel.r, Number(b.dataset.i)); };
+$('#backRoutes').onclick = pickRoute;
+
+async function locate(btn) {
+  const old = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = '⏳ กำลังหาตำแหน่ง...';
+  $('#gpsMsg').classList.add('hide');
+  try {
+    const p = await getPosition();
+    myPos = [p.coords.latitude, p.coords.longitude];
+    return myPos;
+  } catch (e) {
+    const m = $('#gpsMsg');
+    m.innerHTML = `${esc(e.message)}<br><small>วิธีอนุญาต: กดรูปแม่กุญแจ 🔒 ด้านบนข้างชื่อเว็บ → ตำแหน่ง → อนุญาต · หรือเลือกป้ายเองจากรายการข้างล่าง</small>`;
+    m.classList.remove('hide');
+    toast(e.message, 4000);
+    return null;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = old;
+  }
+}
+$('#btnNear').onclick = async () => { if (await locate($('#btnNear'))) pickStop(sel.r); };
+$('#btnNearAll').onclick = async () => {
+  const p = await locate($('#btnNearAll'));
+  if (!p) return;
+  let best = null;
+  for (const r of cfg.routes) r.stops.forEach((s, i) => { const d = dist(p, [s.lat, s.lng]); if (!best || d < best.d) best = { r: r.id, i, d }; });
+  if (best) pickStop(best.r, best.i);
+};
+
+// ---------- หน้าดูรถ ----------
+function watch(rid, si) {
+  sel = { r: rid, s: si };
+  const r = routeById(rid);
+  store.set('bus.sel', { r: rid, s: r.stops[si].id });
+  $('#wRoute').innerHTML = `<span style="color:${r.color}">●</span> ${esc(r.name)}`;
+  $('#wStop').textContent = `รอที่ป้าย: ${r.stops[si].name}`;
+  $('#next').style.setProperty('--c', r.color);
+  show('vWatch');
+  fitted = false;
+  setupMap();
+  renderWatch();
+  startLive();
+}
+$('#btnChange').onclick = () => pickStop(sel.r, sel.s);
+
+function computeList() {
+  const r = routeById(sel.r);
+  const g = geo[sel.r];
+  return busesOn(sel.r).map((b) => {
+    const e = etaToStop(g, b, sel.s);
+    const stale = live.now - b.ts > 2.5 * 60 * 1000;
+    return { b, e, stale, to: headingTo(r, b.dir) };
+  }).sort((x, y) => (x.stale - y.stale) || ((x.e.kind === 'off') - (y.e.kind === 'off')) || ((x.e.minutes ?? 999) - (y.e.minutes ?? 999)));
+}
+
+function renderWatch() {
+  if (!sel || sel.s == null) return;
+  const r = routeById(sel.r);
+  const list = computeList();
+  const stop = r.stops[sel.s];
+  const n = $('#next');
+  const top = list.find((x) => !x.stale && x.e.kind === 'coming') || list.find((x) => !x.stale && x.e.kind === 'return');
+  n.className = 'next';
+  n.style.background = '';
+  if (top) {
+    const near = top.e.kind === 'coming' && top.e.minutes <= 2;
+    if (near) n.classList.add('near'); else n.style.background = r.color;
+    $('#nextLb').textContent = top.e.kind === 'coming' ? 'รถคันที่ใกล้ที่สุด จะถึงป้ายของคุณใน' : 'รถผ่านไปแล้ว จะวนกลับมาอีกใน';
+    $('#nextEta').innerHTML = near ? 'ใกล้ถึงแล้ว! 🙌' : `ประมาณ ${esc(fmtMin(top.e.minutes)).replace(/(\d+)/g, '<b>$1</b>')}`;
+    $('#nextInfo').textContent = `ห่าง ${fmtDist(top.e.meters)} · มุ่งหน้าไป ${top.to}${top.b.plate ? ' · ทะเบียน ' + top.b.plate : ''}${top.b.full ? ' · ⚠️ รถเต็ม' : ''}`;
+  } else {
+    n.classList.add('none');
+    $('#nextLb').textContent = 'ตอนนี้';
+    $('#nextEta').innerHTML = '<small>ยังไม่มีรถวิ่งในสายนี้</small>';
+    const nt = nextTime(r);
+    $('#nextInfo').textContent = nt ? `เที่ยวต่อไปออกเวลา ${nt} น. (ตามตาราง)` : 'กดดูอีกครั้งภายหลัง หน้านี้อัปเดตเองทุก 10 วินาที';
+  }
+
+  const fresh = list.filter((x) => !x.stale).length;
+  $('#busesTitle').textContent = fresh ? `รถที่วิ่งอยู่ตอนนี้ ${fresh} คัน` : 'รถที่วิ่งอยู่ตอนนี้';
+  $('#busList').innerHTML = list.length ? list.map(({ b, e, stale, to }) => {
+    let m;
+    if (stale) m = `<span class="badge warn">สัญญาณหาย</span><small>${fmtAgo(b.ts, live.now)}</small>`;
+    else if (e.kind === 'off') m = `${fmtDist(e.meters)}<small>อยู่นอกเส้นทาง</small>`;
+    else if (e.kind === 'return') m = `~${fmtMin(e.minutes)}<small>ผ่านไปแล้ว รอเที่ยวกลับ</small>`;
+    else m = `${e.minutes <= 1 ? 'ใกล้ถึง!' : '~' + fmtMin(e.minutes)}<small>ห่าง ${fmtDist(e.meters)}</small>`;
+    return `<div class="bus"><div class="ic">🚌</div><div class="t"><b>${esc(b.name)}${b.plate ? ' · ' + esc(b.plate) : ''}</b>
+      <div>มุ่งหน้าไป ${esc(to)}${b.full ? ' · <b style="color:var(--warn)">รถเต็ม</b>' : ''}</div></div><div class="m">${m}</div></div>`;
+  }).join('') : '<p class="mut" style="margin:0">ยังไม่มีคนขับเปิดแชร์ตำแหน่ง</p>';
+  $('#updated').textContent = `อัปเดตล่าสุด ${new Date(live.now).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' })} น. · อัปเดตเองทุก 10 วินาที`;
+
+  // ตารางเวลา
+  const nt = nextTime(r);
+  $('#schedCard').classList.toggle('hide', !r.times.length && !r.note);
+  const hm = nowHM();
+  $('#times').innerHTML = r.times.map((t) => `<span class="${t < hm ? 'past' : t === nt ? 'next' : ''}">${t}</span>`).join('') || '<span class="mut" style="background:none;padding:0;font-weight:400">ไม่มีตารางเวลา</span>';
+  $('#routeNote').textContent = r.note || '';
+  drawMap(list);
+}
+const nextTime = (r) => r.times.find((t) => t >= nowHM());
+
+function speechText() {
+  const r = routeById(sel.r);
+  const list = computeList();
+  const top = list.find((x) => !x.stale && x.e.kind === 'coming');
+  const stop = r.stops[sel.s].name;
+  if (!top) {
+    const nt = nextTime(r);
+    return `ตอนนี้ ยังไม่มีรถ ${r.name} วิ่งมาที่ป้าย ${stop}` + (nt ? ` เที่ยวต่อไปออกเวลา ${nt.replace(':', ' นาฬิกา ')} นาที` : '');
+  }
+  if (top.e.minutes <= 2) return `รถ ${r.name} ใกล้ถึงป้าย ${stop} แล้ว เตรียมตัวได้เลย`;
+  return `รถ ${r.name} มุ่งหน้าไป ${top.to} จะถึงป้าย ${stop} ในอีกประมาณ ${top.e.minutes} นาที`;
+}
+$('#btnSpeak').onclick = () => { if (!speak(speechText())) toast('เครื่องนี้พูดไม่ได้'); };
+$('#btnShare').onclick = () => {
+  const r = routeById(sel.r);
+  const url = `${location.origin}/?r=${encodeURIComponent(r.id)}&s=${encodeURIComponent(r.stops[sel.s].id)}`;
+  shareLink(url, `ดูรถ ${r.name} ที่ป้าย ${r.stops[sel.s].name} ว่าอีกกี่นาทีจะมา`);
+};
+
+// ---------- แผนที่ ----------
+function setupMap() {
+  if (!window.L) return;
+  if (!map) { map = makeMap($('#map')); layers = { route: L.layerGroup().addTo(map), bus: L.layerGroup().addTo(map) }; }
+  setTimeout(() => map.invalidateSize(), 50);
+  const r = routeById(sel.r);
+  const g = geo[sel.r];
+  layers.route.clearLayers();
+  L.polyline(g.pts, { color: r.color, weight: 6, opacity: 0.75 }).addTo(layers.route);
+  r.stops.forEach((s, i) => L.marker([s.lat, s.lng], { icon: stopIcon(i === sel.s, i + 1), zIndexOffset: i === sel.s ? 500 : 0 })
+    .bindPopup(`<b>${esc(s.name)}</b><br><a href="#" onclick="watch('${esc(r.id)}',${i});return false">รอที่ป้ายนี้</a>`).addTo(layers.route));
+  if (myPos) L.marker(myPos, { icon: meIcon() }).addTo(layers.route);
+}
+function drawMap(list) {
+  if (!map) return;
+  const r = routeById(sel.r);
+  layers.bus.clearLayers();
+  const pts = [];
+  list.forEach(({ b, stale }) => {
+    L.marker([b.lat, b.lng], { icon: busIcon(stale ? '#9ca3af' : r.color, b.plate || b.name, b.full), zIndexOffset: 1000 }).addTo(layers.bus);
+    if (!stale) pts.push([b.lat, b.lng]);
+  });
+  if (!fitted) {
+    fitted = true;
+    const s = r.stops[sel.s];
+    const b = L.latLngBounds([[s.lat, s.lng], ...pts]);
+    if (pts.length) map.fitBounds(b.pad(0.25), { maxZoom: 16 });
+    else map.fitBounds(L.latLngBounds(geo[sel.r].pts).pad(0.1), { maxZoom: 15 });
+  }
+}
+
+// ---------- ดึงตำแหน่งรถ ----------
+async function refreshLive() {
+  try {
+    const j = await api('live');
+    live = { buses: j.buses, now: Date.now() };
+  } catch (e) {
+    if (e.offline) toast('ไม่มีอินเทอร์เน็ต กำลังลองใหม่...');
+  }
+}
+async function tick() {
+  if (document.hidden) return;
+  await refreshLive();
+  if (!$('#vWatch').classList.contains('hide')) renderWatch();
+}
+function startLive() { stopLive(); liveTimer = setInterval(tick, 10000); }
+function stopLive() { clearInterval(liveTimer); liveTimer = null; }
+document.addEventListener('visibilitychange', () => { if (!document.hidden && liveTimer) tick(); });
+setInterval(() => { if (sel && sel.s != null && !$('#vWatch').classList.contains('hide')) renderWatch(); }, 30000);
+
+boot();
+</script>
+</body>
+</html>
